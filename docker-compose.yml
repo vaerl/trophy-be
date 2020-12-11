@@ -1,0 +1,13 @@
+version: "3.3"
+
+services:
+  db:
+    image: trophy-db:0.1
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+  web:
+    image: trophy-bak:0.1
+    depends_on:
+      - db
+    ports:
+      - "80:8000"
