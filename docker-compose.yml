@@ -2,11 +2,13 @@ version: "3.3"
 
 services:
   db:
-    image: trophy-db:0.1
+    image: trophy-db:latest
     volumes:
       - ./db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
   web:
-    image: trophy-bak:0.1
+    image: trophy-bak:latest
     depends_on:
       - db
     ports:
