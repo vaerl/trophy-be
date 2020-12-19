@@ -6,10 +6,10 @@ use sqlx::postgres::PgRow;
 use sqlx::{FromRow, PgPool, Row};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
-#[sqlx(rename = "gender")]
+#[sqlx(rename = "team_gender")]
 #[sqlx(rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
-pub enum Gender {
+pub enum TeamGender {
     Female,
     Male,
     Mixed,
@@ -19,13 +19,13 @@ pub enum Gender {
 pub struct Team {
     pub id: i32,
     pub name: String,
-    pub gender: Gender,
+    pub gender: TeamGender,
 }
 
 #[derive(Deserialize)]
 pub struct TeamRequest {
     pub name: String,
-    pub gender: Gender,
+    pub gender: TeamGender,
 }
 
 impl Responder for Team {
@@ -46,7 +46,7 @@ impl Team {
         let mut teams = vec![];
         teams = sqlx::query_as!(
             Team,
-            r#"SELECT id, name, gender as "gender: Gender" FROM team ORDER BY id"#
+            r#"SELECT id, name, gender as "gender: TeamGender" FROM team ORDER BY id"#
         )
         .fetch_all(pool)
         .await?;
@@ -70,6 +70,8 @@ impl Team {
         .await?;
 
         // TODO populate n:m
+        // get all games
+        // add entry for every game
 
         tx.commit().await?;
         Ok(team)

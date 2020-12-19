@@ -1,22 +1,22 @@
 -- drop existing tables and types
+DROP TYPE IF EXISTS game_kind;
 DROP TYPE IF EXISTS team_gender;
-DROP TYPE IF EXISTS game_type;
 DROP TABLE IF EXISTS game;
 DROP TABLE IF EXISTS team;
 DROP TABLE IF EXISTS game_team;
 -- create enums
-CREATE TYPE gender AS ENUM ('female', 'male', 'mixed');
-CREATE TYPE type AS ENUM ('points', 'types');
+CREATE TYPE game_kind AS ENUM ('points', 'time');
+CREATE TYPE team_gender AS ENUM ('female', 'male', 'mixed');
 -- create tables
 CREATE TABLE game (
     id serial PRIMARY KEY,
     name varchar (50) NOT NULL,
-    type type NOT NULL
+    kind game_kind NOT NULL
 );
 CREATE TABLE team (
     id serial PRIMARY KEY,
     name varchar (50) NOT NULL,
-    gender gender NOT NULL
+    gender team_gender NOT NULL
 );
 CREATE TABLE game_team (
     game_id int REFERENCES game (id) ON UPDATE CASCADE ON DELETE CASCADE,
