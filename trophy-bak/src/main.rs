@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate log;
 
-use actix_web::{App, HttpServer};
+use actix_web::{error, web, App, HttpResponse, HttpServer};
 use anyhow::Result;
 use dotenv::dotenv;
 use sqlx::PgPool;
@@ -12,6 +12,11 @@ mod routes;
 
 // TODO remove unused report
 // TODO Improve error-handling in routes
+// TODO move to query_as
+// TODO routes
+// TODO allow setting ids in creation(game, team)
+// TODO check for ids?
+
 #[actix_web::main]
 async fn main() -> Result<()> {
     dotenv().ok();
@@ -28,6 +33,16 @@ async fn main() -> Result<()> {
         App::new()
             .data(db_pool.clone()) // pass database pool to application so we can access it inside handlers
             .configure(routes::init) // init routes
+            // return JSON-parse-errors
+            .app_data(web::JsonConfig::default().error_handler(|err, _req| {
+                error::InternalError::from_response(
+                    "",
+                    HttpResponse::BadRequest()
+                        .content_type("application/json")
+                        .body(format!(r#"{{"error":"{}"}}"#, err)),
+                )
+                .into()
+            }))
     })
     .bind(format!("{}:{}", host, port))?;
 

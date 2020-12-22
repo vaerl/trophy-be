@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgRow;
 use sqlx::{FromRow, PgPool, Row};
 
+use super::{Game, Outcome};
+
 #[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(rename = "team_gender")]
 #[sqlx(rename_all = "lowercase")]
@@ -15,15 +17,9 @@ pub enum TeamGender {
     Mixed,
 }
 
-#[derive(Serialize, FromRow)]
+#[derive(Deserialize, Serialize, FromRow)]
 pub struct Team {
     pub id: i32,
-    pub name: String,
-    pub gender: TeamGender,
-}
-
-#[derive(Deserialize)]
-pub struct TeamRequest {
     pub name: String,
     pub gender: TeamGender,
 }
@@ -42,9 +38,11 @@ impl Responder for Team {
 }
 
 impl Team {
+    // TODO DELETE
+    // TODO UPDATE
+
     pub async fn find_all(pool: &PgPool) -> Result<Vec<Team>> {
-        let mut teams = vec![];
-        teams = sqlx::query_as!(
+        let teams = sqlx::query_as!(
             Team,
             r#"SELECT id, name, gender as "gender: TeamGender" FROM team ORDER BY id"#
         )
@@ -54,11 +52,12 @@ impl Team {
         Ok(teams)
     }
 
-    pub async fn create(team: TeamRequest, pool: &PgPool) -> Result<Team> {
+    pub async fn create(team: Team, pool: &PgPool) -> Result<Team> {
         let mut tx = pool.begin().await?;
         let team = sqlx::query(
-            "INSERT INTO team (name, gender) VALUES ($1, $2) RETURNING id, name, gender",
+            "INSERT INTO team (id, name, gender) VALUES ($1, $2, $3) RETURNING id, name, gender",
         )
+        .bind(team.id)
         .bind(&team.name)
         .bind(team.gender)
         .map(|row: PgRow| Team {
@@ -68,12 +67,12 @@ impl Team {
         })
         .fetch_one(&mut tx)
         .await?;
-
-        // TODO populate n:m
-        // get all games
-        // add entry for every game
-
         tx.commit().await?;
+
+        for game in Game::find_all(pool).await? {
+            Outcome::create(game.id, team.id, pool).await?;
+        }
+
         Ok(team)
     }
 }

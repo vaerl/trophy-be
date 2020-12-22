@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgRow;
 use sqlx::{FromRow, PgPool, Row};
 
-use super::Team;
+use super::{Outcome, Team};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(rename = "game_kind")]
@@ -16,15 +16,9 @@ pub enum GameKind {
     Time,
 }
 
-#[derive(Serialize, FromRow)]
+#[derive(Deserialize, Serialize, FromRow)]
 pub struct Game {
     pub id: i32,
-    pub name: String,
-    pub kind: GameKind,
-}
-
-#[derive(Deserialize)]
-pub struct GameRequest {
     pub name: String,
     pub kind: GameKind,
 }
@@ -43,9 +37,11 @@ impl Responder for Game {
 }
 
 impl Game {
+    // TODO DELETE
+    // TODO UPDATE
+
     pub async fn find_all(pool: &PgPool) -> Result<Vec<Game>> {
-        let mut games = vec![];
-        games = sqlx::query_as!(
+        let games = sqlx::query_as!(
             Game,
             r#"SELECT id, name, kind as "kind: GameKind" FROM game ORDER BY id"#
         )
@@ -55,26 +51,28 @@ impl Game {
         Ok(games)
     }
 
-    pub async fn create(game: GameRequest, pool: &PgPool) -> Result<Game> {
+    pub async fn create(game: Game, pool: &PgPool) -> Result<Game> {
         let mut tx = pool.begin().await?;
-        let game =
-            sqlx::query("INSERT INTO game (name, kind) VALUES ($1, $2) RETURNING id, name, kind")
-                .bind(&game.name)
-                .bind(game.kind)
-                .map(|row: PgRow| Game {
-                    id: row.get(0),
-                    name: row.get(1),
-                    kind: row.get(2),
-                })
-                .fetch_one(&mut tx)
-                .await?;
-
-        // TODO populate n:m
-        // get all teams
-        // add entry for every team
-        for team in Team::find_all(pool).await {}
-
+        // TODO: updating this to with query_as! produces "unsupported type for parameter #2"
+        let game = sqlx::query(
+            "INSERT INTO game (id, name, kind) VALUES ($1, $2, $3) RETURNING id, name, kind",
+        )
+        .bind(game.id)
+        .bind(&game.name)
+        .bind(game.kind)
+        .map(|row: PgRow| Game {
+            id: row.get(0),
+            name: row.get(1),
+            kind: row.get(2),
+        })
+        .fetch_one(&mut tx)
+        .await?;
         tx.commit().await?;
+
+        for team in Team::find_all(pool).await? {
+            Outcome::create(game.id, team.id, pool).await?;
+        }
+
         Ok(game)
     }
 }

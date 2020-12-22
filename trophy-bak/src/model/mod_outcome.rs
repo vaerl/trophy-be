@@ -1,0 +1,94 @@
+use actix_web::{Error, HttpRequest, HttpResponse, Responder};
+use anyhow::Result;
+use futures::future::{ready, Ready};
+use serde::{Deserialize, Serialize};
+use sqlx::{FromRow, PgPool};
+
+#[derive(Deserialize, Serialize, FromRow)]
+#[sqlx(rename = "game_team")]
+#[sqlx(rename_all = "lowercase")]
+pub struct Outcome {
+    pub game_id: i32,
+    pub team_id: i32,
+    pub data: Option<String>,
+}
+
+impl Responder for Outcome {
+    type Error = Error;
+    type Future = Ready<Result<HttpResponse, Error>>;
+
+    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
+        let body = serde_json::to_string(&self).unwrap();
+        // create response and set content type
+        ready(Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(body)))
+    }
+}
+
+impl Outcome {
+    pub async fn find_all(pool: &PgPool) -> Result<Vec<Outcome>> {
+        let outcomes = sqlx::query_as!(
+            Outcome,
+            r#"SELECT game_id, team_id, data FROM game_team ORDER BY game_id"#
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(outcomes)
+    }
+
+    pub async fn find_all_for_game(game_id: i32, pool: &PgPool) -> Result<Vec<Outcome>> {
+        let outcomes = sqlx::query_as!(
+            Outcome,
+            "SELECT game_id, team_id, data FROM game_team WHERE game_id = $1 ORDER BY game_id",
+            game_id
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(outcomes)
+    }
+
+    pub async fn find_all_for_team(team_id: i32, pool: &PgPool) -> Result<Vec<Outcome>> {
+        let outcomes = sqlx::query_as!(
+            Outcome,
+            "SELECT game_id, team_id, data FROM game_team WHERE team_id = $1 ORDER BY game_id",
+            team_id
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(outcomes)
+    }
+
+    pub async fn create(game_id: i32, team_id: i32, pool: &PgPool) -> Result<Outcome> {
+        // there is no need to check if the ids are valid here - because this is called while iterating over existing entities 
+        let mut tx = pool.begin().await?;
+        let outcome = sqlx::query_as!(
+            Outcome, 
+            "INSERT INTO game_team (game_id, team_id) VALUES ($1, $2) RETURNING game_id, team_id, data", 
+            game_id, team_id
+        )
+        .fetch_one(&mut tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(outcome)
+    }
+
+    pub async fn update(outcome: Outcome, pool: &PgPool) -> Result<Outcome> {
+        // TODO check if ids exist?
+        let mut tx = pool.begin().await?;
+        let outcome = sqlx::query_as!(
+            Outcome, 
+            "UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data",
+            outcome.data, outcome.game_id, outcome.team_id
+        )
+        .fetch_one(&mut tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(outcome)
+    }
+}
