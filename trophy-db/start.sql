@@ -16,7 +16,8 @@ CREATE TABLE game (
 CREATE TABLE team (
     id serial PRIMARY KEY,
     name varchar (50) NOT NULL,
-    gender team_gender NOT NULL
+    gender team_gender NOT NULL,
+    points integer NOT NULL DEFAULT 0
 );
 CREATE TABLE game_team (
     game_id int REFERENCES game (id) ON UPDATE CASCADE ON DELETE CASCADE,

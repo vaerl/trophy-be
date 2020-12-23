@@ -21,6 +21,7 @@ pub struct Team {
     pub id: i32,
     pub name: String,
     pub gender: TeamGender,
+    pub points: i32
 }
 
 impl Responder for Team {
@@ -41,9 +42,21 @@ impl Team {
     pub async fn find_all(pool: &PgPool) -> Result<Vec<Team>> {
         let teams = sqlx::query_as!(
             Team,
-            r#"SELECT id, name, gender as "gender: TeamGender" FROM team ORDER BY id"#
+            r#"SELECT id, name, gender as "gender: TeamGender", points FROM team ORDER BY id"#
         )
         .fetch_all(pool)
+        .await?;
+
+        Ok(teams)
+    }
+
+    pub async fn find(id: i32, pool: &PgPool) -> Result<Team> {
+        let teams = sqlx::query_as!(
+            Team,
+            r#"SELECT id, name, gender as "gender: TeamGender", points FROM team WHERE id = $1"#, 
+            id
+        )
+        .fetch_one(pool)
         .await?;
 
         Ok(teams)
@@ -53,8 +66,8 @@ impl Team {
         let mut tx = pool.begin().await?;
         let team = sqlx::query_as!(
             Team, 
-            r#"INSERT INTO team (id, name, gender) VALUES ($1, $2, $3 ) RETURNING id, name, gender as "gender: TeamGender""#,
-            team.id, team.name, team.gender as TeamGender
+            r#"INSERT INTO team (id, name, gender, points) VALUES ($1, $2, $3, $4) RETURNING id, name, gender as "gender: TeamGender", points"#,
+            team.id, team.name, team.gender as TeamGender, team.points
         )
         .fetch_one(&mut tx)
         .await?;
@@ -67,12 +80,12 @@ impl Team {
         Ok(team)
     }
 
-    pub async fn update(team: Team, pool: &PgPool) -> Result<Team> {
+    pub async fn update(id: i32, altered_team: Team, pool: &PgPool) -> Result<Team> {
         let mut tx = pool.begin().await?;
         let team = sqlx::query_as!(
             Team, 
-            r#"UPDATE team SET id = $1, name = $2, gender = $3 WHERE id = $4 RETURNING id, name, gender as "gender: TeamGender""#,
-            team.id, team.name, team.gender as TeamGender, team.id
+            r#"UPDATE team SET id = $1, name = $2, gender = $3 WHERE id = $4 RETURNING id, name, gender as "gender: TeamGender", points"#,
+            altered_team.id, altered_team.name, altered_team.gender as TeamGender, id
         )
         .fetch_one(&mut tx)
         .await?;
@@ -81,12 +94,12 @@ impl Team {
         Ok(team)
     }
 
-    pub async fn delete(team: Team, pool: &PgPool) -> Result<Team> {
+    pub async fn delete(id: i32, pool: &PgPool) -> Result<Team> {
         let mut tx = pool.begin().await?;
         let teams = sqlx::query_as!(
             Team,
-            r#"DELETE FROM team WHERE id = $1 RETURNING id, name, gender as "gender: TeamGender""#,
-            team.id
+            r#"DELETE FROM team WHERE id = $1 RETURNING id, name, gender as "gender: TeamGender", points"#,
+            id
         )
         .fetch_one(&mut tx)
         .await?;

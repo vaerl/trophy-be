@@ -48,6 +48,17 @@ impl Game {
         Ok(games)
     }
 
+    pub async fn find(id: i32, pool: &PgPool) -> Result<Game> {
+        let game = sqlx::query_as!(
+            Game,
+            r#"SELECT id, name, kind as "kind: GameKind" FROM game WHERE id = $1"#, id
+        )
+        .fetch_one(pool)
+        .await?;
+
+        Ok(game)
+    }
+
     pub async fn create(game: Game, pool: &PgPool) -> Result<Game> {
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!( Game, 
@@ -65,12 +76,12 @@ impl Game {
         Ok(game)
     }
 
-    pub async fn update(game: Game, pool: &PgPool) -> Result<Game> {
+    pub async fn update(id: i32, altered_game: Game, pool: &PgPool) -> Result<Game> {
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!(
             Game, 
             r#"UPDATE game SET id = $1, name = $2, kind = $3 WHERE id = $4 RETURNING id, name, kind as "kind: GameKind""#,
-            game.id, game.name, game.kind as GameKind, game.id
+            altered_game.id, altered_game.name, altered_game.kind as GameKind, id
         )
         .fetch_one(&mut tx)
         .await?;
@@ -79,12 +90,12 @@ impl Game {
         Ok(game)
     }
 
-    pub async fn delete(game: Game, pool: &PgPool) -> Result<Game> {
+    pub async fn delete(id: i32, pool: &PgPool) -> Result<Game> {
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!(
             Game,
             r#"DELETE FROM game WHERE id = $1 RETURNING id, name, kind as "kind: GameKind""#,
-            game.id
+            id
         )
         .fetch_one(&mut tx)
         .await?;

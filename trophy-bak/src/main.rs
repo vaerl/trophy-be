@@ -10,11 +10,9 @@ use std::env;
 mod model;
 mod routes;
 
-// TODO remove unused imports
 // TODO improve error-handling in routes
 // TODO routes
 // TODO check for ids?
-// TODO send only id for DELETE?
 
 #[actix_web::main]
 async fn main() -> Result<()> {

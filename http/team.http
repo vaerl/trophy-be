@@ -8,25 +8,24 @@ content-type: application/json
 {
     "id": 1,
     "name": "test",
-    "gender": "female"
+    "gender": "female",
+    "points": 0
 }
 
 ###
-PUT http://127.0.0.1:8080/teams HTTP/1.1
+
+GET http://127.0.0.1:8080/teams/1
+
+###
+PUT http://127.0.0.1:8080/teams/1 HTTP/1.1
 content-type: application/json
 
 {
-    "id": 1,
+    "id": 2,
     "name": "test2",
-    "gender": "female"
+    "gender": "female", 
+    "points": 0
 }
 
 ###
-DELETE http://127.0.0.1:8080/teams HTTP/1.1
-content-type: application/json
-
-{
-    "id": 1,
-    "name": "test2",
-    "gender": "female"
-}
+DELETE http://127.0.0.1:8080/teams/2 HTTP/1.1
