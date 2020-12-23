@@ -10,3 +10,23 @@ content-type: application/json
     "name": "test",
     "gender": "female"
 }
+
+###
+PUT http://127.0.0.1:8080/teams HTTP/1.1
+content-type: application/json
+
+{
+    "id": 1,
+    "name": "test2",
+    "gender": "female"
+}
+
+###
+DELETE http://127.0.0.1:8080/teams HTTP/1.1
+content-type: application/json
+
+{
+    "id": 1,
+    "name": "test2",
+    "gender": "female"
+}

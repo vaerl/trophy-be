@@ -2,8 +2,7 @@ use actix_web::{Error, HttpRequest, HttpResponse, Responder};
 use anyhow::Result;
 use futures::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
-use sqlx::postgres::PgRow;
-use sqlx::{FromRow, PgPool, Row};
+use sqlx::{FromRow, PgPool};
 
 use super::{Game, Outcome};
 
@@ -38,8 +37,6 @@ impl Responder for Team {
 }
 
 impl Team {
-    // TODO DELETE
-    // TODO UPDATE
 
     pub async fn find_all(pool: &PgPool) -> Result<Vec<Team>> {
         let teams = sqlx::query_as!(
@@ -54,17 +51,11 @@ impl Team {
 
     pub async fn create(team: Team, pool: &PgPool) -> Result<Team> {
         let mut tx = pool.begin().await?;
-        let team = sqlx::query(
-            "INSERT INTO team (id, name, gender) VALUES ($1, $2, $3) RETURNING id, name, gender",
+        let team = sqlx::query_as!(
+            Team, 
+            r#"INSERT INTO team (id, name, gender) VALUES ($1, $2, $3 ) RETURNING id, name, gender as "gender: TeamGender""#,
+            team.id, team.name, team.gender as TeamGender
         )
-        .bind(team.id)
-        .bind(&team.name)
-        .bind(team.gender)
-        .map(|row: PgRow| Team {
-            id: row.get(0),
-            name: row.get(1),
-            gender: row.get(2),
-        })
         .fetch_one(&mut tx)
         .await?;
         tx.commit().await?;
@@ -74,5 +65,33 @@ impl Team {
         }
 
         Ok(team)
+    }
+
+    pub async fn update(team: Team, pool: &PgPool) -> Result<Team> {
+        let mut tx = pool.begin().await?;
+        let team = sqlx::query_as!(
+            Team, 
+            r#"UPDATE team SET id = $1, name = $2, gender = $3 WHERE id = $4 RETURNING id, name, gender as "gender: TeamGender""#,
+            team.id, team.name, team.gender as TeamGender, team.id
+        )
+        .fetch_one(&mut tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(team)
+    }
+
+    pub async fn delete(team: Team, pool: &PgPool) -> Result<Team> {
+        let mut tx = pool.begin().await?;
+        let teams = sqlx::query_as!(
+            Team,
+            r#"DELETE FROM team WHERE id = $1 RETURNING id, name, gender as "gender: TeamGender""#,
+            team.id
+        )
+        .fetch_one(&mut tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(teams)
     }
 }

@@ -15,14 +15,14 @@ async fn index() -> impl Responder {
         Team
         GET /teams -> list of all teams
         POST /teams -> create new team, body: { "id": 1, "name": "name", "gender": "gender" }
-        PUT TODO
-        DELETE TODO
+        PUT /teams -> update team, body: { "id": 1, "name": "name2", "gender": "gender" }
+        DELETE /teams -> delete team, body: { "id": 1, "name": "name2", "gender": "gender" }
 
         Game
         GET /games -> list of all games
         POST /games -> create new game, body: { "id": 1, "name": "name", "kind": "time" }
-        PUT TODO
-        DELETE TODO
+        PUT /games -> update game, body: { "id": 1, "name": "name2", "kind": "time" }
+        DELETE /games -> delete game, body: { "id": 1, "name": "name2", "kind": "time" }
 
 
         Result
@@ -30,6 +30,10 @@ async fn index() -> impl Responder {
         PUT /outcomes -> update outcome, body: { "game_id": 1, "team_id": 1, "data": "text"}
         GET /outcomes/games/{id} -> get outcomes for game
         GET /outcomes/teams/{id} -> get outcomes for team
+
+        Evaluate
+        GET /eval -> TODO
+        GET /eval/xlsx -> TODO
 
         Miscellaneous
         GET / -> this index

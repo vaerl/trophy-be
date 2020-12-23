@@ -2,8 +2,7 @@ use actix_web::{Error, HttpRequest, HttpResponse, Responder};
 use anyhow::Result;
 use futures::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
-use sqlx::postgres::PgRow;
-use sqlx::{FromRow, PgPool, Row};
+use sqlx::{FromRow, PgPool};
 
 use super::{Outcome, Team};
 
@@ -37,8 +36,6 @@ impl Responder for Game {
 }
 
 impl Game {
-    // TODO DELETE
-    // TODO UPDATE
 
     pub async fn find_all(pool: &PgPool) -> Result<Vec<Game>> {
         let games = sqlx::query_as!(
@@ -53,18 +50,10 @@ impl Game {
 
     pub async fn create(game: Game, pool: &PgPool) -> Result<Game> {
         let mut tx = pool.begin().await?;
-        // TODO: updating this to with query_as! produces "unsupported type for parameter #2"
-        let game = sqlx::query(
-            "INSERT INTO game (id, name, kind) VALUES ($1, $2, $3) RETURNING id, name, kind",
+        let game = sqlx::query_as!( Game, 
+            r#"INSERT INTO game (id, name, kind) VALUES ($1, $2, $3) RETURNING id, name, kind as "kind: GameKind""#,
+            game.id, game.name, game.kind as GameKind
         )
-        .bind(game.id)
-        .bind(&game.name)
-        .bind(game.kind)
-        .map(|row: PgRow| Game {
-            id: row.get(0),
-            name: row.get(1),
-            kind: row.get(2),
-        })
         .fetch_one(&mut tx)
         .await?;
         tx.commit().await?;
@@ -73,6 +62,34 @@ impl Game {
             Outcome::create(game.id, team.id, pool).await?;
         }
 
+        Ok(game)
+    }
+
+    pub async fn update(game: Game, pool: &PgPool) -> Result<Game> {
+        let mut tx = pool.begin().await?;
+        let game = sqlx::query_as!(
+            Game, 
+            r#"UPDATE game SET id = $1, name = $2, kind = $3 WHERE id = $4 RETURNING id, name, kind as "kind: GameKind""#,
+            game.id, game.name, game.kind as GameKind, game.id
+        )
+        .fetch_one(&mut tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(game)
+    }
+
+    pub async fn delete(game: Game, pool: &PgPool) -> Result<Game> {
+        let mut tx = pool.begin().await?;
+        let game = sqlx::query_as!(
+            Game,
+            r#"DELETE FROM game WHERE id = $1 RETURNING id, name, kind as "kind: GameKind""#,
+            game.id
+        )
+        .fetch_one(&mut tx)
+        .await?;
+
+        tx.commit().await?;
         Ok(game)
     }
 }

@@ -10,12 +10,11 @@ use std::env;
 mod model;
 mod routes;
 
-// TODO remove unused report
-// TODO Improve error-handling in routes
-// TODO move to query_as
+// TODO remove unused imports
+// TODO improve error-handling in routes
 // TODO routes
-// TODO allow setting ids in creation(game, team)
 // TODO check for ids?
+// TODO send only id for DELETE?
 
 #[actix_web::main]
 async fn main() -> Result<()> {

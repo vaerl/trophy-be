@@ -18,8 +18,8 @@ log = "0.4.8"
 serde = "1.0.106"
 serde_json = "1.0.51"
 # runtime
-tokio = { version = "0.3", features = ["full"] }
+tokio = { version = "0.3.6", features = ["full"] }
 # database
-sqlx = { version = "0.4", features = [ "runtime-tokio-rustls", "postgres" ] }
+sqlx = { version = "0.4.2", features = [ "runtime-tokio-rustls", "postgres" ] }
 # http
 actix-web = "3"

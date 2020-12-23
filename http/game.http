@@ -10,3 +10,25 @@ content-type: application/json
     "name": "asdf",
     "kind": "time"
 }
+
+###
+
+PUT http://127.0.0.1:8080/games HTTP/1.1
+content-type: application/json
+
+{
+    "id": 1,
+    "name": "asdf2",
+    "kind": "time"
+}
+
+###
+
+DELETE http://127.0.0.1:8080/games HTTP/1.1
+content-type: application/json
+
+{
+    "id": 1,
+    "name": "asdf2",
+    "kind": "time"
+}
