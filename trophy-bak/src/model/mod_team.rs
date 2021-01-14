@@ -107,4 +107,42 @@ impl Team {
         tx.commit().await?;
         Ok(teams)
     }
+
+    pub async fn pending_games(id: i32, pool: &PgPool) -> Result<Vec<Game>> {
+        // outcome-list where no data is present
+        let outcomes = Outcome::filter_for(Outcome::find_all_for_team, Option::<String>::is_none, id, pool).await?;
+        let mut games: Vec<Game> = Vec::new();
+        for game_id in outcomes.iter().map(|f| f.game_id) {
+            games.push(Game::find(game_id, pool).await?);
+        }
+        Ok(games)
+    }
+
+    pub async fn finished_games(id: i32, pool: &PgPool) -> Result<Vec<Game>>{
+        // outcome-list where data is set
+        let outcomes= Outcome::filter_for(Outcome::find_all_for_team, Option::<String>::is_some, id, pool).await?;
+        let mut games: Vec<Game> = Vec::new();
+        for game_id in outcomes.iter().map(|f| f.game_id) {
+            games.push(Game::find(game_id, pool).await?);
+        }
+        Ok(games)
+    }
+
+    pub async fn pending_games_amount(id: i32, pool: &PgPool) -> Result<usize> {
+        // I am choosing to not use outstanding_teams as it encompasses loading all outstanding teams before counting.
+
+        let outcomes = Outcome::find_all_for_team(id, pool).await?;
+
+        // filter every outcome that has data, then count the items
+        Ok(outcomes.iter().filter(|e | e.data.is_none()).count())
+    }
+
+    pub async fn teams_amount(pool: &PgPool) -> Result<usize> {
+        // This function currently calls find_all and uses its size.
+        // If performance warrants a better implementation(f.e. caching the result in the db or memory), 
+        // this capsules the functionality, meaning I will only need to change this method.
+        
+        Ok(Team::find_all(pool).await?.len())
+    }
+
 }

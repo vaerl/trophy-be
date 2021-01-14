@@ -1,5 +1,5 @@
 [package]
-name = "backend"
+name = "klostertrophy-backend"
 version = "0.1.0"
 authors = ["vaerl <lukas@mlel.dev>"]
 edition = "2018"
@@ -10,10 +10,10 @@ edition = "2018"
 # basics
 anyhow = "1.0"
 dotenv = "0.15.0"
-futures = "0.3.8"
+futures = "0.3"
 # logging
 env_logger = "0.8.2"
-log = "0.4.8"
+log = "0.4"
 # serde
 serde = "1.0.106"
 serde_json = "1.0.51"

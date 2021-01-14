@@ -4,6 +4,8 @@ use sqlx::{Error, PgPool};
 
 #[get("/")]
 async fn index() -> impl Responder {
+    // This function provides an overview of all the different routes.
+    // TODO replace this with swagger-doc or similar
     HttpResponse::Ok().body(
         r#"
         trophy-bak
@@ -14,14 +16,16 @@ async fn index() -> impl Responder {
 
         Team
         GET /teams -> list of all teams
-        POST /teams -> create new team, body: { "id": 1, "name": "name", "gender": "gender" }
-        PUT /teams -> update team, body: { "id": 1, "name": "name2", "gender": "gender" }
-        DELETE /teams -> delete team, body: { "id": 1, "name": "name2", "gender": "gender" }
+        POST /teams -> create new team, body: { "id": 1, "name": "test", "gender": "male", "points": 0 }
+        GET /teams/id -> find team
+        PUT /teams/id -> update team, body: { "id": 1, "name": "test2", "gender": "mixed", "points": 0 }
+        DELETE /teams/id -> delete team
 
         Game
         GET /games -> list of all games
         POST /games -> create new game, body: { "id": 1, "name": "name", "kind": "time" }
-        PUT /games -> update game, body: { "id": 1, "name": "name2", "kind": "time" }
+        GET /games(id) -> find game
+        PUT /games/id -> update game, body: { "id": 1, "name": "name2", "kind": "time" }
         DELETE /games -> delete game, body: { "id": 1, "name": "name2", "kind": "time" }
 
 
@@ -32,8 +36,8 @@ async fn index() -> impl Responder {
         GET /outcomes/teams/{id} -> get outcomes for team
 
         Evaluate
-        GET /eval -> TODO
-        GET /eval/xlsx -> TODO
+        POST /eval/game_id -> checks if game is done and then evaluates said game
+        GET /eval -> builds an .xlsx-file and serves it
 
         Miscellaneous
         GET / -> this index
@@ -44,7 +48,9 @@ async fn index() -> impl Responder {
 
 #[post("/reset/database")]
 async fn reset_database(db_pool: web::Data<PgPool>) -> impl Responder {
-    info!("Received new request: reset database.");
+    // This resets the database COMPLETELY - use with care!
+    // TODO do I keep this?
+    warn!("Received new request: reset database.");
     match reset_database_wrapper(db_pool.get_ref()).await {
         Ok(()) => HttpResponse::Ok().body("Successfully reset database."),
         Err(err) => {
@@ -54,8 +60,10 @@ async fn reset_database(db_pool: web::Data<PgPool>) -> impl Responder {
 }
 
 async fn reset_database_wrapper(pool: &PgPool) -> Result<(), Error> {
-    // TODO check whether doing this is ok
-    // TODO check "execute_many"
+    // This is a wrapper-function for resetting the database as I wanted to use await
+    // (which is only possible when Returning an Result).
+    // CHECK "sqlx::execute_many"
+    // TODO maybe move this
     let mut tx = pool.begin().await?;
     sqlx::query("DELETE FROM game_team")
         .execute(&mut tx)
@@ -63,6 +71,12 @@ async fn reset_database_wrapper(pool: &PgPool) -> Result<(), Error> {
     sqlx::query("DELETE FROM game").execute(&mut tx).await?;
     sqlx::query("DELETE FROM team").execute(&mut tx).await?;
     tx.commit().await
+}
+
+#[get("/ping")]
+async fn ping(db_pool: web::Data<PgPool>) -> impl Responder {
+    debug!("Received new request: ping.");
+    HttpResponse::Ok().body("Pong.")
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {

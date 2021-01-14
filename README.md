@@ -1,5 +1,9 @@
 # Klostertrophy-Backend
 
+// TODO write this in english
+// TODO refer to a german version
+// TODO make german version
+
 ## Aufbau
 
 ### Datenbank

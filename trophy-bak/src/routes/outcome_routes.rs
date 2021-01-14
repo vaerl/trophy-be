@@ -3,6 +3,9 @@ use sqlx::PgPool;
 
 use crate::model::Outcome;
 
+// This module provides all routes concerning outcomes.
+// As the name Result was already taken by anyhow, I'm using outcome.
+
 #[get("/outcomes")]
 async fn find_all_outcomes(db_pool: web::Data<PgPool>) -> impl Responder {
     info!("Received new request: find all outcomes.");

@@ -66,7 +66,8 @@ async fn delete_team(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Res
     }
 }
 
-// function that will be called on new Application to configure routes for this module
+// TODO: check_status -> respond with int
+
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(find_all_teams);
     cfg.service(create_team);

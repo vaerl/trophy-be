@@ -1,6 +1,6 @@
 use actix_web::{Error, HttpRequest, HttpResponse, Responder};
 use anyhow::Result;
-use futures::future::{ready, Ready};
+use futures::{Future, future::{ready, Ready}};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
@@ -90,5 +90,19 @@ impl Outcome {
 
         tx.commit().await?;
         Ok(outcome)
+    }
+
+    pub async fn filter_for<'r, Fut>(
+        find_for_all: impl Fn(i32, &'r PgPool) -> Fut,
+        filter: impl Fn(& Option<String>) -> bool,
+        id: i32, 
+        pool: &'r PgPool
+    ) -> Result<Vec<Outcome>>
+    where Fut: Future<Output = Result<Vec<Outcome>>> // won't work without
+    {
+        // find every outcome using the supplied function
+        let outcomes = find_for_all(id, pool).await?;
+        // remove every item that does not evaluate to true with filter
+        Ok(outcomes.into_iter().filter(|f| filter(&f.data)).collect())
     }
 }
