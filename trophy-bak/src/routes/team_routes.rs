@@ -16,6 +16,17 @@ async fn find_all_teams(db_pool: web::Data<PgPool>) -> impl Responder {
     }
 }
 
+#[get("/teams/amount")]
+async fn teams_amount(db_pool: web::Data<PgPool>) -> impl Responder {
+    info!("Received new request: get the amount of teams.");
+    let result = Team::amount(db_pool.get_ref()).await;
+    match result {
+        Ok(amount) => HttpResponse::Ok().json(amount),
+        Err(err) => HttpResponse::BadRequest()
+            .body(format!("Error trying to get the amount of teams: {}", err)),
+    }
+}
+
 #[post("/teams")]
 async fn create_team(team: web::Json<Team>, db_pool: web::Data<PgPool>) -> impl Responder {
     info!("Received new request: create team.");
@@ -66,6 +77,43 @@ async fn delete_team(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Res
     }
 }
 
+#[get("/teams/{id}/pending")]
+async fn pending_games(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Responder {
+    info!("Received new request: find pending games for team");
+    let result = Team::pending_games(id.into_inner(), db_pool.get_ref()).await;
+    match result {
+        Ok(games) => HttpResponse::Ok().json(games),
+        Err(err) => {
+            HttpResponse::BadRequest().body(format!("Error trying to find pending games: {}", err))
+        }
+    }
+}
+
+#[get("/teams/{id}/pending/amount")]
+async fn pending_games_amount(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Responder {
+    info!("Received new request: get the amount of pending teams for game");
+    let result = Team::pending_games_amount(id.into_inner(), db_pool.get_ref()).await;
+    match result {
+        Ok(games) => HttpResponse::Ok().json(games),
+        Err(err) => HttpResponse::BadRequest().body(format!(
+            "Error trying to get the amount of pending games: {}",
+            err
+        )),
+    }
+}
+
+#[get("/teams/{id}/finished")]
+async fn finished_games(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Responder {
+    info!("Received new request: find finished teams for game");
+    let result = Team::finished_games(id.into_inner(), db_pool.get_ref()).await;
+    match result {
+        Ok(games) => HttpResponse::Ok().json(games),
+        Err(err) => {
+            HttpResponse::BadRequest().body(format!("Error trying to find finished games: {}", err))
+        }
+    }
+}
+
 // TODO: check_status -> respond with int
 
 pub fn init(cfg: &mut web::ServiceConfig) {
@@ -74,4 +122,7 @@ pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(find_team);
     cfg.service(update_team);
     cfg.service(delete_team);
+    cfg.service(pending_games);
+    cfg.service(pending_games_amount);
+    cfg.service(finished_games);
 }

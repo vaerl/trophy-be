@@ -1,20 +1,16 @@
-# Klostertrophy-Backend
+# KL-Bak
 
-// TODO write this in english
-// TODO refer to a german version
-// TODO make german version
+- [Deutsche Version](./docs/readme-deutsch.md)
+- [Development-Information](./docs/development.md)
 
-## Aufbau
+// TODO write this
 
-### Datenbank
+## Structure
 
-Als Datenbank verwende ich [Postgres](https://www.postgresql.org/).
+### Evaluation
 
-### Backend
+This software evaluates exactly like the previous, excel-based mechanism:
+First, all outcomes of a game are fetched. Then the outcomes are separated by gender and sorted by better time or more points. Finally, points are assigned based on the resulting order, stating at 50.
+Note that every gender is rated separately. The staring-point for rating can also be adjusted.
 
-Das Backend ist in [Rust](https://www.rust-lang.org/) geschrieben und verwendet [sqlx](https://github.com/launchbadge/sqlx) und [Actix-Web](https://github.com/actix/actix-web).
-
-## Starten
-
-Um Datenbank und Backend zu starten, muss [Docker](https://www.docker.com/) [Docker-Compose](https://docs.docker.com/compose/install/) installiert sein.
-Dann muss lediglich `docker-compose up` im Terminal ausgeführt werden.
+## Running

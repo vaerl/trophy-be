@@ -8,7 +8,7 @@ async fn index() -> impl Responder {
     // TODO replace this with swagger-doc or similar
     HttpResponse::Ok().body(
         r#"
-        trophy-bak
+        KL-Bak
 
         This backend is currently under development
 
@@ -16,18 +16,25 @@ async fn index() -> impl Responder {
 
         Team
         GET /teams -> list of all teams
+        GET /teams/amount -> amount of all teams
         POST /teams -> create new team, body: { "id": 1, "name": "test", "gender": "male", "points": 0 }
         GET /teams/id -> find team
         PUT /teams/id -> update team, body: { "id": 1, "name": "test2", "gender": "mixed", "points": 0 }
         DELETE /teams/id -> delete team
+        GET /teams/id/pending -> pending games
+        GET /teams/id/pending/amount -> amount of pending games
+        GET /teams/id/finished -> finished games
 
         Game
         GET /games -> list of all games
+        GET /games/amount -> amount of all games
         POST /games -> create new game, body: { "id": 1, "name": "name", "kind": "time" }
         GET /games(id) -> find game
         PUT /games/id -> update game, body: { "id": 1, "name": "name2", "kind": "time" }
         DELETE /games -> delete game, body: { "id": 1, "name": "name2", "kind": "time" }
-
+        GET /games/id/pending -> pending teams
+        GET /games/id/pending/amount -> amount of pending teams
+        GET /games/id/finished -> finished teams
 
         Result
         GET /outcomes -> get all outcomes
@@ -74,7 +81,7 @@ async fn reset_database_wrapper(pool: &PgPool) -> Result<(), Error> {
 }
 
 #[get("/ping")]
-async fn ping(db_pool: web::Data<PgPool>) -> impl Responder {
+async fn ping() -> impl Responder {
     debug!("Received new request: ping.");
     HttpResponse::Ok().body("Pong.")
 }

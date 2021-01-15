@@ -2,7 +2,7 @@ use actix_web::{delete, get, post, put, web, HttpResponse, Responder};
 use sqlx::PgPool;
 
 #[post("/eval/{game_id}")]
-async fn evaluate_game(db_pool: web::Data<PgPool>) -> impl Responder {
+async fn evaluate_game(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Responder {
     info!("Received new request: evaluate game.");
     // TODO check status for game -> only continue if done!
     // TODO get all results for game

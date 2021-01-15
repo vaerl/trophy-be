@@ -137,7 +137,7 @@ impl Team {
         Ok(outcomes.iter().filter(|e | e.data.is_none()).count())
     }
 
-    pub async fn teams_amount(pool: &PgPool) -> Result<usize> {
+    pub async fn amount(pool: &PgPool) -> Result<usize> {
         // This function currently calls find_all and uses its size.
         // If performance warrants a better implementation(f.e. caching the result in the db or memory), 
         // this capsules the functionality, meaning I will only need to change this method.
