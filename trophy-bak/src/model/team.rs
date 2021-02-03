@@ -13,7 +13,6 @@ use super::{Game, Outcome};
 pub enum TeamGender {
     Female,
     Male,
-    Mixed,
 }
 
 #[derive(Deserialize, Serialize, FromRow)]
@@ -48,6 +47,21 @@ impl Team {
         .await?;
 
         Ok(teams)
+    }
+
+    pub async fn find_all_by_genders(pool: &PgPool) -> Result<(Vec<Team>, Vec<Team>)> {
+        let teams = Team::find_all(pool).await?; 
+        let mut female = Vec::<Team>::new();
+        let mut male= Vec::<Team>::new();
+
+        for team in teams {
+            match team.gender {
+                TeamGender::Female => female.push(team),
+                TeamGender::Male => male.push(team),
+            }
+        }
+        
+        Ok((female, male))
     }
 
     pub async fn find(id: i32, pool: &PgPool) -> Result<Team> {
@@ -92,6 +106,13 @@ impl Team {
 
         tx.commit().await?;
         Ok(team)
+    }
+
+    pub async fn update_all(teams: Vec<Team>, pool: &PgPool)-> Result<()> {
+        for team in teams {
+            Team::update(team.id, team, pool).await?;
+        }
+        Ok(())
     }
 
     pub async fn delete(id: i32, pool: &PgPool) -> Result<Team> {

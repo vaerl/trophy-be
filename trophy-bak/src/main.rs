@@ -7,6 +7,7 @@ use dotenv::dotenv;
 use sqlx::PgPool;
 use std::env;
 
+mod eval;
 mod model;
 mod routes;
 

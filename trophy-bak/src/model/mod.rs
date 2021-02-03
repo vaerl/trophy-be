@@ -1,7 +1,9 @@
-mod mod_game;
-mod mod_outcome;
-mod mod_team;
+mod game;
+mod outcome;
+mod parsedOutcome;
+mod team;
 
-pub use mod_game::*;
-pub use mod_outcome::*;
-pub use mod_team::*;
+pub use game::*;
+pub use outcome::*;
+pub use parsedOutcome::*;
+pub use team::*;

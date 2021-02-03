@@ -11,6 +11,8 @@ edition = "2018"
 anyhow = "1.0"
 dotenv = "0.15.0"
 futures = "0.3"
+humantime = "2.1.0"
+xlsxwriter = "0.3"
 # logging
 env_logger = "0.8.2"
 log = "0.4"
@@ -23,3 +25,4 @@ tokio = { version = "0.3.6", features = ["full"] }
 sqlx = { version = "0.4.2", features = [ "runtime-tokio-rustls", "postgres" ] }
 # http
 actix-web = "3"
+actix-files = "0.5"
