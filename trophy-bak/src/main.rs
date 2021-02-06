@@ -15,6 +15,7 @@ mod routes;
 // TODO routes
 // TODO check for ids?
 // TODO use metadata-table for storing number of entries, etc.?
+// TODO use custom errors?
 
 #[actix_web::main]
 async fn main() -> Result<()> {

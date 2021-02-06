@@ -1,9 +1,9 @@
 mod game;
 mod outcome;
-mod parsedOutcome;
+mod parsed_outcome;
 mod team;
 
 pub use game::*;
 pub use outcome::*;
-pub use parsedOutcome::*;
+pub use parsed_outcome::*;
 pub use team::*;

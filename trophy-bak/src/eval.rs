@@ -2,7 +2,8 @@ use crate::model::{Game, GameKind, Outcome, ParsedOutcome, Team, TeamGender};
 use actix_files::NamedFile;
 use anyhow::Result;
 use sqlx::PgPool;
-use std::{panic, time::Duration};
+use std::{panic, time::Duration, time::SystemTime};
+use xlsxwriter::*;
 
 // this const allows for easy changing of max-points
 const MAX_POINTS: i32 = 50;
@@ -82,6 +83,41 @@ impl<T: PartialEq + Ord> Evaluate for Vec<ParsedOutcome<T>> {
     }
 }
 
-pub async fn create_xlsx_file() -> Result<NamedFile> {
-    todo!()
+// NOTE this uses the actix-web-result because actix needs this return-type in the route
+pub async fn create_xlsx_file(pool: &PgPool) -> Result<NamedFile> {
+    // create path
+    // TODO extract timestamp and remove unnecessary precision
+    let path = "./static/results-".to_owned()
+        + &humantime::format_rfc3339(SystemTime::now()).to_string()
+        + &".xlsx".to_owned();
+
+    // create file
+    let workbook = Workbook::new(&path);
+    let (female, male) = Team::find_all_by_genders(pool).await?;
+    write_teams(female, &workbook).await?;
+    write_teams(male, &workbook).await?;
+    workbook.close()?;
+
+    // open and return file
+    Ok(NamedFile::open(path)?)
+}
+
+async fn write_teams(teams: Vec<Team>, workbook: &Workbook) -> Result<()> {
+    // create fonts
+    let heading = workbook.add_format().set_bold().set_font_size(20.0);
+    let values = workbook.add_format().set_font_size(12.0);
+
+    // create initial structure
+    let mut sheet = workbook.add_worksheet(Some(&teams[0].gender.to_string()))?;
+    sheet.write_string(0, 0, "Team", Some(&heading))?;
+    sheet.write_string(0, 1, "Punkte", Some(&heading))?;
+
+    let mut row = 1;
+    for team in teams {
+        sheet.write_string(row, 0, &team.name, Some(&values))?;
+        sheet.write_string(row, 1, &team.points.to_string(), Some(&values))?;
+        row += 1;
+    }
+
+    Ok(())
 }

@@ -1,3 +1,5 @@
+use std::fmt;
+
 use actix_web::{Error, HttpRequest, HttpResponse, Responder};
 use anyhow::Result;
 use futures::future::{ready, Ready};
@@ -6,13 +8,20 @@ use sqlx::{FromRow, PgPool};
 
 use super::{Game, Outcome};
 
-#[derive(Serialize, Deserialize, sqlx::Type)]
+#[derive(Serialize, Deserialize, Debug, sqlx::Type)]
 #[sqlx(rename = "team_gender")]
 #[sqlx(rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum TeamGender {
     Female,
     Male,
+}
+
+// this impl is needed for setting the tab-name when creating the xlsx-file!
+impl fmt::Display for TeamGender {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[derive(Deserialize, Serialize, FromRow)]
