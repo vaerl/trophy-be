@@ -22,7 +22,6 @@ CREATE TABLE team (
 CREATE TABLE game_team (
     game_id int REFERENCES game (id) ON UPDATE CASCADE ON DELETE CASCADE,
     team_id int REFERENCES team (id) ON UPDATE CASCADE,
-    -- TODO is this ok?
     data text DEFAULT NULL,
     CONSTRAINT game_team_pkey PRIMARY KEY (game_id, team_id) -- explicit pk
 );

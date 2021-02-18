@@ -10,7 +10,7 @@ content-type: application/json
 
 {
     "name": "test",
-    "gender": "male",
+    "gender": "male"
 }
 
 ### get team with id 1

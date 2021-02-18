@@ -69,8 +69,6 @@ async fn reset_database(db_pool: web::Data<PgPool>) -> impl Responder {
 async fn reset_database_wrapper(pool: &PgPool) -> Result<(), Error> {
     // This is a wrapper-function for resetting the database as I wanted to use await
     // (which is only possible when Returning an Result).
-    // CHECK "sqlx::execute_many"
-    // TODO maybe move this
     let mut tx = pool.begin().await?;
     sqlx::query("DELETE FROM game_team")
         .execute(&mut tx)
