@@ -1,32 +1,35 @@
-use super::{Outcome, Team};
+use super::{GameKind, Outcome, Team};
 use anyhow::Result;
 use humantime::parse_duration;
 use sqlx::PgPool;
 use std::time::Duration;
 
-pub struct ParsedOutcome<T> {
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub enum Value {
+    Points(Duration),
+    Time(i32),
+}
+
+pub struct ParsedOutcome {
     pub game_id: i32,
     pub team: Team,
-    pub value: T,
+    pub value: Value,
 }
 
-// TODO check performance
-impl ParsedOutcome<Duration> {
-    pub async fn from(outcome: Outcome, pool: &PgPool) -> Result<ParsedOutcome<Duration>> {
-        Ok(ParsedOutcome::<Duration> {
+impl ParsedOutcome {
+    pub async fn from(
+        game_kind: &GameKind,
+        outcome: Outcome,
+        pool: &PgPool,
+    ) -> Result<ParsedOutcome> {
+        let value: Value = match game_kind {
+            super::GameKind::Points => Value::Time(outcome.data.unwrap().parse::<i32>()?),
+            super::GameKind::Time => Value::Points(parse_duration(&outcome.data.unwrap())?),
+        };
+        Ok(ParsedOutcome {
             game_id: outcome.game_id,
             team: Team::find(outcome.team_id, pool).await?,
-            value: parse_duration(&outcome.data.unwrap())?,
-        })
-    }
-}
-
-impl ParsedOutcome<i32> {
-    pub async fn from(outcome: Outcome, pool: &PgPool) -> Result<ParsedOutcome<i32>> {
-        Ok(ParsedOutcome::<i32> {
-            game_id: outcome.game_id,
-            team: Team::find(outcome.team_id, pool).await?,
-            value: outcome.data.unwrap().parse::<i32>()?,
+            value,
         })
     }
 }

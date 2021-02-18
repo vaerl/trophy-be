@@ -1,5 +1,0 @@
-name: "trophy-bak"
-tasks:
-  start:
-    command: cargo run
-    inboundUrl: http://localhost:8080

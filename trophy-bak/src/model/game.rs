@@ -22,6 +22,12 @@ pub struct Game {
     pub kind: GameKind,
 }
 
+#[derive(Deserialize)]
+pub struct CreateGame {
+    pub name: String,
+    pub kind: GameKind,
+}
+
 impl Responder for Game {
     type Error = Error;
     type Future = Ready<Result<HttpResponse, Error>>;
@@ -59,16 +65,17 @@ impl Game {
         Ok(game)
     }
 
-    pub async fn create(game: Game, pool: &PgPool) -> Result<Game> {
+    pub async fn create(create_game: CreateGame, pool: &PgPool) -> Result<Game> {
         let mut tx = pool.begin().await?;
-        let game = sqlx::query_as!( Game, 
-            r#"INSERT INTO game (id, name, kind) VALUES ($1, $2, $3) RETURNING id, name, kind as "kind: GameKind""#,
-            game.id, game.name, game.kind as GameKind
+        let game: Game = sqlx::query_as!( Game, 
+            r#"INSERT INTO game (name, kind) VALUES ($1, $2) RETURNING id, name, kind as "kind: GameKind""#,
+            create_game.name, create_game.kind as GameKind
         )
         .fetch_one(&mut tx)
         .await?;
         tx.commit().await?;
 
+        // create outcomes
         for team in Team::find_all(pool).await? {
             Outcome::create(game.id, team.id, pool).await?;
         }

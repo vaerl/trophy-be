@@ -32,6 +32,12 @@ pub struct Team {
     pub points: i32
 }
 
+#[derive(Deserialize)]
+pub struct CreateTeam {
+    pub name: String,
+    pub gender: TeamGender,
+}
+
 impl Responder for Team {
     type Error = Error;
     type Future = Ready<Result<HttpResponse, Error>>;
@@ -58,7 +64,7 @@ impl Team {
         Ok(teams)
     }
 
-    pub async fn find_all_by_genders(pool: &PgPool) -> Result<(Vec<Team>, Vec<Team>)> {
+    pub async fn find_all_by_gender(pool: &PgPool) -> Result<(Vec<Team>, Vec<Team>)> {
         let teams = Team::find_all(pool).await?; 
         let mut female = Vec::<Team>::new();
         let mut male= Vec::<Team>::new();
@@ -85,12 +91,12 @@ impl Team {
         Ok(teams)
     }
 
-    pub async fn create(team: Team, pool: &PgPool) -> Result<Team> {
+    pub async fn create(create_team: CreateTeam, pool: &PgPool) -> Result<Team> {
         let mut tx = pool.begin().await?;
-        let team = sqlx::query_as!(
+        let team: Team = sqlx::query_as!(
             Team, 
-            r#"INSERT INTO team (id, name, gender, points) VALUES ($1, $2, $3, $4) RETURNING id, name, gender as "gender: TeamGender", points"#,
-            team.id, team.name, team.gender as TeamGender, team.points
+            r#"INSERT INTO team (name, gender) VALUES ($1, $2) RETURNING id, name, gender as "gender: TeamGender", points"#,
+            create_team.name, create_team.gender as TeamGender
         )
         .fetch_one(&mut tx)
         .await?;

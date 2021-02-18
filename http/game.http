@@ -1,0 +1,29 @@
+@BASE = http://127.0.0.1:8080
+
+### get all games
+GET {{BASE}}/games
+
+### create a new game
+POST {{BASE}}/games
+content-type: application/json
+
+{
+    "name": "asdf",
+    "kind": "time"
+}
+
+### get game with id 1
+GET {{BASE}}/games/1
+
+### update game with id 1
+PUT {{BASE}}/games/1
+content-type: application/json
+
+{
+    "id": 2,
+    "name": "asdf2",
+    "kind": "time"
+}
+
+### delete game with id 2
+DELETE http://127.0.0.1:8080/games/2

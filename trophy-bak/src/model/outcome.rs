@@ -1,13 +1,12 @@
-use std::time::Duration;
-
 use actix_web::{Error, HttpRequest, HttpResponse, Responder};
 use anyhow::Result;
 use futures::{Future, future::{ready, Ready}};
-use humantime::parse_duration;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use super::GameKind;
+use super::{GameKind, ParsedOutcome, TeamGender};
+
+
 
 #[derive(Deserialize, Serialize, FromRow)]
 #[sqlx(rename = "game_team")]
@@ -109,5 +108,20 @@ impl Outcome {
         let outcomes = find_for_all(id, pool).await?;
         // remove every item that does not evaluate to true with filter
         Ok(outcomes.into_iter().filter(|f| filter(&f.data)).collect())
+    }
+
+    pub async fn parse_by_gender(game_kind: &GameKind, pool: &PgPool) -> Result<(Vec::<ParsedOutcome>, Vec::<ParsedOutcome>)> {
+        let mut female_outcomes = Vec::<ParsedOutcome>::new();
+        let mut male_outcomes = Vec::<ParsedOutcome>::new();
+        // sort outcomes by gender
+        for outcome in Outcome::find_all(pool).await? {
+            let parsed_outcome = ParsedOutcome::from(&game_kind, outcome, pool).await?;
+            match parsed_outcome.team.gender {
+                TeamGender::Female => female_outcomes.push(parsed_outcome),
+                TeamGender::Male => male_outcomes.push(parsed_outcome),
+            }
+        }
+
+        Ok((female_outcomes, male_outcomes))
     }
 }

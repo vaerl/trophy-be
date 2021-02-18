@@ -1,8 +1,10 @@
-GET http://127.0.0.1:8080/outcomes HTTP/1.1
+@BASE = http://127.0.0.1:8080
 
-###
+### get all outcomes
+GET {{BASE}}/outcomes 
 
-PUT http://127.0.0.1:8080/outcomes HTTP/1.1
+### update outcome
+PUT {{BASE}}/outcomes 
 content-type: application/json
 
 {
@@ -11,10 +13,8 @@ content-type: application/json
     "data": "100"
 }
 
-###
+### get outcomes for team 1
+GET {{BASE}}/outcomes/teams/1 
 
-GET http://127.0.0.1:8080/outcomes/teams/1 HTTP/1.1
-
-###
-
-GET http://127.0.0.1:8080/outcomes/games/1 HTTP/1.1
+### get outcomes for game 1
+GET {{BASE}}/outcomes/games/1 

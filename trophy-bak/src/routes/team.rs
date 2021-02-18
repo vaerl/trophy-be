@@ -1,7 +1,7 @@
 use actix_web::{delete, get, post, put, web, HttpResponse, Responder};
 use sqlx::PgPool;
 
-use crate::model::Team;
+use crate::model::{CreateTeam, Team};
 
 #[get("/teams")]
 async fn find_all_teams(db_pool: web::Data<PgPool>) -> impl Responder {
@@ -28,9 +28,12 @@ async fn teams_amount(db_pool: web::Data<PgPool>) -> impl Responder {
 }
 
 #[post("/teams")]
-async fn create_team(team: web::Json<Team>, db_pool: web::Data<PgPool>) -> impl Responder {
+async fn create_team(
+    create_team: web::Json<CreateTeam>,
+    db_pool: web::Data<PgPool>,
+) -> impl Responder {
     info!("Received new request: create team.");
-    let result = Team::create(team.into_inner(), db_pool.get_ref()).await;
+    let result = Team::create(create_team.into_inner(), db_pool.get_ref()).await;
     match result {
         Ok(team) => HttpResponse::Ok().json(team),
         Err(err) => {

@@ -1,7 +1,7 @@
 use actix_web::{delete, get, post, put, web, HttpResponse, Responder};
 use sqlx::PgPool;
 
-use crate::model::Game;
+use crate::model::{CreateGame, Game};
 
 #[get("/games")]
 async fn find_all_games(db_pool: web::Data<PgPool>) -> impl Responder {
@@ -28,9 +28,12 @@ async fn games_amount(db_pool: web::Data<PgPool>) -> impl Responder {
 }
 
 #[post("/games")]
-async fn create_game(game: web::Json<Game>, db_pool: web::Data<PgPool>) -> impl Responder {
+async fn create_game(
+    create_game: web::Json<CreateGame>,
+    db_pool: web::Data<PgPool>,
+) -> impl Responder {
     info!("Received new request: create game.");
-    let result = Game::create(game.into_inner(), db_pool.get_ref()).await;
+    let result = Game::create(create_game.into_inner(), db_pool.get_ref()).await;
     match result {
         Ok(game) => HttpResponse::Ok().json(game),
         Err(err) => {

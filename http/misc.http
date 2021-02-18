@@ -1,3 +1,6 @@
-GET http://127.0.0.1:8080/ HTTP/1.1
-###
-POST http://127.0.0.1:8080/reset/database HTTP/1.1
+### get index -> endpoint-overview
+
+GET http://127.0.0.1:8080/
+
+### reset the database
+POST http://127.0.0.1:8080/reset/database

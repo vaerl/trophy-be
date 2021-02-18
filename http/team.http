@@ -1,0 +1,31 @@
+@BASE = http://127.0.0.1:8080
+
+
+### get all teams
+GET {{BASE}}/teams
+
+### add new team
+POST {{BASE}}/teams
+content-type: application/json
+
+{
+    "name": "test",
+    "gender": "male",
+}
+
+### get team with id 1
+GET {{BASE}}/teams/1
+
+### update team with id 1
+PUT http://127.0.0.1:8080/teams/1
+content-type: application/json
+
+{
+    "id": 2,
+    "name": "test2",
+    "gender": "female", 
+    "points": 0
+}
+
+### delete team with id 2
+DELETE http://127.0.0.1:8080/teams/2
