@@ -82,7 +82,6 @@ impl Outcome {
     }
 
     pub async fn update(outcome: Outcome, pool: &PgPool) -> Result<Outcome> {
-        // TODO check if ids exist?
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
             Outcome, 

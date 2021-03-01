@@ -5,7 +5,7 @@ use sqlx::{Error, PgPool};
 #[get("/")]
 async fn index() -> impl Responder {
     // This function provides an overview of all the different routes.
-    // TODO replace this with swagger-doc or similar
+    // TODO think about removing this -> documented through ./http-files
     HttpResponse::Ok().body(
         r#"
         KL-Bak
@@ -56,7 +56,7 @@ async fn index() -> impl Responder {
 #[post("/reset/database")]
 async fn reset_database(db_pool: web::Data<PgPool>) -> impl Responder {
     // This resets the database COMPLETELY - use with care!
-    // TODO do I keep this?
+    // TODO remove this (or at least comment it) before moving to production
     warn!("Received new request: reset database.");
     match reset_database_wrapper(db_pool.get_ref()).await {
         Ok(()) => HttpResponse::Ok().body("Successfully reset database."),

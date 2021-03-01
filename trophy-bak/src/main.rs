@@ -12,10 +12,23 @@ mod model;
 mod routes;
 
 // TODO improve error-handling in routes
-// TODO routes
-// TODO check for ids?
-// TODO use metadata-table for storing number of entries, etc.?
 // TODO use custom errors?
+
+// TODO routes: user, ping
+// -> ping should live in misc
+// TODO think about removing /
+// -> the api-doc lives in ./http!
+// TODO log transactions in the transaction table
+// - maybe use services
+
+// TODO think about where and how I create the referees
+// -> creating with a game makes sense
+// TODO adjust start.sql
+// -> add creation and deletion of admin and referee
+// => add these tables to /reset/database
+
+// TODO use metadata-table for storing number of entries, etc.?
+// -> this example is the only thing I can currently think of!
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -23,16 +36,17 @@ async fn main() -> Result<()> {
     std::env::set_var("RUST_LOG", "debug");
     env_logger::init();
 
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file!");
     let db_pool = PgPool::connect(&database_url).await?;
 
-    let host = env::var("HOST").expect("HOST is not set in .env file");
-    let port = env::var("PORT").expect("PORT is not set in .env file");
+    let host = env::var("HOST").expect("HOST is not set in .env file!");
+    let port = env::var("PORT").expect("PORT is not set in .env file!");
 
     let server = HttpServer::new(move || {
         App::new()
-            .data(db_pool.clone()) // pass database pool to application so we can access it inside handlers
-            .configure(routes::init) // init routes
+            // pass database pool to application so we can access it inside handlers
+            .data(db_pool.clone())
+            .configure(routes::init)
             // return JSON-parse-errors
             .app_data(web::JsonConfig::default().error_handler(|err, _req| {
                 error::InternalError::from_response(
@@ -46,7 +60,7 @@ async fn main() -> Result<()> {
     })
     .bind(format!("{}:{}", host, port))?;
 
-    info!("Starting server");
+    info!("Starting server.");
     server.run().await?;
 
     Ok(())

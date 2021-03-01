@@ -1,8 +1,8 @@
 use crate::model::{Game, Outcome, ParsedOutcome, Team};
 use actix_files::NamedFile;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use sqlx::PgPool;
-use std::{panic, time::SystemTime};
+use std::time::SystemTime;
 use xlsxwriter::*;
 
 const MAX_POINTS: i32 = 50;
@@ -18,7 +18,7 @@ async fn evaluate_game(id: i32, pool: &PgPool) -> Result<()> {
     let pending_amount = Game::pending_teams_amount(id, pool).await?;
     if pending_amount > 0 {
         // Don't evaluate when teams are still playing - this should never happen.
-        panic!(format!("Game {} is not finished!", id));
+        Err(anyhow!("Tried to evaluate while teams are still playing!"))
     } else {
         let game_kind = Game::find(id, pool).await?.kind;
         let (female, male) = Outcome::parse_by_gender(&game_kind, pool).await?;
@@ -61,7 +61,7 @@ pub async fn create_xlsx_file(pool: &PgPool) -> Result<NamedFile> {
     Ok(NamedFile::open(path)?)
 }
 
-async fn write_teams(teams: Vec<Team>, workbook: &Workbook) -> Result<()> {
+async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> Result<()> {
     // create fonts
     let heading = workbook.add_format().set_bold().set_font_size(20.0);
     let values = workbook.add_format().set_font_size(12.0);
@@ -71,6 +71,8 @@ async fn write_teams(teams: Vec<Team>, workbook: &Workbook) -> Result<()> {
     sheet.write_string(0, 0, "Team", Some(&heading))?;
     sheet.write_string(0, 1, "Punkte", Some(&heading))?;
 
+    // sort teams by points for right order in xlsx-file
+    teams.sort_by(|a, b| a.points.cmp(&b.points));
     let mut row = 1;
     for team in teams {
         sheet.write_string(row, 0, &team.name, Some(&values))?;
