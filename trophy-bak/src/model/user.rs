@@ -12,7 +12,7 @@ pub enum UserRole {
     Visualizer,
 }
 
-#[derive(Deserialize, Serialize, FromRow)]
+#[derive(Serialize, FromRow)]
 pub struct User {
     pub id: i32,
     pub username: String,
@@ -34,7 +34,7 @@ pub struct SessionInfo {}
 // TODO
 // - implement User: auth
 // - init Game with User, adjust game
-// - adjust game & team: trophy_id
+// - adjust game: trophy_id
 // - supply User-endpoints
 // - write user.http
 // - tests

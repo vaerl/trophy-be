@@ -24,7 +24,7 @@ impl fmt::Display for TeamGender {
     }
 }
 
-#[derive(Deserialize, Serialize, FromRow)]
+#[derive(Serialize, FromRow)]
 pub struct Team {
     pub id: i32,
     pub trophy_id: i32,
