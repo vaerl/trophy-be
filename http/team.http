@@ -26,5 +26,5 @@ content-type: application/json
     "gender": "female"
 }
 
-### delete team with id 2
+### delete team with id 1
 DELETE http://127.0.0.1:8080/teams/1

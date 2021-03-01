@@ -26,12 +26,14 @@ CREATE TABLE users (
 );
 CREATE TABLE games (
     id serial PRIMARY KEY NOT NULL,
+    trophy_id integer NOT NULL,
     name varchar (50) NOT NULL,
     kind game_kind NOT NULL,
     user_id int NOT NULL REFERENCES users (id) ON UPDATE CASCADE
 );
 CREATE TABLE teams (
     id serial PRIMARY KEY NOT NULL,
+    trophy_id integer NOT NULL,
     name varchar (50) NOT NULL,
     gender team_gender NOT NULL,
     points integer NOT NULL DEFAULT 0
