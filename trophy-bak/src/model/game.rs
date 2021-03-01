@@ -15,17 +15,21 @@ pub enum GameKind {
     Time,
 }
 
-#[derive(Deserialize, Serialize, FromRow)]
+#[derive(Serialize, FromRow)]
 pub struct Game {
     pub id: i32,
+    pub trophy_id: i32,
     pub name: String,
     pub kind: GameKind,
+    pub user_id: i32
 }
 
 #[derive(Deserialize)]
 pub struct CreateGame {
+    pub trophy_id: i32,
     pub name: String,
     pub kind: GameKind,
+    pub user_id: i32
 }
 
 impl Responder for Game {
@@ -46,7 +50,7 @@ impl Game {
     pub async fn find_all(pool: &PgPool) -> Result<Vec<Game>> {
         let games = sqlx::query_as!(
             Game,
-            r#"SELECT id, name, kind as "kind: GameKind" FROM game ORDER BY id"#
+            r#"SELECT id, trophy_id, name, kind as "kind: GameKind", user_id FROM games ORDER BY id"#
         )
         .fetch_all(pool)
         .await?;
@@ -57,7 +61,7 @@ impl Game {
     pub async fn find(id: i32, pool: &PgPool) -> Result<Game> {
         let game = sqlx::query_as!(
             Game,
-            r#"SELECT id, name, kind as "kind: GameKind" FROM game WHERE id = $1"#, id
+            r#"SELECT id, trophy_id, name, kind as "kind: GameKind", user_id FROM games WHERE id = $1"#, id
         )
         .fetch_one(pool)
         .await?;
@@ -67,9 +71,9 @@ impl Game {
 
     pub async fn create(create_game: CreateGame, pool: &PgPool) -> Result<Game> {
         let mut tx = pool.begin().await?;
-        let game: Game = sqlx::query_as!( Game, 
-            r#"INSERT INTO game (name, kind) VALUES ($1, $2) RETURNING id, name, kind as "kind: GameKind""#,
-            create_game.name, create_game.kind as GameKind
+        let game: Game = sqlx::query_as!(Game, 
+            r#"INSERT INTO games (trophy_id, name, kind) VALUES ($1, $2, $3) RETURNING id, trophy_id, name, kind as "kind: GameKind", user_id"#,
+            create_game.trophy_id, create_game.name, create_game.kind as GameKind
         )
         .fetch_one(&mut tx)
         .await?;
@@ -83,12 +87,12 @@ impl Game {
         Ok(game)
     }
 
-    pub async fn update(id: i32, altered_game: Game, pool: &PgPool) -> Result<Game> {
+    pub async fn update(id: i32, altered_game: CreateGame, pool: &PgPool) -> Result<Game> {
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!(
             Game, 
-            r#"UPDATE game SET id = $1, name = $2, kind = $3 WHERE id = $4 RETURNING id, name, kind as "kind: GameKind""#,
-            altered_game.id, altered_game.name, altered_game.kind as GameKind, id
+            r#"UPDATE games SET trophy_id = $1, name = $2, kind = $3, user_id = $4 WHERE id = $5 RETURNING id, trophy_id, name, kind as "kind: GameKind", user_id"#,
+            altered_game.trophy_id, altered_game.name, altered_game.kind as GameKind, altered_game.user_id, id
         )
         .fetch_one(&mut tx)
         .await?;
@@ -101,7 +105,7 @@ impl Game {
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!(
             Game,
-            r#"DELETE FROM game WHERE id = $1 RETURNING id, name, kind as "kind: GameKind""#,
+            r#"DELETE FROM games WHERE id = $1 RETURNING id, trophy_id, name, kind as "kind: GameKind", user_id"#,
             id
         )
         .fetch_one(&mut tx)

@@ -58,7 +58,7 @@ async fn find_game(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Respo
 #[put("/games/{id}")]
 async fn update_game(
     id: web::Path<i32>,
-    game: web::Json<Game>,
+    game: web::Json<CreateGame>,
     db_pool: web::Data<PgPool>,
 ) -> impl Responder {
     info!("Received new request: update game.");

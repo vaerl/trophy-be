@@ -8,6 +8,7 @@ POST {{BASE}}/games
 content-type: application/json
 
 {
+    "trophy_id": 1,
     "name": "asdf",
     "kind": "time"
 }
@@ -20,10 +21,10 @@ PUT {{BASE}}/games/1
 content-type: application/json
 
 {
-    "id": 2,
+    "trophy_id": 2,
     "name": "asdf2",
     "kind": "time"
 }
 
-### delete game with id 2
-DELETE http://127.0.0.1:8080/games/2
+### delete game with id 1
+DELETE http://127.0.0.1:8080/games/1
