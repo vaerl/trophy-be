@@ -55,7 +55,7 @@ async fn find_team(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Respo
 #[put("/teams/{id}")]
 async fn update_team(
     id: web::Path<i32>,
-    team: web::Json<Team>,
+    team: web::Json<CreateTeam>,
     db_pool: web::Data<PgPool>,
 ) -> impl Responder {
     info!("Received new request: update team.");

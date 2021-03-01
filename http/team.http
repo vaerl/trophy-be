@@ -1,6 +1,5 @@
 @BASE = http://127.0.0.1:8080
 
-
 ### get all teams
 GET {{BASE}}/teams
 
@@ -9,6 +8,7 @@ POST {{BASE}}/teams
 content-type: application/json
 
 {
+    "trophy_id": 1,
     "name": "test",
     "gender": "male"
 }
@@ -21,11 +21,10 @@ PUT http://127.0.0.1:8080/teams/1
 content-type: application/json
 
 {
-    "id": 2,
+    "trophy_id": 2,
     "name": "test2",
-    "gender": "female", 
-    "points": 0
+    "gender": "female"
 }
 
 ### delete team with id 2
-DELETE http://127.0.0.1:8080/teams/2
+DELETE http://127.0.0.1:8080/teams/1

@@ -1,6 +1,7 @@
 use crate::model::{Game, Outcome, ParsedOutcome, Team};
 use actix_files::NamedFile;
 use anyhow::{anyhow, Result};
+use futures::TryFutureExt;
 use sqlx::PgPool;
 use std::time::SystemTime;
 use xlsxwriter::*;
@@ -23,8 +24,14 @@ async fn evaluate_game(id: i32, pool: &PgPool) -> Result<()> {
         let game_kind = Game::find(id, pool).await?.kind;
         let (female, male) = Outcome::parse_by_gender(&game_kind, pool).await?;
 
-        Team::update_all(evaluate_team(female).await?, pool).await?;
-        Team::update_all(evaluate_team(male).await?, pool).await?;
+        // using for-loops allows using await and ?
+        for team in evaluate_team(female).await? {
+            Team::update_points(team, pool).await?;
+        }
+
+        for team in evaluate_team(male).await? {
+            Team::update_points(team, pool).await?;
+        }
 
         Ok(())
     }

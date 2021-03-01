@@ -21,6 +21,7 @@ pub struct User {
     pub session: String,
 }
 
+#[derive(Deserialize)]
 pub struct CreateUser {
     pub username: String,
     pub password: String,
@@ -31,13 +32,13 @@ pub struct CreateSession {}
 pub struct SessionInfo {}
 
 // TODO
-// 1) implement User: auth
-// 2) init Game with User, adjust game
-// 3) adjust game & team: trophy_id
-// 3) supply User-endpoints
-// 4) write user.http
-// 5) tests
-// 6) update /reset/database
+// - implement User: auth
+// - init Game with User, adjust game
+// - adjust game & team: trophy_id
+// - supply User-endpoints
+// - write user.http
+// - tests
+// - update /reset/database
 
 impl User {
     pub async fn find_all(pool: &PgPool) -> Result<Vec<User>> {
