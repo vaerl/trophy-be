@@ -1,3 +1,4 @@
+use actix_web::HttpRequest;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
@@ -32,9 +33,8 @@ pub struct CreateSession {}
 pub struct SessionInfo {}
 
 // TODO
-// - implement User: auth
-// - init Game with User, adjust game
-// - adjust game: trophy_id
+// - implement User: auth, hash pw
+// - improve error-handling: custom errors, check if they convert automatically when returning an error, use custom errors CURRENT
 // - supply User-endpoints
 // - write user.http
 // - tests
@@ -74,6 +74,7 @@ impl User {
     }
 
     pub async fn create(create_user: CreateUser, pool: &PgPool) -> Result<User> {
+        // TODO hash password
         if User::find_by_name(&create_user.username, pool)
             .await
             .is_err()
@@ -122,5 +123,28 @@ impl User {
 
         tx.commit().await?;
         Ok(user)
+    }
+
+    pub fn login() {}
+    pub fn logout() {}
+    pub fn generate_session() {}
+    pub fn is_valid_session() {}
+
+    pub async fn from_request(request: &HttpRequest, pool: &PgPool) -> Result<User> {
+        // let authen_header = match request.headers().get("Authorization") {
+        //     Some(authen_header) => authen_header,
+        //     None => {
+        //         return Err();
+        //     }
+        // };
+        // let authen_str = authen_header.to_str()?;
+        // if !authen_str.starts_with("bearer") && !authen_str.starts_with("Bearer") {
+        //     return Err();
+        // }
+        // let raw_token = authen_str[6..authen_str.len()].trim();
+        // let token = UserToken::decode_token(raw_token.to_string())?;
+        // let uid = token.uid;
+        // Ok(uid)
+        todo!()
     }
 }
