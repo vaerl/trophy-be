@@ -1,7 +1,7 @@
 @BASE = http://127.0.0.1:8080
 
-### get index -> endpoint-overview
-GET {{BASE}}/
+### ping
+GET {{BASE}}/ping
 
 ### reset the database
 POST {{BASE}}/reset/database
