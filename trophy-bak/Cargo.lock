@@ -1264,6 +1264,7 @@ dependencies = [
  "actix-web",
  "anyhow",
  "argon2",
+ "derive_more",
  "dotenv",
  "env_logger 0.8.2",
  "futures",

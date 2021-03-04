@@ -1,11 +1,15 @@
 use actix_web::{dev::HttpResponseBuilder, error, http::header, http::StatusCode, HttpResponse};
 use derive_more::{Display, Error};
 
+/// This enables me to simply call err.error_response() on errors, so all errors
+/// have the correct status-codes.
+
 #[derive(Debug, Display, Error)]
-enum DataBaseError {
-    NotFoundError { field: String },
-    UpdateError { field: String },
-    DeletionError { field: String },
+pub enum DataBaseError {
+    NotFoundError { message: String },
+    // Since sqlx does not differentiate between different database-errors and there are
+    // not enough status-codes, I'm not differentiating here.
+    CatchAllError { message: String },
 }
 
 impl error::ResponseError for DataBaseError {
@@ -17,15 +21,29 @@ impl error::ResponseError for DataBaseError {
     fn status_code(&self) -> StatusCode {
         match *self {
             DataBaseError::NotFoundError { .. } => StatusCode::NOT_FOUND,
-            DataBaseError::UpdateError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
-            DataBaseError::DeletionError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            DataBaseError::CatchAllError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+}
+
+impl From<sqlx::Error> for DataBaseError {
+    fn from(err: sqlx::Error) -> DataBaseError {
+        match err {
+            sqlx::Error::RowNotFound | sqlx::Error::ColumnNotFound(_) => {
+                DataBaseError::NotFoundError {
+                    message: err.to_string(),
+                }
+            }
+            _ => DataBaseError::CatchAllError {
+                message: err.to_string(),
+            },
         }
     }
 }
 
 #[derive(Debug, Display, Error)]
-enum EvaluationError {
-    EarlyEvaluation { field: String },
+pub enum EvaluationError {
+    EarlyEvaluationError { field: String },
 }
 
 impl error::ResponseError for EvaluationError {
@@ -34,16 +52,17 @@ impl error::ResponseError for EvaluationError {
             .set_header(header::CONTENT_TYPE, "text/html; charset=utf-8")
             .body(self.to_string())
     }
+
     fn status_code(&self) -> StatusCode {
         match *self {
             // 425 -> too early, experimental API!
-            EvaluationError::EarlyEvaluation { .. } => StatusCode::from_u16(425).unwrap(),
+            EvaluationError::EarlyEvaluationError { .. } => StatusCode::from_u16(425).unwrap(),
         }
     }
 }
 
 #[derive(Debug, Display, Error)]
-enum AuthenticationError {
+pub enum AuthenticationError {
     NoTokenError { field: String },
     AccessDeniedError { field: String },
 }

@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate log;
+extern crate derive_more;
 
 use actix_web::{error, web, App, HttpResponse, HttpServer};
 use anyhow::Result;
