@@ -7,4 +7,8 @@
 
 ## Documentation
 
-- currently, there is no Swagger-Doc-Support(or similar) readily available -> CHECK in some months
+There is no Swagger-Doc-Support(or similar) readily available for rust.
+
+## Error-Handling
+
+Errors are propagated using the `anyhow`-crate. This allows to automatically cast to custom errors which implement `actix_web`'s `error::ResponseError`. This in turn allows just returning a result of type `Result<T, impl ResponseError>` for simple types or calling `err.error_response()` in a `match` for complex types.
