@@ -15,10 +15,8 @@ mod routes;
 // TODO improve error-handling in routes
 // TODO use custom errors?
 
-// TODO routes: user, ping
-// -> ping should live in misc
-// TODO think about removing /
-// -> the api-doc lives in ./http!
+// TODO routes: user
+
 // TODO log transactions in the transaction table
 // - maybe use services
 

@@ -1,10 +1,10 @@
-use actix_web::{get, put, web, HttpResponse, Responder};
+use actix_web::{get, put, web, HttpResponse, Responder, ResponseError};
 use sqlx::PgPool;
 
 use crate::model::Outcome;
 
-// This module provides all routes concerning outcomes.
-// As the name Result was already taken by anyhow, I'm using outcome.
+/// This module provides all routes concerning outcomes.
+/// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
 
 #[get("/outcomes")]
 async fn find_all_outcomes(db_pool: web::Data<PgPool>) -> impl Responder {
@@ -12,23 +12,14 @@ async fn find_all_outcomes(db_pool: web::Data<PgPool>) -> impl Responder {
     let result = Outcome::find_all(db_pool.get_ref()).await;
     match result {
         Ok(outcomes) => HttpResponse::Ok().json(outcomes),
-        Err(err) => HttpResponse::BadRequest().body(format!(
-            "Error trying to read all outcomes from database: {}",
-            err
-        )),
+        Err(err) => err.error_response(),
     }
 }
 
 #[put("/outcomes")]
 async fn create_outcome(outcome: web::Json<Outcome>, db_pool: web::Data<PgPool>) -> impl Responder {
     info!("Received new request: update outcome.");
-    let result = Outcome::update(outcome.into_inner(), db_pool.get_ref()).await;
-    match result {
-        Ok(outcome) => HttpResponse::Ok().json(outcome),
-        Err(err) => {
-            HttpResponse::BadRequest().body(format!("Error trying to create outcome: {}", err))
-        }
-    }
+    Outcome::update(outcome.into_inner(), db_pool.get_ref()).await
 }
 
 #[get("/outcomes/teams/{id}")]
@@ -40,10 +31,7 @@ async fn find_all_outcomes_for_team(
     let result = Outcome::find_all_for_team(team_id.into_inner(), db_pool.get_ref()).await;
     match result {
         Ok(outcomes) => HttpResponse::Ok().json(outcomes),
-        Err(err) => HttpResponse::BadRequest().body(format!(
-            "Error trying to read all outcomes for team: {}",
-            err
-        )),
+        Err(err) => err.error_response(),
     }
 }
 
@@ -56,10 +44,7 @@ async fn find_all_outcomes_for_game(
     let result = Outcome::find_all_for_game(game_id.into_inner(), db_pool.get_ref()).await;
     match result {
         Ok(outcomes) => HttpResponse::Ok().json(outcomes),
-        Err(err) => HttpResponse::BadRequest().body(format!(
-            "Error trying to read all outcomes for game: {}",
-            err
-        )),
+        Err(err) => err.error_response(),
     }
 }
 

@@ -11,3 +11,5 @@ pub use outcome::*;
 pub use parsed_outcome::*;
 pub use team::*;
 pub use user::*;
+
+pub type DbResult<T> = Result<T, DataBaseError>;

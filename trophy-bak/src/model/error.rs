@@ -1,5 +1,8 @@
+use std::num::ParseIntError;
+
 use actix_web::{dev::HttpResponseBuilder, error, http::header, http::StatusCode, HttpResponse};
 use derive_more::{Display, Error};
+use xlsxwriter::XlsxError;
 
 /// This enables me to simply call err.error_response() on errors, so all errors
 /// have the correct status-codes.
@@ -41,9 +44,27 @@ impl From<sqlx::Error> for DataBaseError {
     }
 }
 
+impl From<humantime::DurationError> for DataBaseError {
+    fn from(err: humantime::DurationError) -> DataBaseError {
+        DataBaseError::CatchAllError {
+            message: err.to_string(),
+        }
+    }
+}
+
+impl From<std::num::ParseIntError> for DataBaseError {
+    fn from(err: std::num::ParseIntError) -> DataBaseError {
+        DataBaseError::CatchAllError {
+            message: err.to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Display, Error)]
 pub enum EvaluationError {
-    EarlyEvaluationError { field: String },
+    EarlyEvaluationError { message: String },
+    DataBaseError { message: String },
+    XlsxError { message: String },
 }
 
 impl error::ResponseError for EvaluationError {
@@ -57,14 +78,40 @@ impl error::ResponseError for EvaluationError {
         match *self {
             // 425 -> too early, experimental API!
             EvaluationError::EarlyEvaluationError { .. } => StatusCode::from_u16(425).unwrap(),
+            EvaluationError::DataBaseError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            EvaluationError::XlsxError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+}
+
+impl From<DataBaseError> for EvaluationError {
+    fn from(err: DataBaseError) -> EvaluationError {
+        EvaluationError::DataBaseError {
+            message: err.to_string(),
+        }
+    }
+}
+
+impl From<XlsxError> for EvaluationError {
+    fn from(err: XlsxError) -> EvaluationError {
+        EvaluationError::XlsxError {
+            message: err.to_string(),
+        }
+    }
+}
+
+impl From<std::io::Error> for EvaluationError {
+    fn from(err: std::io::Error) -> EvaluationError {
+        EvaluationError::XlsxError {
+            message: err.to_string(),
         }
     }
 }
 
 #[derive(Debug, Display, Error)]
 pub enum AuthenticationError {
-    NoTokenError { field: String },
-    AccessDeniedError { field: String },
+    NoTokenError { message: String },
+    AccessDeniedError { message: String },
 }
 
 impl error::ResponseError for AuthenticationError {

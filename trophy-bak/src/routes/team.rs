@@ -1,4 +1,4 @@
-use actix_web::{delete, get, post, put, web, HttpResponse, Responder};
+use actix_web::{delete, get, post, put, web, HttpResponse, Responder, ResponseError};
 use sqlx::PgPool;
 
 use crate::model::{CreateTeam, Team};
@@ -9,10 +9,7 @@ async fn find_all_teams(db_pool: web::Data<PgPool>) -> impl Responder {
     let result = Team::find_all(db_pool.get_ref()).await;
     match result {
         Ok(teams) => HttpResponse::Ok().json(teams),
-        Err(err) => HttpResponse::BadRequest().body(format!(
-            "Error trying to read all teams from database: {}",
-            err
-        )),
+        Err(err) => err.error_response(),
     }
 }
 
@@ -22,8 +19,7 @@ async fn teams_amount(db_pool: web::Data<PgPool>) -> impl Responder {
     let result = Team::amount(db_pool.get_ref()).await;
     match result {
         Ok(amount) => HttpResponse::Ok().json(amount),
-        Err(err) => HttpResponse::BadRequest()
-            .body(format!("Error trying to get the amount of teams: {}", err)),
+        Err(err) => err.error_response(),
     }
 }
 
@@ -33,23 +29,13 @@ async fn create_team(
     db_pool: web::Data<PgPool>,
 ) -> impl Responder {
     info!("Received new request: create team.");
-    let result = Team::create(create_team.into_inner(), db_pool.get_ref()).await;
-    match result {
-        Ok(team) => HttpResponse::Ok().json(team),
-        Err(err) => {
-            HttpResponse::BadRequest().body(format!("Error trying to create new team: {}", err))
-        }
-    }
+    Team::create(create_team.into_inner(), db_pool.get_ref()).await
 }
 
 #[get("/teams/{id}")]
 async fn find_team(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Responder {
     info!("Received new request: find team.");
-    let result = Team::find(id.into_inner(), db_pool.get_ref()).await;
-    match result {
-        Ok(team) => HttpResponse::Ok().json(team),
-        Err(err) => HttpResponse::BadRequest().body(format!("Error trying to find team: {}", err)),
-    }
+    Team::find(id.into_inner(), db_pool.get_ref()).await
 }
 
 #[put("/teams/{id}")]
@@ -59,25 +45,13 @@ async fn update_team(
     db_pool: web::Data<PgPool>,
 ) -> impl Responder {
     info!("Received new request: update team.");
-    let result = Team::update(id.into_inner(), team.into_inner(), db_pool.get_ref()).await;
-    match result {
-        Ok(team) => HttpResponse::Ok().json(team),
-        Err(err) => {
-            HttpResponse::BadRequest().body(format!("Error trying to update team: {}", err))
-        }
-    }
+    Team::update(id.into_inner(), team.into_inner(), db_pool.get_ref()).await
 }
 
 #[delete("/teams/{id}")]
 async fn delete_team(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Responder {
     info!("Received new request: delete team.");
-    let result = Team::delete(id.into_inner(), db_pool.get_ref()).await;
-    match result {
-        Ok(team) => HttpResponse::Ok().json(team),
-        Err(err) => {
-            HttpResponse::BadRequest().body(format!("Error trying to delete team: {}", err))
-        }
-    }
+    Team::delete(id.into_inner(), db_pool.get_ref()).await
 }
 
 #[get("/teams/{id}/pending")]
@@ -86,9 +60,7 @@ async fn pending_games(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl R
     let result = Team::pending_games(id.into_inner(), db_pool.get_ref()).await;
     match result {
         Ok(games) => HttpResponse::Ok().json(games),
-        Err(err) => {
-            HttpResponse::BadRequest().body(format!("Error trying to find pending games: {}", err))
-        }
+        Err(err) => err.error_response(),
     }
 }
 
@@ -97,11 +69,8 @@ async fn pending_games_amount(id: web::Path<i32>, db_pool: web::Data<PgPool>) ->
     info!("Received new request: get the amount of pending teams for game");
     let result = Team::pending_games_amount(id.into_inner(), db_pool.get_ref()).await;
     match result {
-        Ok(games) => HttpResponse::Ok().json(games),
-        Err(err) => HttpResponse::BadRequest().body(format!(
-            "Error trying to get the amount of pending games: {}",
-            err
-        )),
+        Ok(size) => HttpResponse::Ok().json(size),
+        Err(err) => err.error_response(),
     }
 }
 
@@ -111,9 +80,7 @@ async fn finished_games(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl 
     let result = Team::finished_games(id.into_inner(), db_pool.get_ref()).await;
     match result {
         Ok(games) => HttpResponse::Ok().json(games),
-        Err(err) => {
-            HttpResponse::BadRequest().body(format!("Error trying to find finished games: {}", err))
-        }
+        Err(err) => err.error_response(),
     }
 }
 

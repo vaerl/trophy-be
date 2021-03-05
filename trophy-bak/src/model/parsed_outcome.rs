@@ -1,4 +1,4 @@
-use super::{GameKind, Outcome, Team};
+use super::{DataBaseError, DbResult, GameKind, Outcome, Team};
 use anyhow::Result;
 use humantime::parse_duration;
 use sqlx::PgPool;
@@ -21,7 +21,7 @@ impl ParsedOutcome {
         game_kind: &GameKind,
         outcome: Outcome,
         pool: &PgPool,
-    ) -> Result<ParsedOutcome> {
+    ) -> Result<ParsedOutcome, DataBaseError> {
         let value: Value = match game_kind {
             super::GameKind::Points => Value::Time(outcome.data.unwrap().parse::<i32>()?),
             super::GameKind::Time => Value::Points(parse_duration(&outcome.data.unwrap())?),

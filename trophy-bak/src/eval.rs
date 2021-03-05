@@ -1,35 +1,36 @@
-use crate::model::{Game, Outcome, ParsedOutcome, Team};
+use crate::model::{EvaluationError, Game, Outcome, ParsedOutcome, Team};
 use actix_files::NamedFile;
-use anyhow::{anyhow, Result};
-use futures::TryFutureExt;
+use anyhow::Result;
 use sqlx::PgPool;
 use std::time::SystemTime;
 use xlsxwriter::*;
 
 const MAX_POINTS: i32 = 50;
 
-pub async fn evaluate_trophy(pool: &PgPool) -> Result<()> {
+pub async fn evaluate_trophy(pool: &PgPool) -> Result<(), EvaluationError> {
     for game in Game::find_all(pool).await? {
         evaluate_game(game.id, pool).await?;
     }
     Ok(())
 }
 
-async fn evaluate_game(id: i32, pool: &PgPool) -> Result<()> {
+async fn evaluate_game(id: i32, pool: &PgPool) -> Result<(), EvaluationError> {
     let pending_amount = Game::pending_teams_amount(id, pool).await?;
     if pending_amount > 0 {
-        // Don't evaluate when teams are still playing - this should never happen.
-        Err(anyhow!("Tried to evaluate while teams are still playing!"))
+        // Don't evaluate when teams are still playing - this should never happen!
+        Err(EvaluationError::EarlyEvaluationError {
+            message: "Tried to evaluate while teams are still playing!".to_string(),
+        })
     } else {
         let game_kind = Game::find(id, pool).await?.kind;
         let (female, male) = Outcome::parse_by_gender(&game_kind, pool).await?;
 
         // using for-loops allows using await and ?
-        for team in evaluate_team(female).await? {
+        for team in evaluate_team(female).await {
             Team::update_points(team, pool).await?;
         }
 
-        for team in evaluate_team(male).await? {
+        for team in evaluate_team(male).await {
             Team::update_points(team, pool).await?;
         }
 
@@ -37,7 +38,7 @@ async fn evaluate_game(id: i32, pool: &PgPool) -> Result<()> {
     }
 }
 
-async fn evaluate_team(mut team: Vec<ParsedOutcome>) -> Result<Vec<Team>> {
+async fn evaluate_team(mut team: Vec<ParsedOutcome>) -> Vec<Team> {
     let mut current_points = MAX_POINTS;
 
     team.sort_by(|a, b| a.value.cmp(&b.value));
@@ -48,10 +49,10 @@ async fn evaluate_team(mut team: Vec<ParsedOutcome>) -> Result<Vec<Team>> {
             current_points -= 1;
         }
     }
-    Ok(team.into_iter().map(|e| e.team).collect())
+    team.into_iter().map(|e| e.team).collect()
 }
 
-pub async fn create_xlsx_file(pool: &PgPool) -> Result<NamedFile> {
+pub async fn create_xlsx_file(pool: &PgPool) -> Result<NamedFile, EvaluationError> {
     // this path uses a timestamp to distinguish between versions
     let path = "./static/results-".to_owned()
         + &humantime::format_rfc3339_seconds(SystemTime::now()).to_string()
@@ -68,7 +69,7 @@ pub async fn create_xlsx_file(pool: &PgPool) -> Result<NamedFile> {
     Ok(NamedFile::open(path)?)
 }
 
-async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> Result<()> {
+async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> Result<(), EvaluationError> {
     // create fonts
     let heading = workbook.add_format().set_bold().set_font_size(20.0);
     let values = workbook.add_format().set_font_size(12.0);

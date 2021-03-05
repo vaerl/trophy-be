@@ -1,6 +1,8 @@
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpResponse, Responder, ResponseError};
 use anyhow::Result;
 use sqlx::{Error, PgPool};
+
+use crate::model::DataBaseError;
 
 #[get("/ping")]
 async fn ping() -> impl Responder {
@@ -15,13 +17,11 @@ async fn reset_database(db_pool: web::Data<PgPool>) -> impl Responder {
     warn!("Received new request: reset database.");
     match reset_database_wrapper(db_pool.get_ref()).await {
         Ok(()) => HttpResponse::Ok().body("Successfully reset database."),
-        Err(err) => {
-            HttpResponse::BadRequest().body(format!("Error trying to reset database: {}", err))
-        }
+        Err(err) => err.error_response(),
     }
 }
 
-async fn reset_database_wrapper(pool: &PgPool) -> Result<(), Error> {
+async fn reset_database_wrapper(pool: &PgPool) -> Result<(), DataBaseError> {
     // This is a wrapper-function for resetting the database as I wanted to use await
     // (which is only possible when Returning an Result).
     let mut tx = pool.begin().await?;
@@ -30,7 +30,7 @@ async fn reset_database_wrapper(pool: &PgPool) -> Result<(), Error> {
         .await?;
     sqlx::query("DELETE FROM game").execute(&mut tx).await?;
     sqlx::query("DELETE FROM team").execute(&mut tx).await?;
-    tx.commit().await
+    Ok(tx.commit().await?)
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {
