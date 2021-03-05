@@ -12,9 +12,6 @@ mod eval;
 mod model;
 mod routes;
 
-// TODO improve error-handling in routes
-// TODO use custom errors?
-
 // TODO routes: user
 
 // TODO log transactions in the transaction table

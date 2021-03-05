@@ -1,4 +1,6 @@
-use actix_web::{dev::HttpResponseBuilder, error, http::header, http::StatusCode, HttpResponse};
+use actix_web::{
+    dev::HttpResponseBuilder, error, guard::Head, http::header, http::StatusCode, HttpResponse,
+};
 use derive_more::{Display, Error};
 use xlsxwriter::XlsxError;
 
@@ -11,6 +13,7 @@ pub enum DataBaseError {
     // Since sqlx does not differentiate between different database-errors and there are
     // not enough status-codes, I'm not differentiating here.
     CatchAllError { message: String },
+    AlreadyExistsError { message: String },
 }
 
 impl error::ResponseError for DataBaseError {
@@ -22,6 +25,7 @@ impl error::ResponseError for DataBaseError {
     fn status_code(&self) -> StatusCode {
         match *self {
             DataBaseError::NotFoundError { .. } => StatusCode::NOT_FOUND,
+            DataBaseError::AlreadyExistsError { .. } => StatusCode::BAD_REQUEST,
             DataBaseError::CatchAllError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
@@ -122,6 +126,14 @@ impl error::ResponseError for AuthenticationError {
         match *self {
             AuthenticationError::NoTokenError { .. } => StatusCode::UNAUTHORIZED,
             AuthenticationError::AccessDeniedError { .. } => StatusCode::FORBIDDEN,
+        }
+    }
+}
+
+impl From<actix_web::http::header::ToStrError> for AuthenticationError {
+    fn from(err: actix_web::http::header::ToStrError) -> AuthenticationError {
+        AuthenticationError::NoTokenError {
+            message: err.to_string(),
         }
     }
 }
