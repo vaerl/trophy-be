@@ -4,7 +4,7 @@ use futures::{Future, future::{ready, Ready}};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use super::{DataBaseError, DbResult, GameKind, ParsedOutcome, TeamGender};
+use super::{DataBaseError, GameKind, ParsedOutcome, TeamGender};
 
 
 

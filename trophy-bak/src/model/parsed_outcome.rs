@@ -1,4 +1,4 @@
-use super::{DataBaseError, DbResult, GameKind, Outcome, Team};
+use super::{DataBaseError, GameKind, Outcome, Team};
 use anyhow::Result;
 use humantime::parse_duration;
 use sqlx::PgPool;

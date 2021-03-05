@@ -1,6 +1,6 @@
 use actix_web::{get, post, web, HttpResponse, Responder, ResponseError};
 use anyhow::Result;
-use sqlx::{Error, PgPool};
+use sqlx::PgPool;
 
 use crate::model::DataBaseError;
 
