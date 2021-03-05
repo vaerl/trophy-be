@@ -1,5 +1,7 @@
 use actix_web::HttpRequest;
 use anyhow::{anyhow, Result};
+use argon2::{Argon2, PasswordHasher, password_hash::SaltString};
+use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
@@ -35,7 +37,7 @@ pub struct CreateSession {}
 pub struct SessionInfo {}
 
 // TODO
-// - implement User: auth, hash pw
+// - implement User: auth
 // - supply User-endpoints
 // - write user.http
 // - tests
@@ -75,15 +77,18 @@ impl User {
     }
 
     pub async fn create(create_user: CreateUser, pool: &PgPool) -> Result<User, DataBaseError> {
-        // TODO hash password
         if User::find_by_name(&create_user.username, pool)
             .await
             .is_err()
         {
+            let salt = SaltString::generate(&mut OsRng);
+            let argon2 = Argon2::default();
+            let password_hash = argon2.hash_password_simple(&create_user.password.as_bytes(), salt.as_ref()).unwrap().to_string();
+
             let mut tx = pool.begin().await?;
             let user = sqlx::query_as!( User, 
                 r#"INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id, username, password, role as "role: UserRole", session"#,
-                create_user.username, create_user.password,  create_user.role as UserRole
+                create_user.username, password_hash,  create_user.role as UserRole
             )
             .fetch_one(&mut tx)
             .await?;
