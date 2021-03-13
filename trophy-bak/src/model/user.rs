@@ -41,7 +41,7 @@ pub struct CreateLogin {
 
 
 // TODO
-// - implement User: auth CHECK
+// - implement User: CHECK functionality when api is accessible
 // - use thiserror for errors -> should provide default-messages
 // - supply User-endpoints
 // - write user.http

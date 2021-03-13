@@ -1,17 +1,20 @@
 use actix_web::{dev::HttpResponseBuilder, error, http::header, http::StatusCode, HttpResponse};
 use argon2::password_hash::HashError;
-use derive_more::{Display, Error};
+use thiserror::Error;
 use xlsxwriter::XlsxError;
 
 /// This enables me to simply call err.error_response() on errors, so all errors
 /// have the correct status-codes.
 
-#[derive(Debug, Display, Error)]
+#[derive(Debug, Error)]
 pub enum DataBaseError {
+    #[error("The requested resource could not be found: {message}")]
     NotFoundError { message: String },
     // Since sqlx does not differentiate between different database-errors and there are
     // not enough status-codes, I'm not differentiating here.
+    #[error("An error occurred while interacting with the database: {message}")]
     CatchAllError { message: String },
+    #[error("The resource already exists: {message}")]
     AlreadyExistsError { message: String },
 }
 
@@ -61,10 +64,13 @@ impl From<std::num::ParseIntError> for DataBaseError {
     }
 }
 
-#[derive(Debug, Display, Error)]
+#[derive(Debug, Error)]
 pub enum EvaluationError {
+    #[error("You tried to evaluate while teams are still playing: {message}")]
     EarlyEvaluationError { message: String },
+    #[error("A database-error occurred: {message}")]
     DataBaseError { message: String },
+    #[error("An error occurred while creating the excel-file: {message}")]
     XlsxError { message: String },
 }
 
@@ -109,11 +115,15 @@ impl From<std::io::Error> for EvaluationError {
     }
 }
 
-#[derive(Debug, Display, Error)]
+#[derive(Debug, Error)]
 pub enum AuthenticationError {
+    #[error("The request did not contain an access-token: {message}")]
     NoTokenError { message: String },
+    #[error("You are not allowed to access this resource")]
     AccessDeniedError { message: String },
+    #[error("A database-error occurred: {message}")]
     DataBaseError { message: String },
+    #[error("The provided password was empty or wrong: {message}")]
     BadPasswordError { message: String },
 }
 

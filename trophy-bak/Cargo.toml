@@ -13,7 +13,7 @@ dotenv = "0.15.0"
 futures = "0.3"
 humantime = "2.1.0"
 xlsxwriter = "0.3"
-derive_more = "0.99"
+thiserror = "1.0"
 # logging
 env_logger = "0.8.2"
 log = "0.4"
