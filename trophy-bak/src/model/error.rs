@@ -125,6 +125,8 @@ pub enum AuthenticationError {
     DataBaseError { message: String },
     #[error("The provided password was empty or wrong: {message}")]
     BadPasswordError { message: String },
+    #[error("You must log in first!")]
+    UnauthorizedError,
 }
 
 impl error::ResponseError for AuthenticationError {
@@ -140,6 +142,7 @@ impl error::ResponseError for AuthenticationError {
             AuthenticationError::AccessDeniedError { .. } => StatusCode::FORBIDDEN,
             AuthenticationError::DataBaseError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
             AuthenticationError::BadPasswordError { .. } => StatusCode::BAD_REQUEST,
+            AuthenticationError::UnauthorizedError => StatusCode::UNAUTHORIZED,
         }
     }
 }

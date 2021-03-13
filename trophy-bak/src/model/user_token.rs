@@ -14,8 +14,9 @@ static TWO_HOURS: i64 = 60 * 2 * 24;
 
 #[derive(Serialize, Deserialize)]
 pub struct UserToken {
-    pub issued_at: i64,
-    pub expiration: i64,
+    // iat- and exp-names are required by jsonwebtoken!
+    pub iat: i64,
+    pub exp: i64,
     pub user_id: i32,
     pub login_session: String,
 }
@@ -37,8 +38,8 @@ impl UserToken {
         };
 
         let payload = UserToken {
-            issued_at: now,
-            expiration,
+            iat: now,
+            exp: expiration,
             user_id: login.user_id,
             login_session: login.session.clone(),
         };
@@ -62,6 +63,8 @@ impl UserToken {
 
     pub fn is_valid(&self) -> bool {
         let now = Utc::now().timestamp();
-        now < self.expiration
+        info!("NOW: {}", now);
+        info!("SELF: {}", self.exp);
+        now < self.exp
     }
 }

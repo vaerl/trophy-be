@@ -1,6 +1,7 @@
-use actix_web::HttpRequest;
+use actix_web::{Error, HttpRequest, HttpResponse, Responder};
 use anyhow::{Result};
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
+use futures::future::{Ready, ready};
 use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
@@ -34,6 +35,7 @@ pub struct CreateUser {
     pub role: UserRole
 }
 
+#[derive(Deserialize)]
 pub struct CreateLogin {
     pub username: String,
     pub password: String
@@ -42,14 +44,26 @@ pub struct CreateLogin {
 
 // TODO
 // - implement User: CHECK functionality when api is accessible
-// - use thiserror for errors -> should provide default-messages
-// - supply User-endpoints
 // - write user.http
-// - start checks
+// - merge branch
+// - start checks in services
 //      - authentication -> pass method and allowed roles to service to check
 //      - logs -> log transaction; from auth_service?
 // - tests
 // - update /reset/database
+
+impl Responder for User {
+    type Error = Error;
+    type Future = Ready<Result<HttpResponse, Error>>;
+
+    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
+        let body = serde_json::to_string(&self).unwrap();
+        // create response and set content type
+        ready(Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(body)))
+    }
+}
 
 impl User {
     pub async fn find_all(pool: &PgPool) -> Result<Vec<User>, DataBaseError> {
@@ -74,7 +88,7 @@ impl User {
         Ok(user)
     }
 
-    pub async fn find_by_name(name: &String, pool: &PgPool) -> Result<User, DataBaseError> {
+    async fn find_by_name(name: &String, pool: &PgPool) -> Result<User, DataBaseError> {
         let users = User::find_all(pool).await?;
         for user in users {
             if user.username.eq(name) {
@@ -122,14 +136,13 @@ impl User {
         Ok(user)
     }
 
-    pub async fn update_session(id: i32, session: &String, pool: &PgPool) -> Result<(), DataBaseError> {
+    async fn update_session(id: i32, session: &String, pool: &PgPool) -> Result<(), DataBaseError> {
         let mut tx = pool.begin().await?;
-        let user = sqlx::query_as!(
+        sqlx::query_as!(
             User, 
             r#"UPDATE users SET session = $1 WHERE id = $2"#,
             session, id
-        )
-        .fetch_one(&mut tx)
+        ).execute(&mut tx)
         .await?;
         tx.commit().await?;
 
@@ -156,7 +169,7 @@ impl User {
 
         let password_hash = PasswordHash::new(&user.password)?;
 
-        if !user.password.is_empty() || argon2.verify_password(login.password.as_bytes(), &password_hash).is_err() {
+        if user.password.is_empty() || argon2.verify_password(login.password.as_bytes(), &password_hash).is_err() {
             return Err(AuthenticationError::BadPasswordError {message: "Token is invalid!".to_string()});
         } else {
             let session = User::generate_session();
@@ -173,6 +186,8 @@ impl User {
         Uuid::new_v4().to_simple().to_string()
     }
 
+    /// Extracts a User from a HttpRequest using a JSON-webtoken.
+    /// Succeeds, when: a) the provided token is not expired and b) the user is logged in. 
     pub async fn from_request(request: &HttpRequest, pool: &PgPool) -> Result<User, AuthenticationError> {
         let authn_header = match request.headers().get("Authorization") {
             Some(authn_header) => authn_header,
@@ -190,10 +205,19 @@ impl User {
             });
         }
         let raw_token = authn_str[6..authn_str.len()].trim();
+        info!("RAW TOKEN: {}", raw_token);
         let token = UserToken::decode_token(raw_token.to_string())?;
+
+        // 1: check if supplied token is valid
         if token.is_valid() {
             let user = Self::find(token.user_id, pool).await?;
-            Ok(user)
+
+            // 2: check if user is logged in
+            if user.session.is_empty() {
+                return Err(AuthenticationError::UnauthorizedError);
+            } else {
+                Ok(user)
+            }
         } else {
             Err(AuthenticationError::NoTokenError {message: "Token is invalid!".to_string()})
         }

@@ -1,10 +1,11 @@
+use actix_web::web;
+
 mod eval;
 mod game;
 mod misc;
 mod outcome;
 mod team;
-
-use actix_web::web;
+mod user;
 
 pub fn init(cfg: &mut web::ServiceConfig) {
     misc::init(cfg);
@@ -12,4 +13,5 @@ pub fn init(cfg: &mut web::ServiceConfig) {
     team::init(cfg);
     outcome::init(cfg);
     eval::init(cfg);
+    user::init(cfg);
 }
