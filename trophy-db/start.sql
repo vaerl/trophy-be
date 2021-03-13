@@ -20,7 +20,7 @@ CREATE TYPE user_role AS ENUM ('admin', 'referee', 'visualizer');
 CREATE TABLE users (
     id serial PRIMARY KEY NOT NULL,
     username varchar (50) NOT NULL,
-    password varchar (50) NOT NULL,
+    password varchar NOT NULL,
     role user_role NOT NULL,
     session varchar NOT NULL DEFAULT ''
 );
