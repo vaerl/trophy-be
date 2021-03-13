@@ -1,0 +1,17 @@
+@BASE = http://127.0.0.1:8080
+
+# TODO check how I can assign to TOKEN?
+@TOKEN = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MTU2NzQ2NjAsImV4cCI6MTYxNTY3NzU0MCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6ImMzNDM4MDIzYjZkOTQ4NmY5YjJkNTRkODM4NGVjZWQ2In0.dKGsgOxYijGurTXlCWHEkhuXKMVOB5l3vHCrJKInqEQ
+
+### log in -> get token
+POST {{BASE}}/login
+Content-Type: application/json
+
+{
+    "username": "lukas",
+    "password": "test"
+}
+
+### log out
+POST {{BASE}}/logout
+Authorization: bearer {{TOKEN}}

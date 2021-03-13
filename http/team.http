@@ -5,7 +5,7 @@ GET {{BASE}}/teams
 
 ### add new team
 POST {{BASE}}/teams
-content-type: application/json
+Content-Type: : application/json
 
 {
     "trophy_id": 1,
@@ -18,7 +18,7 @@ GET {{BASE}}/teams/1
 
 ### update team with id 1
 PUT http://127.0.0.1:8080/teams/1
-content-type: application/json
+Content-Type: application/json
 
 {
     "trophy_id": 2,

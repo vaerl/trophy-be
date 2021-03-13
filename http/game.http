@@ -5,7 +5,7 @@ GET {{BASE}}/games
 
 ### create a new game
 POST {{BASE}}/games
-content-type: application/json
+Content-Type: application/json
 
 {
     "trophy_id": 1,
@@ -18,7 +18,7 @@ GET {{BASE}}/games/1
 
 ### update game with id 1
 PUT {{BASE}}/games/1
-content-type: application/json
+Content-Type: application/json
 
 {
     "trophy_id": 2,

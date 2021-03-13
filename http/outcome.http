@@ -5,7 +5,7 @@ GET {{BASE}}/outcomes
 
 ### update outcome
 PUT {{BASE}}/outcomes 
-content-type: application/json
+Content-Type: application/json
 
 {
     "game_id": 4,
