@@ -1,11 +1,12 @@
 use actix_web::HttpRequest;
-use anyhow::{anyhow, Result};
-use argon2::{Argon2, PasswordHasher, password_hash::SaltString};
+use anyhow::{Result};
+use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
 use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
+use uuid::Uuid;
 
-use super::{AuthenticationError, DataBaseError};
+use super::{AuthenticationError, CreateToken, DataBaseError, UserToken};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(rename = "user_role")]
@@ -33,13 +34,21 @@ pub struct CreateUser {
     pub role: UserRole
 }
 
-pub struct CreateSession {}
-pub struct SessionInfo {}
+pub struct CreateLogin {
+    pub username: String,
+    pub password: String
+}
+
 
 // TODO
-// - implement User: auth
+// - implement User: auth CHECK
+// - initially create admin-user
+// - use thiserror for errors -> should provide default-messages
 // - supply User-endpoints
 // - write user.http
+// - start checks
+//      - authentication -> pass method and allowed roles to service to check
+//      - logs -> log transaction; from auth_service?
 // - tests
 // - update /reset/database
 
@@ -114,6 +123,20 @@ impl User {
         Ok(user)
     }
 
+    pub async fn update_session(id: i32, session: &String, pool: &PgPool) -> Result<(), DataBaseError> {
+        let mut tx = pool.begin().await?;
+        let user = sqlx::query_as!(
+            User, 
+            r#"UPDATE users SET session = $1 WHERE id = $2"#,
+            session, id
+        )
+        .fetch_one(&mut tx)
+        .await?;
+        tx.commit().await?;
+
+        Ok(())
+    }
+
     pub async fn delete(id: i32, pool: &PgPool) -> Result<User, DataBaseError> {
         let mut tx = pool.begin().await?;
         let user = sqlx::query_as!(
@@ -128,10 +151,28 @@ impl User {
         Ok(user)
     }
 
-    pub fn login() {}
-    pub fn logout() {}
-    pub fn generate_session() {}
-    pub fn is_valid_session() {}
+    pub async fn login(login: CreateLogin, pool: &PgPool) -> Result<String, AuthenticationError> {
+        let user = User::find_by_name(&login.username, pool).await?;
+        let argon2 = Argon2::default();
+
+        let password_hash = PasswordHash::new(&user.password)?;
+
+        if !user.password.is_empty() || argon2.verify_password(login.password.as_bytes(), &password_hash).is_err() {
+            return Err(AuthenticationError::BadPasswordError {message: "Token is invalid!".to_string()});
+        } else {
+            let session = User::generate_session();
+            User::update_session(user.id, &session, &pool).await?;
+            return Ok(UserToken::generate_token(&CreateToken {user_id: user.id, session}, user));
+        }
+    }
+
+    pub async fn logout(id: i32, pool: &PgPool) -> Result<(), DataBaseError> {
+        User::update_session(id, &"".to_string(), pool).await
+    }
+
+    pub fn generate_session() -> String {
+        Uuid::new_v4().to_simple().to_string()
+    }
 
     pub async fn from_request(request: &HttpRequest, pool: &PgPool) -> Result<User, AuthenticationError> {
         let authn_header = match request.headers().get("Authorization") {
@@ -150,8 +191,12 @@ impl User {
             });
         }
         let raw_token = authn_str[6..authn_str.len()].trim();
-        // let token = UserToken::decode_token(raw_token.to_string())?;
-        // Ok(token.uid)
-        todo!()
+        let token = UserToken::decode_token(raw_token.to_string())?;
+        if token.is_valid() {
+            let user = Self::find(token.user_id, pool).await?;
+            Ok(user)
+        } else {
+            Err(AuthenticationError::NoTokenError {message: "Token is invalid!".to_string()})
+        }
     }
 }

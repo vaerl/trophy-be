@@ -3,3 +3,4 @@
 db-data
 **/.env
 *.xlsx
+secret.key

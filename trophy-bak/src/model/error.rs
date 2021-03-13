@@ -1,6 +1,5 @@
-use actix_web::{
-    dev::HttpResponseBuilder, error, guard::Head, http::header, http::StatusCode, HttpResponse,
-};
+use actix_web::{dev::HttpResponseBuilder, error, http::header, http::StatusCode, HttpResponse};
+use argon2::password_hash::HashError;
 use derive_more::{Display, Error};
 use xlsxwriter::XlsxError;
 
@@ -114,6 +113,8 @@ impl From<std::io::Error> for EvaluationError {
 pub enum AuthenticationError {
     NoTokenError { message: String },
     AccessDeniedError { message: String },
+    DataBaseError { message: String },
+    BadPasswordError { message: String },
 }
 
 impl error::ResponseError for AuthenticationError {
@@ -122,10 +123,13 @@ impl error::ResponseError for AuthenticationError {
             .set_header(header::CONTENT_TYPE, "text/html; charset=utf-8")
             .body(self.to_string())
     }
+
     fn status_code(&self) -> StatusCode {
         match *self {
             AuthenticationError::NoTokenError { .. } => StatusCode::UNAUTHORIZED,
             AuthenticationError::AccessDeniedError { .. } => StatusCode::FORBIDDEN,
+            AuthenticationError::DataBaseError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            AuthenticationError::BadPasswordError { .. } => StatusCode::BAD_REQUEST,
         }
     }
 }
@@ -133,6 +137,30 @@ impl error::ResponseError for AuthenticationError {
 impl From<actix_web::http::header::ToStrError> for AuthenticationError {
     fn from(err: actix_web::http::header::ToStrError) -> AuthenticationError {
         AuthenticationError::NoTokenError {
+            message: err.to_string(),
+        }
+    }
+}
+
+impl From<jsonwebtoken::errors::Error> for AuthenticationError {
+    fn from(err: jsonwebtoken::errors::Error) -> AuthenticationError {
+        AuthenticationError::NoTokenError {
+            message: err.to_string(),
+        }
+    }
+}
+
+impl From<DataBaseError> for AuthenticationError {
+    fn from(err: DataBaseError) -> AuthenticationError {
+        AuthenticationError::DataBaseError {
+            message: err.to_string(),
+        }
+    }
+}
+
+impl From<HashError> for AuthenticationError {
+    fn from(err: HashError) -> AuthenticationError {
+        AuthenticationError::BadPasswordError {
             message: err.to_string(),
         }
     }

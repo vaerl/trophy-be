@@ -24,7 +24,7 @@ serde_json = "1.0"
 # NOTE upgrading to Tokio 1.2 is dependant on actix-4
 tokio = { version = "0.3.6", features = ["full"] }
 # database
-# NOTE upgrading to sqlx-0.5 introduces some changes, check cargo-output
+# NOTE upgrading to sqlx-0.5 introduces some changes, check cargo-output!
 sqlx = { version = "0.4.2", features = [ "runtime-tokio-rustls", "postgres" ] }
 # http
 actix-web = "3"
@@ -33,3 +33,5 @@ actix-files = "0.5"
 jsonwebtoken = "7.2.0"
 argon2 = "0.1"
 rand_core = { version = "0.6", features = ["std"] }
+chrono = "0.4"
+uuid = { version = "0.8", features = ["v4"] }
