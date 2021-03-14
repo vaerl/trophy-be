@@ -45,10 +45,10 @@ pub struct CreateLogin {
 // TODO
 // - unify names: eval-be or similar
 // - -> project, github, etc.
-// - merge branch
 // - start checks in services
 //      - authentication -> pass method and allowed roles to service to check
 //      - logs -> log transaction; from auth_service?
+// - merge branch
 // - tests
 // - update /reset/database
 

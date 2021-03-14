@@ -1,1 +1,1 @@
-docker run -p 8080:8080 --name trophy-bak -t trophy-bak
+docker run -p 8080:8080 --name trophy-be -t trophy-be
