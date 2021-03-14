@@ -43,8 +43,8 @@ pub struct CreateLogin {
 
 
 // TODO
-// - implement User: CHECK functionality when api is accessible
-// - write user.http
+// - unify names: eval-be or similar
+// - -> project, github, etc.
 // - merge branch
 // - start checks in services
 //      - authentication -> pass method and allowed roles to service to check
@@ -123,11 +123,16 @@ impl User {
     }
 
     pub async fn update(id: i32, altered_user: CreateUser, pool: &PgPool) -> Result<User, DataBaseError> {
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        let password_hash = argon2.hash_password_simple(&altered_user.password.as_bytes(), salt.as_ref()).unwrap().to_string();
+
+        
         let mut tx = pool.begin().await?;
         let user = sqlx::query_as!(
             User, 
             r#"UPDATE users SET username = $1, password = $2, role = $3 WHERE id = $4 RETURNING id, username, password, role as "role: UserRole", session"#,
-            altered_user.username, altered_user.password, altered_user.role as UserRole, id
+            altered_user.username, password_hash, altered_user.role as UserRole, id
         )
         .fetch_one(&mut tx)
         .await?;
