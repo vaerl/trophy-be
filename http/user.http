@@ -1,4 +1,5 @@
 @BASE = http://127.0.0.1:8080
+@ID = 2
 
 # TODO check how I can assign to TOKEN?
 @TOKEN = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MTU2NzQ2NjAsImV4cCI6MTYxNTY3NzU0MCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6ImMzNDM4MDIzYjZkOTQ4NmY5YjJkNTRkODM4NGVjZWQ2In0.dKGsgOxYijGurTXlCWHEkhuXKMVOB5l3vHCrJKInqEQ
@@ -15,3 +16,29 @@ Content-Type: application/json
 ### log out
 POST {{BASE}}/logout
 Authorization: bearer {{TOKEN}}
+
+### get all users
+GET {{BASE}}/users
+
+### get user
+GET {{BASE}}/users/{{ID}}
+
+### create new user
+POST {{BASE}}/users
+Content-Type: application/json
+
+{
+    "username": "lars",
+    "password": "asdf",
+    "role": "referee"
+}
+
+### update user
+PUT {{BASE}}/users/{{ID}}
+Content-Type: application/json
+
+{
+    "username": "lars",
+    "password": "hermann",
+    "role": "admin"
+}
