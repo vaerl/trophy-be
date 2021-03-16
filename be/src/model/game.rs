@@ -4,7 +4,7 @@ use futures::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use super::{DataBaseError, Outcome, Team};
+use super::{CustomError, Outcome, Team};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(rename = "game_kind")]
@@ -47,7 +47,7 @@ impl Responder for Game {
 
 impl Game {
 
-    pub async fn find_all(pool: &PgPool) -> Result<Vec<Game>, DataBaseError> {
+    pub async fn find_all(pool: &PgPool) -> Result<Vec<Game>, CustomError> {
         let games = sqlx::query_as!(
             Game,
             r#"SELECT id, trophy_id, name, kind as "kind: GameKind", user_id FROM games ORDER BY id"#
@@ -58,7 +58,7 @@ impl Game {
         Ok(games)
     }
 
-    pub async fn find(id: i32, pool: &PgPool) -> Result<Game, DataBaseError> {
+    pub async fn find(id: i32, pool: &PgPool) -> Result<Game, CustomError> {
         let game = sqlx::query_as!(
             Game,
             r#"SELECT id, trophy_id, name, kind as "kind: GameKind", user_id FROM games WHERE id = $1"#, id
@@ -69,7 +69,7 @@ impl Game {
         Ok(game)
     }
 
-    pub async fn create(create_game: CreateGame, pool: &PgPool) -> Result<Game, DataBaseError> {
+    pub async fn create(create_game: CreateGame, pool: &PgPool) -> Result<Game, CustomError> {
         let mut tx = pool.begin().await?;
         let game: Game = sqlx::query_as!(Game, 
             r#"INSERT INTO games (trophy_id, name, kind) VALUES ($1, $2, $3) RETURNING id, trophy_id, name, kind as "kind: GameKind", user_id"#,
@@ -87,7 +87,7 @@ impl Game {
         Ok(game)
     }
 
-    pub async fn update(id: i32, altered_game: CreateGame, pool: &PgPool) -> Result<Game, DataBaseError> {
+    pub async fn update(id: i32, altered_game: CreateGame, pool: &PgPool) -> Result<Game, CustomError> {
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!(
             Game, 
@@ -101,7 +101,7 @@ impl Game {
         Ok(game)
     }
 
-    pub async fn delete(id: i32, pool: &PgPool) -> Result<Game, DataBaseError> {
+    pub async fn delete(id: i32, pool: &PgPool) -> Result<Game, CustomError> {
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!(
             Game,
@@ -115,7 +115,7 @@ impl Game {
         Ok(game)
     }
 
-    pub async fn pending_teams(id: i32, pool: &PgPool) -> Result<Vec<Team>, DataBaseError> {
+    pub async fn pending_teams(id: i32, pool: &PgPool) -> Result<Vec<Team>, CustomError> {
         // outcome-list where no data is present
         let outcomes = Outcome::filter_for(Outcome::find_all_for_game, Option::<String>::is_none, id, pool).await?;
         let mut teams: Vec<Team> = Vec::new();
@@ -125,7 +125,7 @@ impl Game {
         Ok(teams)
     }
 
-    pub async fn finished_teams(id: i32, pool: &PgPool) -> Result<Vec<Team>, DataBaseError>{
+    pub async fn finished_teams(id: i32, pool: &PgPool) -> Result<Vec<Team>, CustomError>{
         // outcome-list where data is set
         let outcomes= Outcome::filter_for(Outcome::find_all_for_game, Option::<String>::is_some, id, pool).await?;
         let mut teams: Vec<Team> = Vec::new();
@@ -135,7 +135,7 @@ impl Game {
         Ok(teams)
     }
 
-    pub async fn pending_teams_amount(id: i32, pool: &PgPool) -> Result<usize, DataBaseError> {
+    pub async fn pending_teams_amount(id: i32, pool: &PgPool) -> Result<usize, CustomError> {
         // I am choosing to not use pending_teams as it encompasses loading all outstanding teams before counting.
 
         let outcomes = Outcome::find_all_for_game(id, pool).await?;
@@ -144,7 +144,7 @@ impl Game {
         Ok(outcomes.iter().filter(|e | e.data.is_none()).count())
     }
 
-    pub async fn amount(pool: &PgPool) -> Result<usize, DataBaseError> {
+    pub async fn amount(pool: &PgPool) -> Result<usize, CustomError> {
         // This function currently calls find_all and uses its size.
         // If performance warrants a better implementation(f.e. caching the result in the db or memory), 
         // this capsules the functionality, meaning I will only need to change this method.

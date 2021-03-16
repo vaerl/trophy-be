@@ -4,7 +4,6 @@ extern crate log;
 use actix_web::{error, web, App, HttpResponse, HttpServer};
 use anyhow::Result;
 use dotenv::dotenv;
-use model::{CreateUser, User, UserRole};
 use sqlx::PgPool;
 use std::env;
 

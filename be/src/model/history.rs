@@ -1,9 +1,8 @@
-use actix_web::HttpRequest;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 
-use super::{DataBaseError, UserRole};
+use super::CustomError;
 
 pub struct Transaction {
     pub id: i32,
@@ -13,7 +12,7 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub async fn find_all(pool: &PgPool) -> Result<Vec<Transaction>, DataBaseError> {
+    pub async fn find_all(pool: &PgPool) -> Result<Vec<Transaction>, CustomError> {
         let mut tx = pool.begin().await?;
         let transaction_history = sqlx::query_as!(
             Transaction,
@@ -25,7 +24,7 @@ impl Transaction {
         Ok(transaction_history)
     }
 
-    async fn create(user_id: i32, action: String, pool: &PgPool) -> Result<(), DataBaseError> {
+    async fn create(user_id: i32, action: String, pool: &PgPool) -> Result<(), CustomError> {
         let mut tx = pool.begin().await?;
         sqlx::query!(
             r#"INSERT INTO transaction_history (user_id, timestamp, action) VALUES ($1, $2, $3)"#,
@@ -47,7 +46,7 @@ pub struct LoginTransaction {
 }
 
 impl LoginTransaction {
-    pub async fn find_all(pool: &PgPool) -> Result<Vec<LoginTransaction>, DataBaseError> {
+    pub async fn find_all(pool: &PgPool) -> Result<Vec<LoginTransaction>, CustomError> {
         let mut tx = pool.begin().await?;
         let login_history = sqlx::query_as!(
             LoginTransaction,
@@ -59,7 +58,7 @@ impl LoginTransaction {
         Ok(login_history)
     }
 
-    pub async fn create(user_id: i32, pool: &PgPool) -> Result<(), DataBaseError> {
+    pub async fn create(user_id: i32, pool: &PgPool) -> Result<(), CustomError> {
         let mut tx = pool.begin().await?;
         sqlx::query!(
             r#"INSERT INTO login_history (user_id, timestamp) VALUES ($1, $2)"#,

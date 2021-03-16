@@ -1,9 +1,12 @@
+use actix_web::{FromRequest, HttpRequest};
 use anyhow::Result;
 use chrono::Utc;
+use futures::future::{err, ready, Ready};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
+use sqlx::PgPool;
 
-use super::{AuthenticationError, User};
+use super::{CustomError, User, UserRole};
 
 pub static KEY: [u8; 16] = *include_bytes!("../../secret.key");
 
@@ -52,7 +55,7 @@ impl UserToken {
         .unwrap()
     }
 
-    pub fn decode_token(token: String) -> Result<Self, AuthenticationError> {
+    pub fn decode_token(token: String) -> Result<Self, CustomError> {
         let token_data = jsonwebtoken::decode::<UserToken>(
             &token,
             &DecodingKey::from_secret(&KEY),
@@ -63,8 +66,64 @@ impl UserToken {
 
     pub fn is_valid(&self) -> bool {
         let now = Utc::now().timestamp();
-        info!("NOW: {}", now);
-        info!("SELF: {}", self.exp);
         now < self.exp
+    }
+
+    /// Loads the user specified in the token, if:
+    /// a) the token is not expired
+    /// b) the user is logged in
+    /// c) the user has one of the specified roles
+    pub async fn try_into_authorized_user(
+        self,
+        roles: Vec<UserRole>,
+        pool: &PgPool,
+    ) -> Result<User, CustomError> {
+        // NOTE I've not found a ay to get rid of the if-cascade - because I want specific errors!
+
+        // 1: check if token is valid
+        if self.is_valid() {
+            let user = User::find(self.user_id, pool).await?;
+            // 2: check if user is logged in
+            if !user.session.is_empty() {
+                // 3: check if user is allowed to access the resource
+                if roles.contains(&user.role) {
+                    Ok(user)
+                } else {
+                    Err(CustomError::AccessDeniedError)
+                }
+            } else {
+                Err(CustomError::UnauthorizedError)
+            }
+        } else {
+            Err(CustomError::NoTokenError {
+                message: "Token is expired!".to_string(),
+            })
+        }
+    }
+}
+
+impl FromRequest for UserToken {
+    type Error = CustomError;
+    type Future = Ready<Result<UserToken, CustomError>>;
+    type Config = ();
+
+    fn from_request(request: &HttpRequest, _payload: &mut actix_web::dev::Payload) -> Self::Future {
+        let auth_header = match request.headers().get("Authorization") {
+            Some(auth_header) => auth_header,
+            None => {
+                // explicit return so that it's not assigned to authn_header
+                return err(CustomError::NoTokenError {
+                    message: "There was no authorization-header in the request!".to_string(),
+                });
+            }
+        };
+        let auth_str = auth_header.to_str().unwrap();
+        if !auth_str.starts_with("bearer") && !auth_str.starts_with("Bearer") {
+            return err(CustomError::NoTokenError {
+                message: "There was no bearer-header in the request!".to_string(),
+            });
+        }
+        let raw_token = auth_str[6..auth_str.len()].trim();
+        ready(UserToken::decode_token(raw_token.to_string()))
     }
 }

@@ -1,4 +1,4 @@
-use crate::model::{EvaluationError, Game, Outcome, ParsedOutcome, Team};
+use crate::model::{CustomError, Game, Outcome, ParsedOutcome, Team};
 use actix_files::NamedFile;
 use anyhow::Result;
 use sqlx::PgPool;
@@ -7,18 +7,18 @@ use xlsxwriter::*;
 
 const MAX_POINTS: i32 = 50;
 
-pub async fn evaluate_trophy(pool: &PgPool) -> Result<(), EvaluationError> {
+pub async fn evaluate_trophy(pool: &PgPool) -> Result<(), CustomError> {
     for game in Game::find_all(pool).await? {
         evaluate_game(game.id, pool).await?;
     }
     Ok(())
 }
 
-async fn evaluate_game(id: i32, pool: &PgPool) -> Result<(), EvaluationError> {
+async fn evaluate_game(id: i32, pool: &PgPool) -> Result<(), CustomError> {
     let pending_amount = Game::pending_teams_amount(id, pool).await?;
     if pending_amount > 0 {
         // Don't evaluate when teams are still playing - this should never happen!
-        Err(EvaluationError::EarlyEvaluationError {
+        Err(CustomError::EarlyEvaluationError {
             message: "Tried to evaluate while teams are still playing!".to_string(),
         })
     } else {
@@ -52,7 +52,7 @@ async fn evaluate_team(mut team: Vec<ParsedOutcome>) -> Vec<Team> {
     team.into_iter().map(|e| e.team).collect()
 }
 
-pub async fn create_xlsx_file(pool: &PgPool) -> Result<NamedFile, EvaluationError> {
+pub async fn create_xlsx_file(pool: &PgPool) -> Result<NamedFile, CustomError> {
     // this path uses a timestamp to distinguish between versions
     let path = "./static/results-".to_owned()
         + &humantime::format_rfc3339_seconds(SystemTime::now()).to_string()
@@ -69,7 +69,7 @@ pub async fn create_xlsx_file(pool: &PgPool) -> Result<NamedFile, EvaluationErro
     Ok(NamedFile::open(path)?)
 }
 
-async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> Result<(), EvaluationError> {
+async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> Result<(), CustomError> {
     // create fonts
     let heading = workbook.add_format().set_bold().set_font_size(20.0);
     let values = workbook.add_format().set_font_size(12.0);

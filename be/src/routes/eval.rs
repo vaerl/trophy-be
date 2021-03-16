@@ -4,12 +4,12 @@ use sqlx::PgPool;
 
 use crate::{
     eval::{create_xlsx_file, evaluate_trophy},
-    model::EvaluationError,
+    model::CustomError,
 };
 
 // CHECK if calling multiple times evaluates again -> in this case I should separate or use some flag
 #[get("/eval")]
-async fn evaluate(db_pool: web::Data<PgPool>) -> actix_web::Result<NamedFile, EvaluationError> {
+async fn evaluate(db_pool: web::Data<PgPool>) -> actix_web::Result<NamedFile, CustomError> {
     info!("Received new request: evaluate trophy.");
     evaluate_trophy(db_pool.get_ref()).await?;
     create_xlsx_file(db_pool.get_ref()).await
