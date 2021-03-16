@@ -1,8 +1,14 @@
+use actix_web::{HttpRequest, HttpResponse, Responder};
 use chrono::{DateTime, Utc};
+use futures::future::{ready, Ready};
+use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::ApiResult;
 
+use super::CustomError;
+
+#[derive(Serialize)]
 pub struct Transaction {
     pub id: i32,
     pub user_id: i32,
@@ -10,8 +16,37 @@ pub struct Transaction {
     pub action: String,
 }
 
+#[derive(Serialize)]
+pub struct TransactionVec(Vec<Transaction>);
+
+impl Responder for Transaction {
+    type Error = CustomError;
+    type Future = Ready<ApiResult<HttpResponse>>;
+
+    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
+        let body = serde_json::to_string(&self).unwrap();
+        // create response and set content type
+        ready(Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(body)))
+    }
+}
+
+impl Responder for TransactionVec {
+    type Error = CustomError;
+    type Future = Ready<ApiResult<HttpResponse>>;
+
+    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
+        let body = serde_json::to_string(&self).unwrap();
+        // create response and set content type
+        ready(Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(body)))
+    }
+}
+
 impl Transaction {
-    pub async fn find_all(pool: &PgPool) -> ApiResult<Vec<Transaction>> {
+    pub async fn find_all(pool: &PgPool) -> ApiResult<TransactionVec> {
         let mut tx = pool.begin().await?;
         let transaction_history = sqlx::query_as!(
             Transaction,
@@ -20,7 +55,7 @@ impl Transaction {
         .fetch_all(&mut tx)
         .await?;
         tx.commit().await?;
-        Ok(transaction_history)
+        Ok(TransactionVec(transaction_history))
     }
 
     async fn create(user_id: i32, action: String, pool: &PgPool) -> ApiResult<()> {
@@ -38,10 +73,40 @@ impl Transaction {
     }
 }
 
+#[derive(Serialize)]
 pub struct LoginTransaction {
     pub id: i32,
     pub user_id: i32,
     pub timestamp: DateTime<Utc>,
+}
+
+#[derive(Serialize)]
+pub struct LoginTransactionVec(Vec<LoginTransaction>);
+
+impl Responder for LoginTransaction {
+    type Error = CustomError;
+    type Future = Ready<ApiResult<HttpResponse>>;
+
+    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
+        let body = serde_json::to_string(&self).unwrap();
+        // create response and set content type
+        ready(Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(body)))
+    }
+}
+
+impl Responder for LoginTransactionVec {
+    type Error = CustomError;
+    type Future = Ready<ApiResult<HttpResponse>>;
+
+    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
+        let body = serde_json::to_string(&self).unwrap();
+        // create response and set content type
+        ready(Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(body)))
+    }
 }
 
 impl LoginTransaction {

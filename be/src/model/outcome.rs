@@ -18,6 +18,9 @@ pub struct Outcome {
     pub data: Option<String>,
 }
 
+#[derive(Serialize)]
+pub struct OutcomeVec(pub Vec<Outcome>);
+
 impl Responder for Outcome {
     type Error = CustomError;
     type Future = Ready<ApiResult<HttpResponse>>;
@@ -31,8 +34,21 @@ impl Responder for Outcome {
     }
 }
 
+impl Responder for OutcomeVec {
+    type Error = CustomError;
+    type Future = Ready<ApiResult<HttpResponse>>;
+
+    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
+        let body = serde_json::to_string(&self).unwrap();
+        // create response and set content type
+        ready(Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(body)))
+    }
+}
+
 impl Outcome {
-    pub async fn find_all(pool: &PgPool) -> ApiResult<Vec<Outcome>> {
+    pub async fn find_all(pool: &PgPool) -> ApiResult<OutcomeVec> {
         let outcomes = sqlx::query_as!(
             Outcome,
             r#"SELECT game_id, team_id, data FROM game_team ORDER BY game_id"#
@@ -40,10 +56,10 @@ impl Outcome {
         .fetch_all(pool)
         .await?;
 
-        Ok(outcomes)
+        Ok(OutcomeVec(outcomes))
     }
 
-    pub async fn find_all_for_game(game_id: i32, pool: &PgPool) -> ApiResult<Vec<Outcome>> {
+    pub async fn find_all_for_game(game_id: i32, pool: &PgPool) -> ApiResult<OutcomeVec> {
         let outcomes = sqlx::query_as!(
             Outcome,
             "SELECT game_id, team_id, data FROM game_team WHERE game_id = $1 ORDER BY game_id",
@@ -52,10 +68,10 @@ impl Outcome {
         .fetch_all(pool)
         .await?;
 
-        Ok(outcomes)
+        Ok(OutcomeVec(outcomes))
     }
 
-    pub async fn find_all_for_team(team_id: i32, pool: &PgPool) -> ApiResult<Vec<Outcome>> {
+    pub async fn find_all_for_team(team_id: i32, pool: &PgPool) -> ApiResult<OutcomeVec> {
         let outcomes = sqlx::query_as!(
             Outcome,
             "SELECT game_id, team_id, data FROM game_team WHERE team_id = $1 ORDER BY game_id",
@@ -64,7 +80,7 @@ impl Outcome {
         .fetch_all(pool)
         .await?;
 
-        Ok(outcomes)
+        Ok(OutcomeVec(outcomes))
     }
 
     pub async fn create(game_id: i32, team_id: i32, pool: &PgPool) -> ApiResult<Outcome> {
@@ -101,20 +117,20 @@ impl Outcome {
         filter: impl Fn(& Option<String>) -> bool,
         id: i32, 
         pool: &'r PgPool
-    ) -> ApiResult<Vec<Outcome>>
-    where Fut: Future<Output = ApiResult<Vec<Outcome>>> // won't work without where
+    ) -> ApiResult<OutcomeVec>
+    where Fut: Future<Output = ApiResult<OutcomeVec>> // won't work without where
     {
         // find every outcome using the supplied function
-        let outcomes = find_for_all(id, pool).await?;
+        let outcomes = find_for_all(id, pool).await?.0;
         // remove every item that does not evaluate to true with filter
-        Ok(outcomes.into_iter().filter(|f| filter(&f.data)).collect())
+        Ok(OutcomeVec(outcomes.into_iter().filter(|f| filter(&f.data)).collect()))
     }
 
     pub async fn parse_by_gender(game_kind: &GameKind, pool: &PgPool) -> ApiResult<(Vec::<ParsedOutcome>, Vec::<ParsedOutcome>)> {
         let mut female_outcomes = Vec::<ParsedOutcome>::new();
         let mut male_outcomes = Vec::<ParsedOutcome>::new();
         // sort outcomes by gender
-        for outcome in Outcome::find_all(pool).await? {
+        for outcome in Outcome::find_all(pool).await?.0 {
             let parsed_outcome = ParsedOutcome::from(&game_kind, outcome, pool).await?;
             match parsed_outcome.team.gender {
                 TeamGender::Female => female_outcomes.push(parsed_outcome),

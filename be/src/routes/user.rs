@@ -4,16 +4,16 @@ use actix_web::{
 use sqlx::PgPool;
 
 use crate::{
-    model::{CreateLogin, CreateUser, User, UserRole, UserToken},
+    model::{CreateLogin, CreateUser, User, UserRole, UserToken, UserVec},
     ApiResult,
 };
 
 #[get("/users")]
-async fn find_all_users(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<HttpResponse> {
+async fn find_all_users(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<UserVec> {
     token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    Ok(HttpResponse::Ok().json(User::find_all(db_pool.get_ref()).await?))
+    User::find_all(db_pool.get_ref()).await
 }
 
 #[get("/users/{id}")]

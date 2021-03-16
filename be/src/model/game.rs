@@ -5,7 +5,7 @@ use sqlx::{FromRow, PgPool};
 
 use crate::ApiResult;
 
-use super::{CustomError, Outcome, Team};
+use super::{CustomError, Outcome, Team, TeamVec};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(rename = "game_kind")]
@@ -24,6 +24,9 @@ pub struct Game {
     pub kind: GameKind,
     pub user_id: i32
 }
+
+#[derive(Serialize)]
+pub struct GameVec(pub Vec<Game>);
 
 #[derive(Deserialize)]
 pub struct CreateGame {
@@ -46,9 +49,22 @@ impl Responder for Game {
     }
 }
 
+impl Responder for GameVec {
+    type Error = CustomError;
+    type Future = Ready<ApiResult<HttpResponse>>;
+
+    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
+        let body = serde_json::to_string(&self).unwrap();
+        // create response and set content type
+        ready(Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(body)))
+    }
+}
+
 impl Game {
 
-    pub async fn find_all(pool: &PgPool) -> ApiResult<Vec<Game>> {
+    pub async fn find_all(pool: &PgPool) -> ApiResult<GameVec> {
         let games = sqlx::query_as!(
             Game,
             r#"SELECT id, trophy_id, name, kind as "kind: GameKind", user_id FROM games ORDER BY id"#
@@ -56,7 +72,7 @@ impl Game {
         .fetch_all(pool)
         .await?;
 
-        Ok(games)
+        Ok(GameVec(games))
     }
 
     pub async fn find(id: i32, pool: &PgPool) -> ApiResult<Game> {
@@ -81,7 +97,7 @@ impl Game {
         tx.commit().await?;
 
         // create outcomes
-        for team in Team::find_all(pool).await? {
+        for team in Team::find_all(pool).await?.0 {
             Outcome::create(game.id, team.id, pool).await?;
         }
 
@@ -116,30 +132,30 @@ impl Game {
         Ok(game)
     }
 
-    pub async fn pending_teams(id: i32, pool: &PgPool) -> ApiResult<Vec<Team>> {
+    pub async fn pending_teams(id: i32, pool: &PgPool) -> ApiResult<TeamVec> {
         // outcome-list where no data is present
-        let outcomes = Outcome::filter_for(Outcome::find_all_for_game, Option::<String>::is_none, id, pool).await?;
+        let outcomes = Outcome::filter_for(Outcome::find_all_for_game, Option::<String>::is_none, id, pool).await?.0;
         let mut teams: Vec<Team> = Vec::new();
         for team_id in outcomes.iter().map(|f| f.team_id) {
             teams.push(Team::find(team_id, pool).await?);
         }
-        Ok(teams)
+        Ok(TeamVec(teams))
     }
 
-    pub async fn finished_teams(id: i32, pool: &PgPool) -> ApiResult<Vec<Team>>{
+    pub async fn finished_teams(id: i32, pool: &PgPool) -> ApiResult<TeamVec>{
         // outcome-list where data is set
-        let outcomes= Outcome::filter_for(Outcome::find_all_for_game, Option::<String>::is_some, id, pool).await?;
+        let outcomes= Outcome::filter_for(Outcome::find_all_for_game, Option::<String>::is_some, id, pool).await?.0;
         let mut teams: Vec<Team> = Vec::new();
         for team_id in outcomes.iter().map(|f| f.team_id) {
             teams.push(Team::find(team_id, pool).await?);
         }
-        Ok(teams)
+        Ok(TeamVec(teams))
     }
 
     pub async fn pending_teams_amount(id: i32, pool: &PgPool) -> ApiResult<usize> {
         // I am choosing to not use pending_teams as it encompasses loading all outstanding teams before counting.
 
-        let outcomes = Outcome::find_all_for_game(id, pool).await?;
+        let outcomes = Outcome::find_all_for_game(id, pool).await?.0;
 
         // filter every outcome that has data, then count the items
         Ok(outcomes.iter().filter(|e | e.data.is_none()).count())
@@ -150,6 +166,6 @@ impl Game {
         // If performance warrants a better implementation(f.e. caching the result in the db or memory), 
         // this capsules the functionality, meaning I will only need to change this method.
         
-        Ok(Game::find_all(pool).await?.len())
+        Ok(Game::find_all(pool).await?.0.len())
     }
 }

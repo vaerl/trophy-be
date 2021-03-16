@@ -1,5 +1,4 @@
-use actix_web::{Error, HttpRequest, HttpResponse, Responder};
-use anyhow::{Result};
+use actix_web::{HttpRequest, HttpResponse, Responder};
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
 use futures::future::{Ready, ready};
 use rand_core::OsRng;
@@ -30,6 +29,10 @@ pub struct User {
     pub session: String,
 }
 
+// this syntax is brilliant!
+#[derive(Serialize)]
+pub struct UserVec(Vec<User>);
+
 #[derive(Deserialize)]
 pub struct CreateUser {
     pub username: String,
@@ -45,22 +48,39 @@ pub struct CreateLogin {
 
 
 // TODO
-// - check if anyhow is necessary
-// - introduce type-abbreviation for Result<T, Error>
-// - move model-vecs behind a newtype and impl Responder -> saves matching
+// - adjust all routes to:
+//      1. check authorization!
+//      2. use logging
+//      3. use newtype-vecs
 // - log between token and action with Transaction-History
-// -  log in try-into-user -> this needs a pool! 
-// - adjust all routes to check authorization! -> everything except user
-// - implement transaction-history -> use actix-web middleware-logger
-// - write history-routes
-// - write history.http
+// - log in try-into-user -> this needs a pool! 
+// - check if anyhow is necessary
+// - implement transaction-history -> use actix-web middleware-logger?
+// -> I've almost settled on logging myself - to access the user, I have to log after getting the token!
+// - write history-routes? -> I need this for showing logs in the admin-fe
+//      - write history.http
 // - merge branch
-// - tests
-// - update /reset/database
+// - tests -> implement on separate branch
+//      - this will include a lot of bugfixing!
+// - update /reset/database--> what did I want to do here?
 
 impl Responder for User {
-    type Error = Error;
-    type Future = Ready<Result<HttpResponse, Error>>;
+    type Error = CustomError;
+    type Future = Ready<ApiResult<HttpResponse>>;
+
+    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
+        let body = serde_json::to_string(&self).unwrap();
+        // create response and set content type
+        ready(Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(body)))
+    }
+}
+
+
+impl Responder for UserVec {
+    type Error = CustomError;
+    type Future = Ready<ApiResult<HttpResponse>>;
 
     fn respond_to(self, _req: &HttpRequest) -> Self::Future {
         let body = serde_json::to_string(&self).unwrap();
@@ -72,7 +92,7 @@ impl Responder for User {
 }
 
 impl User {
-    pub async fn find_all(pool: &PgPool) -> ApiResult<Vec<User>> {
+    pub async fn find_all(pool: &PgPool) -> ApiResult<UserVec> {
         let users = sqlx::query_as!(
             User,
             r#"SELECT id, username, password, role as "role: UserRole", session FROM users ORDER BY id"#
@@ -80,7 +100,7 @@ impl User {
         .fetch_all(pool)
         .await?;
 
-        Ok(users)
+        Ok(UserVec(users))
     }
 
     pub async fn find(id: i32, pool: &PgPool) -> ApiResult<User> {
@@ -95,7 +115,7 @@ impl User {
     }
 
     async fn find_by_name(name: &String, pool: &PgPool) -> ApiResult<User> {
-        let users = User::find_all(pool).await?;
+        let users = User::find_all(pool).await?.0;
         for user in users {
             if user.username.eq(name) {
                 return Ok(user);
