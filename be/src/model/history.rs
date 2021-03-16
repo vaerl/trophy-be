@@ -1,8 +1,7 @@
-use anyhow::Result;
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 
-use super::CustomError;
+use crate::ApiResult;
 
 pub struct Transaction {
     pub id: i32,
@@ -12,7 +11,7 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub async fn find_all(pool: &PgPool) -> Result<Vec<Transaction>, CustomError> {
+    pub async fn find_all(pool: &PgPool) -> ApiResult<Vec<Transaction>> {
         let mut tx = pool.begin().await?;
         let transaction_history = sqlx::query_as!(
             Transaction,
@@ -24,7 +23,7 @@ impl Transaction {
         Ok(transaction_history)
     }
 
-    async fn create(user_id: i32, action: String, pool: &PgPool) -> Result<(), CustomError> {
+    async fn create(user_id: i32, action: String, pool: &PgPool) -> ApiResult<()> {
         let mut tx = pool.begin().await?;
         sqlx::query!(
             r#"INSERT INTO transaction_history (user_id, timestamp, action) VALUES ($1, $2, $3)"#,
@@ -46,7 +45,7 @@ pub struct LoginTransaction {
 }
 
 impl LoginTransaction {
-    pub async fn find_all(pool: &PgPool) -> Result<Vec<LoginTransaction>, CustomError> {
+    pub async fn find_all(pool: &PgPool) -> ApiResult<Vec<LoginTransaction>> {
         let mut tx = pool.begin().await?;
         let login_history = sqlx::query_as!(
             LoginTransaction,
@@ -58,7 +57,7 @@ impl LoginTransaction {
         Ok(login_history)
     }
 
-    pub async fn create(user_id: i32, pool: &PgPool) -> Result<(), CustomError> {
+    pub async fn create(user_id: i32, pool: &PgPool) -> ApiResult<()> {
         let mut tx = pool.begin().await?;
         sqlx::query!(
             r#"INSERT INTO login_history (user_id, timestamp) VALUES ($1, $2)"#,

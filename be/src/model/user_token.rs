@@ -1,10 +1,11 @@
 use actix_web::{FromRequest, HttpRequest};
-use anyhow::Result;
 use chrono::Utc;
 use futures::future::{err, ready, Ready};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+
+use crate::ApiResult;
 
 use super::{CustomError, User, UserRole};
 
@@ -55,7 +56,7 @@ impl UserToken {
         .unwrap()
     }
 
-    pub fn decode_token(token: String) -> Result<Self, CustomError> {
+    pub fn decode_token(token: String) -> ApiResult<Self> {
         let token_data = jsonwebtoken::decode::<UserToken>(
             &token,
             &DecodingKey::from_secret(&KEY),
@@ -77,7 +78,7 @@ impl UserToken {
         self,
         roles: Vec<UserRole>,
         pool: &PgPool,
-    ) -> Result<User, CustomError> {
+    ) -> ApiResult<User> {
         // NOTE I've not found a ay to get rid of the if-cascade - because I want specific errors!
 
         // 1: check if token is valid
@@ -104,14 +105,14 @@ impl UserToken {
 
 impl FromRequest for UserToken {
     type Error = CustomError;
-    type Future = Ready<Result<UserToken, CustomError>>;
+    type Future = Ready<ApiResult<UserToken>>;
     type Config = ();
 
     fn from_request(request: &HttpRequest, _payload: &mut actix_web::dev::Payload) -> Self::Future {
         let auth_header = match request.headers().get("Authorization") {
             Some(auth_header) => auth_header,
             None => {
-                // explicit return so that it's not assigned to authn_header
+                // explicit return so that it's not assigned to auth_header
                 return err(CustomError::NoTokenError {
                     message: "There was no authorization-header in the request!".to_string(),
                 });

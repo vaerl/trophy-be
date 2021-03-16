@@ -1,8 +1,9 @@
-use actix_web::{Error, HttpRequest, HttpResponse, Responder};
-use anyhow::Result;
+use actix_web::{HttpRequest, HttpResponse, Responder};
 use futures::{Future, future::{ready, Ready}};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
+
+use crate::ApiResult;
 
 use super::{CustomError, GameKind, ParsedOutcome, TeamGender};
 
@@ -18,8 +19,8 @@ pub struct Outcome {
 }
 
 impl Responder for Outcome {
-    type Error = Error;
-    type Future = Ready<Result<HttpResponse, Error>>;
+    type Error = CustomError;
+    type Future = Ready<ApiResult<HttpResponse>>;
 
     fn respond_to(self, _req: &HttpRequest) -> Self::Future {
         let body = serde_json::to_string(&self).unwrap();
@@ -31,7 +32,7 @@ impl Responder for Outcome {
 }
 
 impl Outcome {
-    pub async fn find_all(pool: &PgPool) -> Result<Vec<Outcome>, CustomError> {
+    pub async fn find_all(pool: &PgPool) -> ApiResult<Vec<Outcome>> {
         let outcomes = sqlx::query_as!(
             Outcome,
             r#"SELECT game_id, team_id, data FROM game_team ORDER BY game_id"#
@@ -42,7 +43,7 @@ impl Outcome {
         Ok(outcomes)
     }
 
-    pub async fn find_all_for_game(game_id: i32, pool: &PgPool) -> Result<Vec<Outcome>, CustomError> {
+    pub async fn find_all_for_game(game_id: i32, pool: &PgPool) -> ApiResult<Vec<Outcome>> {
         let outcomes = sqlx::query_as!(
             Outcome,
             "SELECT game_id, team_id, data FROM game_team WHERE game_id = $1 ORDER BY game_id",
@@ -54,7 +55,7 @@ impl Outcome {
         Ok(outcomes)
     }
 
-    pub async fn find_all_for_team(team_id: i32, pool: &PgPool) -> Result<Vec<Outcome>, CustomError> {
+    pub async fn find_all_for_team(team_id: i32, pool: &PgPool) -> ApiResult<Vec<Outcome>> {
         let outcomes = sqlx::query_as!(
             Outcome,
             "SELECT game_id, team_id, data FROM game_team WHERE team_id = $1 ORDER BY game_id",
@@ -66,7 +67,7 @@ impl Outcome {
         Ok(outcomes)
     }
 
-    pub async fn create(game_id: i32, team_id: i32, pool: &PgPool) -> Result<Outcome, CustomError> {
+    pub async fn create(game_id: i32, team_id: i32, pool: &PgPool) -> ApiResult<Outcome> {
         // there is no need to check if the ids are valid here - because this is called while iterating over existing entities 
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
@@ -81,7 +82,7 @@ impl Outcome {
         Ok(outcome)
     }
 
-    pub async fn update(outcome: Outcome, pool: &PgPool) -> Result<Outcome, CustomError> {
+    pub async fn update(outcome: Outcome, pool: &PgPool) -> ApiResult<Outcome> {
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
             Outcome, 
@@ -100,8 +101,8 @@ impl Outcome {
         filter: impl Fn(& Option<String>) -> bool,
         id: i32, 
         pool: &'r PgPool
-    ) -> Result<Vec<Outcome>, CustomError>
-    where Fut: Future<Output = Result<Vec<Outcome>, CustomError>> // won't work without
+    ) -> ApiResult<Vec<Outcome>>
+    where Fut: Future<Output = ApiResult<Vec<Outcome>>> // won't work without where
     {
         // find every outcome using the supplied function
         let outcomes = find_for_all(id, pool).await?;
@@ -109,7 +110,7 @@ impl Outcome {
         Ok(outcomes.into_iter().filter(|f| filter(&f.data)).collect())
     }
 
-    pub async fn parse_by_gender(game_kind: &GameKind, pool: &PgPool) -> Result<(Vec::<ParsedOutcome>, Vec::<ParsedOutcome>), CustomError> {
+    pub async fn parse_by_gender(game_kind: &GameKind, pool: &PgPool) -> ApiResult<(Vec::<ParsedOutcome>, Vec::<ParsedOutcome>)> {
         let mut female_outcomes = Vec::<ParsedOutcome>::new();
         let mut male_outcomes = Vec::<ParsedOutcome>::new();
         // sort outcomes by gender

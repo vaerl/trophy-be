@@ -3,13 +3,13 @@ use actix_web::{
 };
 use sqlx::PgPool;
 
-use crate::model::{CreateLogin, CreateUser, CustomError, User, UserRole, UserToken};
+use crate::{
+    model::{CreateLogin, CreateUser, User, UserRole, UserToken},
+    ApiResult,
+};
 
 #[get("/users")]
-async fn find_all_users(
-    token: UserToken,
-    db_pool: web::Data<PgPool>,
-) -> Result<HttpResponse, CustomError> {
+async fn find_all_users(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<HttpResponse> {
     token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
@@ -21,7 +21,7 @@ async fn find_user(
     id: web::Path<i32>,
     token: UserToken,
     db_pool: web::Data<PgPool>,
-) -> Result<User, CustomError> {
+) -> ApiResult<User> {
     token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
@@ -34,7 +34,7 @@ async fn create_user(
     create_user: web::Json<CreateUser>,
     token: UserToken,
     db_pool: web::Data<PgPool>,
-) -> Result<User, CustomError> {
+) -> ApiResult<User> {
     token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
@@ -47,7 +47,7 @@ async fn update_user(
     user: web::Json<CreateUser>,
     token: UserToken,
     db_pool: web::Data<PgPool>,
-) -> Result<User, CustomError> {
+) -> ApiResult<User> {
     token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
@@ -59,7 +59,7 @@ async fn delete_user(
     id: web::Path<i32>,
     token: UserToken,
     db_pool: web::Data<PgPool>,
-) -> Result<User, CustomError> {
+) -> ApiResult<User> {
     token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
@@ -82,7 +82,7 @@ async fn login(login: web::Json<CreateLogin>, db_pool: web::Data<PgPool>) -> imp
 }
 
 #[post("/logout")]
-async fn logout(token: UserToken, db_pool: web::Data<PgPool>) -> Result<HttpResponse, CustomError> {
+async fn logout(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<HttpResponse> {
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;

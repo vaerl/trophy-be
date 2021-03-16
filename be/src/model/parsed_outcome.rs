@@ -1,8 +1,9 @@
-use super::{CustomError, GameKind, Outcome, Team};
-use anyhow::Result;
+use super::{GameKind, Outcome, Team};
 use humantime::parse_duration;
 use sqlx::PgPool;
 use std::time::Duration;
+
+use crate::ApiResult;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub enum Value {
@@ -21,7 +22,7 @@ impl ParsedOutcome {
         game_kind: &GameKind,
         outcome: Outcome,
         pool: &PgPool,
-    ) -> Result<ParsedOutcome, CustomError> {
+    ) -> ApiResult<ParsedOutcome> {
         let value: Value = match game_kind {
             super::GameKind::Points => Value::Time(outcome.data.unwrap().parse::<i32>()?),
             super::GameKind::Time => Value::Points(parse_duration(&outcome.data.unwrap())?),

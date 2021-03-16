@@ -4,12 +4,15 @@ extern crate log;
 use actix_web::{error, web, App, HttpResponse, HttpServer};
 use anyhow::Result;
 use dotenv::dotenv;
+use model::CustomError;
 use sqlx::PgPool;
 use std::env;
 
 mod eval;
 mod model;
 mod routes;
+
+pub type ApiResult<T> = Result<T, CustomError>;
 
 // TODO routes: user
 

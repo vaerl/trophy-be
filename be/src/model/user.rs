@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
+use crate::ApiResult;
+
 use super::{CustomError, CreateToken, LoginTransaction, UserToken};
 
 #[derive(Serialize, Deserialize, sqlx::Type, PartialEq)]
@@ -43,8 +45,7 @@ pub struct CreateLogin {
 
 
 // TODO
-// - move to one error-enum -> saves casting, etc.
-//      - check if anyhow is necessary
+// - check if anyhow is necessary
 // - introduce type-abbreviation for Result<T, Error>
 // - move model-vecs behind a newtype and impl Responder -> saves matching
 // - log between token and action with Transaction-History
@@ -71,7 +72,7 @@ impl Responder for User {
 }
 
 impl User {
-    pub async fn find_all(pool: &PgPool) -> Result<Vec<User>, CustomError> {
+    pub async fn find_all(pool: &PgPool) -> ApiResult<Vec<User>> {
         let users = sqlx::query_as!(
             User,
             r#"SELECT id, username, password, role as "role: UserRole", session FROM users ORDER BY id"#
@@ -82,7 +83,7 @@ impl User {
         Ok(users)
     }
 
-    pub async fn find(id: i32, pool: &PgPool) -> Result<User, CustomError> {
+    pub async fn find(id: i32, pool: &PgPool) -> ApiResult<User> {
         let user = sqlx::query_as!(
             User,
             r#"SELECT id, username, password, role as "role: UserRole", session FROM users WHERE id = $1"#, id
@@ -93,7 +94,7 @@ impl User {
         Ok(user)
     }
 
-    async fn find_by_name(name: &String, pool: &PgPool) -> Result<User, CustomError> {
+    async fn find_by_name(name: &String, pool: &PgPool) -> ApiResult<User> {
         let users = User::find_all(pool).await?;
         for user in users {
             if user.username.eq(name) {
@@ -103,7 +104,7 @@ impl User {
         Err(CustomError::NotFoundError {message: format!("User {} does not exist!", name)})
     }
 
-    pub async fn create(create_user: CreateUser, pool: &PgPool) -> Result<User, CustomError> {
+    pub async fn create(create_user: CreateUser, pool: &PgPool) -> ApiResult<User> {
         if User::find_by_name(&create_user.username, pool)
             .await
             .is_err()
@@ -127,7 +128,7 @@ impl User {
         }
     }
 
-    pub async fn update(id: i32, altered_user: CreateUser, pool: &PgPool) -> Result<User, CustomError> {
+    pub async fn update(id: i32, altered_user: CreateUser, pool: &PgPool) -> ApiResult<User> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
         let password_hash = argon2.hash_password_simple(&altered_user.password.as_bytes(), salt.as_ref()).unwrap().to_string();
@@ -146,7 +147,7 @@ impl User {
         Ok(user)
     }
 
-    async fn update_session(id: i32, session: &String, pool: &PgPool) -> Result<(), CustomError> {
+    async fn update_session(id: i32, session: &String, pool: &PgPool) -> ApiResult<()> {
         let mut tx = pool.begin().await?;
         sqlx::query_as!(
             User, 
@@ -159,7 +160,7 @@ impl User {
         Ok(())
     }
 
-    pub async fn delete(id: i32, pool: &PgPool) -> Result<User, CustomError> {
+    pub async fn delete(id: i32, pool: &PgPool) -> ApiResult<User> {
         let mut tx = pool.begin().await?;
         let user = sqlx::query_as!(
             User,
@@ -173,7 +174,7 @@ impl User {
         Ok(user)
     }
 
-    pub async fn login(login: CreateLogin, pool: &PgPool) -> Result<String, CustomError> {
+    pub async fn login(login: CreateLogin, pool: &PgPool) -> ApiResult<String> {
         let user = User::find_by_name(&login.username, pool).await?;
         let argon2 = Argon2::default();
 
@@ -189,7 +190,7 @@ impl User {
         }
     }
 
-    pub async fn logout(id: i32, pool: &PgPool) -> Result<(), CustomError> {
+    pub async fn logout(id: i32, pool: &PgPool) -> ApiResult<()> {
         User::update_session(id, &"".to_string(), pool).await
     }
 
