@@ -9,7 +9,7 @@ use crate::ApiResult;
 use super::CustomError;
 
 #[derive(Serialize)]
-pub struct Transaction {
+pub struct History {
     pub id: i32,
     pub user_id: i32,
     pub timestamp: DateTime<Utc>,
@@ -17,9 +17,9 @@ pub struct Transaction {
 }
 
 #[derive(Serialize)]
-pub struct TransactionVec(Vec<Transaction>);
+pub struct HistoryVec(Vec<History>);
 
-impl Responder for Transaction {
+impl Responder for History {
     type Error = CustomError;
     type Future = Ready<ApiResult<HttpResponse>>;
 
@@ -32,7 +32,7 @@ impl Responder for Transaction {
     }
 }
 
-impl Responder for TransactionVec {
+impl Responder for HistoryVec {
     type Error = CustomError;
     type Future = Ready<ApiResult<HttpResponse>>;
 
@@ -45,17 +45,17 @@ impl Responder for TransactionVec {
     }
 }
 
-impl Transaction {
-    pub async fn find_all(pool: &PgPool) -> ApiResult<TransactionVec> {
+impl History {
+    pub async fn find_all(pool: &PgPool) -> ApiResult<HistoryVec> {
         let mut tx = pool.begin().await?;
         let transaction_history = sqlx::query_as!(
-            Transaction,
+            History,
             r#"SELECT id, user_id, timestamp, action FROM transaction_history ORDER BY id"#,
         )
         .fetch_all(&mut tx)
         .await?;
         tx.commit().await?;
-        Ok(TransactionVec(transaction_history))
+        Ok(HistoryVec(transaction_history))
     }
 
     async fn create(user_id: i32, action: String, pool: &PgPool) -> ApiResult<()> {
@@ -71,67 +71,10 @@ impl Transaction {
         tx.commit().await?;
         Ok(())
     }
-}
 
-#[derive(Serialize)]
-pub struct LoginTransaction {
-    pub id: i32,
-    pub user_id: i32,
-    pub timestamp: DateTime<Utc>,
-}
-
-#[derive(Serialize)]
-pub struct LoginTransactionVec(Vec<LoginTransaction>);
-
-impl Responder for LoginTransaction {
-    type Error = CustomError;
-    type Future = Ready<ApiResult<HttpResponse>>;
-
-    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
-        let body = serde_json::to_string(&self).unwrap();
-        // create response and set content type
-        ready(Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(body)))
-    }
-}
-
-impl Responder for LoginTransactionVec {
-    type Error = CustomError;
-    type Future = Ready<ApiResult<HttpResponse>>;
-
-    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
-        let body = serde_json::to_string(&self).unwrap();
-        // create response and set content type
-        ready(Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(body)))
-    }
-}
-
-impl LoginTransaction {
-    pub async fn find_all(pool: &PgPool) -> ApiResult<Vec<LoginTransaction>> {
-        let mut tx = pool.begin().await?;
-        let login_history = sqlx::query_as!(
-            LoginTransaction,
-            r#"SELECT id, user_id, timestamp FROM login_history ORDER BY id"#,
-        )
-        .fetch_all(&mut tx)
-        .await?;
-        tx.commit().await?;
-        Ok(login_history)
-    }
-
-    pub async fn create(user_id: i32, pool: &PgPool) -> ApiResult<()> {
-        let mut tx = pool.begin().await?;
-        sqlx::query!(
-            r#"INSERT INTO login_history (user_id, timestamp) VALUES ($1, $2)"#,
-            user_id,
-            Utc::now()
-        )
-        .execute(&mut tx)
-        .await?;
-        tx.commit().await?;
-        Ok(())
+    /// Log the transaction and save it to the database.
+    pub async fn log(user_id: i32, action: String, pool: &PgPool) -> ApiResult<()> {
+        info!("User {} executed: '{}'.", user_id, action);
+        History::create(user_id, action, pool).await
     }
 }

@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::ApiResult;
 
-use super::{CustomError, CreateToken, LoginTransaction, UserToken};
+use super::{CustomError, CreateToken, History, UserToken};
 
 #[derive(Serialize, Deserialize, sqlx::Type, PartialEq)]
 #[sqlx(rename = "user_role")]
@@ -204,8 +204,8 @@ impl User {
             return Err(CustomError::BadPasswordError {message: "Token is invalid!".to_string()});
         } else {
             let session = User::generate_session();
+            History::log(user.id, format!("logged in"), pool).await?;
             User::update_session(user.id, &session, &pool).await?;
-            LoginTransaction::create(user.id, &pool).await?;
             return Ok(UserToken::generate_token(&CreateToken {user_id: user.id, session}, user));
         }
     }
