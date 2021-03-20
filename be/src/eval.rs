@@ -8,7 +8,7 @@ use xlsxwriter::*;
 const MAX_POINTS: i32 = 50;
 
 pub async fn evaluate_trophy(pool: &PgPool) -> Result<(), CustomError> {
-    for game in Game::find_all(pool).await? {
+    for game in Game::find_all(pool).await?.0 {
         evaluate_game(game.id, pool).await?;
     }
     Ok(())
@@ -61,8 +61,8 @@ pub async fn create_xlsx_file(pool: &PgPool) -> Result<NamedFile, CustomError> {
     // create file
     let workbook = Workbook::new(&path);
     let (female, male) = Team::find_all_by_gender(pool).await?;
-    write_teams(female, &workbook).await?;
-    write_teams(male, &workbook).await?;
+    write_teams(female.0, &workbook).await?;
+    write_teams(male.0, &workbook).await?;
     workbook.close()?;
 
     // open and return file
