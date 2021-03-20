@@ -79,7 +79,7 @@ impl UserToken {
         roles: Vec<UserRole>,
         pool: &PgPool,
     ) -> ApiResult<User> {
-        // NOTE I've not found a ay to get rid of the if-cascade - because I want specific errors!
+        // NOTE I've not found a way to get rid of the if-cascade - because I want specific errors!
 
         // 1: check if token is valid
         if self.is_valid() {

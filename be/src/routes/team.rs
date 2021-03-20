@@ -1,31 +1,45 @@
 use actix_web::{delete, get, post, put, web, HttpResponse, Responder, ResponseError};
 use sqlx::PgPool;
 
-use crate::model::{CreateTeam, Team};
+use crate::{
+    model::{Amount, CreateTeam, History, Team, TeamVec, UserRole, UserToken},
+    ApiResult,
+};
 
 #[get("/teams")]
-async fn find_all_teams(db_pool: web::Data<PgPool>) -> impl Responder {
-    info!("Received new request: find all teams.");
-    let result = Team::find_all(db_pool.get_ref()).await;
-    match result {
-        Ok(teams) => HttpResponse::Ok().json(teams),
-        Err(err) => err.error_response(),
-    }
+async fn find_all_teams(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<TeamVec> {
+    let user = token
+        .try_into_authorized_user(
+            vec![UserRole::Admin, UserRole::Visualizer],
+            db_pool.get_ref(),
+        )
+        .await?;
+    History::log(user.id, format!("find all teams"), db_pool.get_ref()).await?;
+    Team::find_all(db_pool.get_ref()).await
 }
 
+// TODO determine if this is useful
 #[get("/teams/amount")]
-async fn teams_amount(db_pool: web::Data<PgPool>) -> impl Responder {
-    info!("Received new request: get the amount of teams.");
-    let result = Team::amount(db_pool.get_ref()).await;
-    match result {
-        Ok(amount) => HttpResponse::Ok().json(amount),
-        Err(err) => err.error_response(),
-    }
+async fn teams_amount(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<Amount> {
+    let user = token
+        .try_into_authorized_user(
+            vec![UserRole::Admin, UserRole::Visualizer],
+            db_pool.get_ref(),
+        )
+        .await?;
+    History::log(
+        user.id,
+        format!("get the amount of all teams"),
+        db_pool.get_ref(),
+    )
+    .await?;
+    Team::amount(db_pool.get_ref()).await
 }
 
 #[post("/teams")]
 async fn create_team(
     create_team: web::Json<CreateTeam>,
+    token: UserToken,
     db_pool: web::Data<PgPool>,
 ) -> impl Responder {
     info!("Received new request: create team.");
@@ -33,8 +47,18 @@ async fn create_team(
 }
 
 #[get("/teams/{id}")]
-async fn find_team(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Responder {
-    info!("Received new request: find team.");
+async fn find_team(
+    id: web::Path<i32>,
+    token: UserToken,
+    db_pool: web::Data<PgPool>,
+) -> ApiResult<Team> {
+    let user = token
+        .try_into_authorized_user(
+            vec![UserRole::Admin, UserRole::Visualizer],
+            db_pool.get_ref(),
+        )
+        .await?;
+    History::log(user.id, format!("get team by id"), db_pool.get_ref()).await?;
     Team::find(id.into_inner(), db_pool.get_ref()).await
 }
 
@@ -42,49 +66,92 @@ async fn find_team(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Respo
 async fn update_team(
     id: web::Path<i32>,
     team: web::Json<CreateTeam>,
+    token: UserToken,
     db_pool: web::Data<PgPool>,
-) -> impl Responder {
-    info!("Received new request: update team.");
+) -> ApiResult<Team> {
+    let user = token
+        .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
+        .await?;
+    History::log(user.id, format!("update team"), db_pool.get_ref()).await?;
     Team::update(id.into_inner(), team.into_inner(), db_pool.get_ref()).await
 }
 
 #[delete("/teams/{id}")]
-async fn delete_team(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Responder {
-    info!("Received new request: delete team.");
+async fn delete_team(
+    id: web::Path<i32>,
+    token: UserToken,
+    db_pool: web::Data<PgPool>,
+) -> ApiResult<Team> {
+    let user = token
+        .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
+        .await?;
+    History::log(user.id, format!("delete team"), db_pool.get_ref()).await?;
     Team::delete(id.into_inner(), db_pool.get_ref()).await
 }
 
 #[get("/teams/{id}/pending")]
-async fn pending_games(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Responder {
-    info!("Received new request: find pending games for team");
-    let result = Team::pending_games(id.into_inner(), db_pool.get_ref()).await;
-    match result {
-        Ok(games) => HttpResponse::Ok().json(games),
-        Err(err) => err.error_response(),
-    }
+async fn pending_games(
+    id: web::Path<i32>,
+    token: UserToken,
+    db_pool: web::Data<PgPool>,
+) -> impl Responder {
+    let user = token
+        .try_into_authorized_user(
+            vec![UserRole::Admin, UserRole::Visualizer],
+            db_pool.get_ref(),
+        )
+        .await?;
+    History::log(
+        user.id,
+        format!("get all pending games for team"),
+        db_pool.get_ref(),
+    )
+    .await?;
+    Team::pending_games(id.into_inner(), db_pool.get_ref()).await
 }
 
+// TODO check if this is useful
 #[get("/teams/{id}/pending/amount")]
-async fn pending_games_amount(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Responder {
-    info!("Received new request: get the amount of pending teams for game");
-    let result = Team::pending_games_amount(id.into_inner(), db_pool.get_ref()).await;
-    match result {
-        Ok(size) => HttpResponse::Ok().json(size),
-        Err(err) => err.error_response(),
-    }
+async fn pending_games_amount(
+    id: web::Path<i32>,
+    token: UserToken,
+    db_pool: web::Data<PgPool>,
+) -> ApiResult<Amount> {
+    let user = token
+        .try_into_authorized_user(
+            vec![UserRole::Admin, UserRole::Visualizer],
+            db_pool.get_ref(),
+        )
+        .await?;
+    History::log(
+        user.id,
+        format!("get the amount of all pending teams"),
+        db_pool.get_ref(),
+    )
+    .await?;
+    Team::pending_games_amount(id.into_inner(), db_pool.get_ref()).await
 }
 
 #[get("/teams/{id}/finished")]
-async fn finished_games(id: web::Path<i32>, db_pool: web::Data<PgPool>) -> impl Responder {
-    info!("Received new request: find finished teams for game");
-    let result = Team::finished_games(id.into_inner(), db_pool.get_ref()).await;
-    match result {
-        Ok(games) => HttpResponse::Ok().json(games),
-        Err(err) => err.error_response(),
-    }
+async fn finished_games(
+    id: web::Path<i32>,
+    token: UserToken,
+    db_pool: web::Data<PgPool>,
+) -> impl Responder {
+    let user = token
+        .try_into_authorized_user(
+            vec![UserRole::Admin, UserRole::Visualizer],
+            db_pool.get_ref(),
+        )
+        .await?;
+    History::log(
+        user.id,
+        format!("get the all finished teams"),
+        db_pool.get_ref(),
+    )
+    .await?;
+    Team::finished_games(id.into_inner(), db_pool.get_ref()).await
 }
-
-// TODO: check_status -> respond with int
 
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(find_all_teams);

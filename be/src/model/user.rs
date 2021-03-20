@@ -52,10 +52,10 @@ pub struct CreateLogin {
 //      1. check authorization!
 //      2. use logging
 //      3. use newtype-vecs
+// - check if impl Responder for TypeVec can be generalized in mod.rs
 // - log between token and action with Transaction-History
-// - log in try-into-user -> this needs a pool! 
 // - check if anyhow is necessary
-// - implement transaction-history -> use actix-web middleware-logger?
+// - fine-tune permissions 
 // -> I've almost settled on logging myself - to access the user, I have to log after getting the token!
 // - write history-routes? -> I need this for showing logs in the admin-fe
 //      - write history.http

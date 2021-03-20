@@ -7,8 +7,8 @@ use crate::ApiResult;
 
 use super::{CustomError, GameKind, ParsedOutcome, TeamGender};
 
-
-
+/// This module provides all routes concerning outcomes.
+/// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
 #[derive(Deserialize, Serialize, FromRow)]
 #[sqlx(rename = "game_team")]
 #[sqlx(rename_all = "lowercase")]

@@ -5,7 +5,7 @@ use sqlx::{FromRow, PgPool};
 
 use crate::ApiResult;
 
-use super::{CustomError, Outcome, Team, TeamVec};
+use super::{Amount, CustomError, Outcome, Team, TeamVec};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(rename = "game_kind")]
@@ -152,20 +152,22 @@ impl Game {
         Ok(TeamVec(teams))
     }
 
-    pub async fn pending_teams_amount(id: i32, pool: &PgPool) -> ApiResult<usize> {
+    /// get the amount of pending teams
+    pub async fn pending_teams_amount(id: i32, pool: &PgPool) -> ApiResult<Amount> {
         // I am choosing to not use pending_teams as it encompasses loading all outstanding teams before counting.
 
         let outcomes = Outcome::find_all_for_game(id, pool).await?.0;
 
         // filter every outcome that has data, then count the items
-        Ok(outcomes.iter().filter(|e | e.data.is_none()).count())
+        Ok(Amount(outcomes.iter().filter(|e | e.data.is_none()).count()))
     }
 
-    pub async fn amount(pool: &PgPool) -> ApiResult<usize> {
+    /// get the amount of games
+    pub async fn amount(pool: &PgPool) -> ApiResult<Amount> {
         // This function currently calls find_all and uses its size.
         // If performance warrants a better implementation(f.e. caching the result in the db or memory), 
         // this capsules the functionality, meaning I will only need to change this method.
         
-        Ok(Game::find_all(pool).await?.0.len())
+        Ok(Amount(Game::find_all(pool).await?.0.len()))
     }
 }

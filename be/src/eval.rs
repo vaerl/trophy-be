@@ -15,7 +15,7 @@ pub async fn evaluate_trophy(pool: &PgPool) -> Result<(), CustomError> {
 }
 
 async fn evaluate_game(id: i32, pool: &PgPool) -> Result<(), CustomError> {
-    let pending_amount = Game::pending_teams_amount(id, pool).await?;
+    let pending_amount = Game::pending_teams_amount(id, pool).await?.0;
     if pending_amount > 0 {
         // Don't evaluate when teams are still playing - this should never happen!
         Err(CustomError::EarlyEvaluationError {
