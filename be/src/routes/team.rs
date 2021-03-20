@@ -1,4 +1,4 @@
-use actix_web::{delete, get, post, put, web, HttpResponse, Responder, ResponseError};
+use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
 use crate::{
@@ -41,8 +41,11 @@ async fn create_team(
     create_team: web::Json<CreateTeam>,
     token: UserToken,
     db_pool: web::Data<PgPool>,
-) -> impl Responder {
-    info!("Received new request: create team.");
+) -> ApiResult<Team> {
+    let user = token
+        .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
+        .await?;
+    History::log(user.id, format!("create team"), db_pool.get_ref()).await?;
     Team::create(create_team.into_inner(), db_pool.get_ref()).await
 }
 

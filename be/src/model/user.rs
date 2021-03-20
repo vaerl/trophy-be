@@ -48,17 +48,10 @@ pub struct CreateLogin {
 
 
 // TODO
-// - adjust all routes to:
-//      1. check authorization!
-//      2. use logging
-//      3. use newtype-vecs
-// - check if impl Responder for TypeVec can be generalized in mod.rs
-// - log between token and action with Transaction-History
+// - check if "impl Responder for <Type>Vec" can be generalized (in mod.rs)
 // - check if anyhow is necessary
 // - fine-tune permissions 
-// -> I've almost settled on logging myself - to access the user, I have to log after getting the token!
-// - write history-routes? -> I need this for showing logs in the admin-fe
-//      - write history.http
+// - adjust http to login
 // - merge branch
 // - tests -> implement on separate branch
 //      - this will include a lot of bugfixing!
