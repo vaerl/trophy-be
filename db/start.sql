@@ -7,7 +7,6 @@ DROP TABLE IF EXISTS game;
 DROP TABLE IF EXISTS team;
 DROP TABLE IF EXISTS game_team;
 DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS login_history;
 DROP TABLE IF EXISTS transaction_history;
 ---
 ---
@@ -45,11 +44,6 @@ CREATE TABLE game_team (
     CONSTRAINT game_team_pkey PRIMARY KEY (game_id, team_id) -- explicit pk
 );
 --- create meta-tables
-CREATE TABLE login_history (
-    id serial PRIMARY KEY NOT NULL,
-    user_id int NOT NULL REFERENCES users (id),
-    timestamp TIMESTAMP WITH TIME ZONE NOT NULL
-);
 CREATE TABLE transaction_history (
     id serial PRIMARY KEY NOT NULL,
     user_id int NOT NULL REFERENCES users (id),
