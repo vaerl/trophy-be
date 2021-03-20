@@ -1,0 +1,4 @@
+@BASE = http://127.0.0.1:8080
+
+### evaluate trophy -> this create an xlsx-file
+GET {{BASE}}/history
