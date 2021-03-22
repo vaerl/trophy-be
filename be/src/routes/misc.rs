@@ -24,8 +24,12 @@ async fn reset_database(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResu
     sqlx::query("DELETE FROM game_team")
         .execute(&mut tx)
         .await?;
-    sqlx::query("DELETE FROM game").execute(&mut tx).await?;
-    sqlx::query("DELETE FROM team").execute(&mut tx).await?;
+    sqlx::query("DELETE FROM games").execute(&mut tx).await?;
+    sqlx::query("DELETE FROM teams").execute(&mut tx).await?;
+    sqlx::query("DELETE FROM users").execute(&mut tx).await?;
+    sqlx::query("DELETE FROM transaction_history")
+        .execute(&mut tx)
+        .await?;
     tx.commit().await?;
 
     Ok(HttpResponse::Ok().finish())

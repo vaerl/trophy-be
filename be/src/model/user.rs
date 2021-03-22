@@ -55,7 +55,6 @@ pub struct CreateLogin {
 // - merge branch
 // - tests -> implement on separate branch
 //      - this will include a lot of bugfixing!
-// - update /reset/database--> what did I want to do here?
 
 impl Responder for User {
     type Error = CustomError;
