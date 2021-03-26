@@ -3,13 +3,13 @@ use futures::{Future, future::{ready, Ready}};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use crate::ApiResult;
+use crate::{derive_responder::Responder, ApiResult};
 
 use super::{CustomError, GameKind, ParsedOutcome, TeamGender};
 
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
-#[derive(Deserialize, Serialize, FromRow)]
+#[derive(Deserialize, Serialize, FromRow, Responder)]
 #[sqlx(rename = "game_team")]
 #[sqlx(rename_all = "lowercase")]
 pub struct Outcome {
@@ -18,34 +18,8 @@ pub struct Outcome {
     pub data: Option<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Responder)]
 pub struct OutcomeVec(pub Vec<Outcome>);
-
-impl Responder for Outcome {
-    type Error = CustomError;
-    type Future = Ready<ApiResult<HttpResponse>>;
-
-    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
-        let body = serde_json::to_string(&self).unwrap();
-        // create response and set content type
-        ready(Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(body)))
-    }
-}
-
-impl Responder for OutcomeVec {
-    type Error = CustomError;
-    type Future = Ready<ApiResult<HttpResponse>>;
-
-    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
-        let body = serde_json::to_string(&self).unwrap();
-        // create response and set content type
-        ready(Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(body)))
-    }
-}
 
 impl Outcome {
     pub async fn find_all(pool: &PgPool) -> ApiResult<OutcomeVec> {

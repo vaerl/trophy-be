@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
-use crate::ApiResult;
+use crate::{derive_responder::Responder, ApiResult};
 
 use super::{CustomError, CreateToken, History, UserToken};
 
@@ -20,7 +20,7 @@ pub enum UserRole {
     Visualizer,
 }
 
-#[derive(Serialize, FromRow)]
+#[derive(Serialize, FromRow, Responder)]
 pub struct User {
     pub id: i32,
     pub username: String,
@@ -30,7 +30,7 @@ pub struct User {
 }
 
 // this syntax is brilliant!
-#[derive(Serialize)]
+#[derive(Serialize, Responder)]
 pub struct UserVec(Vec<User>);
 
 #[derive(Deserialize)]
@@ -48,40 +48,13 @@ pub struct CreateLogin {
 
 
 // TODO
-// - check if "impl Responder for <Type>Vec" can be generalized (in mod.rs)
+// - check if I can/should move secret.key into /static
 // - check if anyhow is necessary
 // - fine-tune permissions 
 // - adjust http to login
 // - merge branch
 // - tests -> implement on separate branch
 //      - this will include a lot of bugfixing!
-
-impl Responder for User {
-    type Error = CustomError;
-    type Future = Ready<ApiResult<HttpResponse>>;
-
-    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
-        let body = serde_json::to_string(&self).unwrap();
-        // create response and set content type
-        ready(Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(body)))
-    }
-}
-
-
-impl Responder for UserVec {
-    type Error = CustomError;
-    type Future = Ready<ApiResult<HttpResponse>>;
-
-    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
-        let body = serde_json::to_string(&self).unwrap();
-        // create response and set content type
-        ready(Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(body)))
-    }
-}
 
 impl User {
     pub async fn find_all(pool: &PgPool) -> ApiResult<UserVec> {

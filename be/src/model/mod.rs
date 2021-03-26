@@ -19,20 +19,7 @@ pub use team::*;
 pub use user::*;
 pub use user_token::*;
 
-use crate::ApiResult;
+use crate::{derive_responder::Responder, ApiResult};
 
-#[derive(Serialize)]
+#[derive(Serialize, Responder)]
 pub struct Amount(pub usize);
-
-impl Responder for Amount {
-    type Error = CustomError;
-    type Future = Ready<ApiResult<HttpResponse>>;
-
-    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
-        let body = serde_json::to_string(&self).unwrap();
-        // create response and set content type
-        ready(Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(body)))
-    }
-}

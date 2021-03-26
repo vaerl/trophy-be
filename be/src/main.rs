@@ -1,6 +1,8 @@
 #[macro_use]
 extern crate log;
 
+extern crate derive_responder;
+
 use actix_web::{error, web, App, HttpResponse, HttpServer};
 use anyhow::Result;
 use dotenv::dotenv;

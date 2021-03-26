@@ -4,11 +4,11 @@ use futures::future::{ready, Ready};
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::ApiResult;
+use crate::{derive_responder::Responder, ApiResult};
 
 use super::CustomError;
 
-#[derive(Serialize)]
+#[derive(Serialize, Responder)]
 pub struct History {
     pub id: i32,
     pub user_id: i32,
@@ -16,34 +16,8 @@ pub struct History {
     pub action: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Responder)]
 pub struct HistoryVec(Vec<History>);
-
-impl Responder for History {
-    type Error = CustomError;
-    type Future = Ready<ApiResult<HttpResponse>>;
-
-    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
-        let body = serde_json::to_string(&self).unwrap();
-        // create response and set content type
-        ready(Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(body)))
-    }
-}
-
-impl Responder for HistoryVec {
-    type Error = CustomError;
-    type Future = Ready<ApiResult<HttpResponse>>;
-
-    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
-        let body = serde_json::to_string(&self).unwrap();
-        // create response and set content type
-        ready(Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(body)))
-    }
-}
 
 impl History {
     pub async fn find_all(pool: &PgPool) -> ApiResult<HistoryVec> {

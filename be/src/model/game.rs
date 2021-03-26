@@ -3,7 +3,7 @@ use futures::future::{ready, Ready};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use crate::ApiResult;
+use crate::{derive_responder::Responder, ApiResult};
 
 use super::{Amount, CustomError, Outcome, Team, TeamVec};
 
@@ -16,7 +16,7 @@ pub enum GameKind {
     Time,
 }
 
-#[derive(Serialize, FromRow)]
+#[derive(Serialize, FromRow, Responder)]
 pub struct Game {
     pub id: i32,
     pub trophy_id: i32,
@@ -25,7 +25,7 @@ pub struct Game {
     pub user_id: i32
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Responder)]
 pub struct GameVec(pub Vec<Game>);
 
 #[derive(Deserialize)]
@@ -34,32 +34,6 @@ pub struct CreateGame {
     pub name: String,
     pub kind: GameKind,
     pub user_id: i32
-}
-
-impl Responder for Game {
-    type Error = CustomError;
-    type Future = Ready<ApiResult<HttpResponse>>;
-
-    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
-        let body = serde_json::to_string(&self).unwrap();
-        // create response and set content type
-        ready(Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(body)))
-    }
-}
-
-impl Responder for GameVec {
-    type Error = CustomError;
-    type Future = Ready<ApiResult<HttpResponse>>;
-
-    fn respond_to(self, _req: &HttpRequest) -> Self::Future {
-        let body = serde_json::to_string(&self).unwrap();
-        // create response and set content type
-        ready(Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(body)))
-    }
 }
 
 impl Game {
