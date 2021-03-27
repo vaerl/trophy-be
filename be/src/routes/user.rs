@@ -4,7 +4,7 @@ use actix_web::{
 use sqlx::PgPool;
 
 use crate::{
-    model::{CreateLogin, CreateUser, History, User, UserRole, UserToken, UserVec},
+    model::{CreateLogin, CreateUser, Game, History, User, UserRole, UserToken, UserVec},
     ApiResult,
 };
 
@@ -28,6 +28,19 @@ async fn find_user(
         .await?;
     History::log(user.id, format!("get user with ID"), db_pool.get_ref()).await?;
     User::find(id.into_inner(), db_pool.get_ref()).await
+}
+
+#[get("/users/{id}/game")]
+async fn find_game_for_ref(
+    id: web::Path<i32>,
+    token: UserToken,
+    db_pool: web::Data<PgPool>,
+) -> ApiResult<Game> {
+    let user = token
+        .try_into_authorized_user(vec![UserRole::Admin, UserRole::Referee], db_pool.get_ref())
+        .await?;
+    History::log(user.id, format!("get user with ID"), db_pool.get_ref()).await?;
+    User::find_game_for_ref(id.into_inner(), db_pool.get_ref()).await
 }
 
 #[post("/users")]
@@ -106,6 +119,7 @@ async fn logout(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<HttpR
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(find_all_users);
     cfg.service(find_user);
+    cfg.service(find_game_for_ref);
     cfg.service(create_user);
     cfg.service(update_user);
     cfg.service(delete_user);

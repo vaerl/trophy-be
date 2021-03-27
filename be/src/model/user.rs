@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
-use crate::{derive_responder::Responder, ApiResult};
+use crate::{derive_responder::Responder, ApiResult, model::Game};
 
 use super::{CustomError, CreateToken, History, UserToken};
 
@@ -29,8 +29,8 @@ pub struct User {
     pub session: String,
 }
 
-// this syntax is brilliant!
 #[derive(Serialize, Responder)]
+// this syntax is brilliant!
 pub struct UserVec(Vec<User>);
 
 #[derive(Deserialize)]
@@ -48,8 +48,7 @@ pub struct CreateLogin {
 
 
 // TODO
-// - check if I can/should move secret.key into /static
-// - fine-tune permissions 
+// - fine-tune permissions
 // - adjust http to login
 // - merge branch
 // - tests -> implement on separate branch
@@ -86,6 +85,15 @@ impl User {
             }
         }
         Err(CustomError::NotFoundError {message: format!("User {} does not exist!", name)})
+    }
+
+    pub async fn find_game_for_ref(user_id: i32, pool: &PgPool) -> ApiResult<Game> {
+        let game = Game::find_all(pool).await?.0.into_iter().filter(|game| game.user_id == user_id).next();
+
+        match game {
+            Some(game) => Ok(game),
+            None => Err(CustomError::NotFoundError {message: format!("Game for referee could not be found!")})
+        }
     }
 
     pub async fn create(create_user: CreateUser, pool: &PgPool) -> ApiResult<User> {
