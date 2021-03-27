@@ -4,7 +4,6 @@ extern crate log;
 extern crate derive_responder;
 
 use actix_web::{error, web, App, HttpResponse, HttpServer};
-use anyhow::Result;
 use dotenv::dotenv;
 use model::CustomError;
 use sqlx::PgPool;
@@ -31,7 +30,7 @@ pub type ApiResult<T> = Result<T, CustomError>;
 // -> this example is the only thing I can currently think of!
 
 #[actix_web::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), CustomError> {
     dotenv().ok();
     std::env::set_var("RUST_LOG", "debug");
     env_logger::init();

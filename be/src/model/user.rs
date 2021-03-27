@@ -49,7 +49,6 @@ pub struct CreateLogin {
 
 // TODO
 // - check if I can/should move secret.key into /static
-// - check if anyhow is necessary
 // - fine-tune permissions 
 // - adjust http to login
 // - merge branch

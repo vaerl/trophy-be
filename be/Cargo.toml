@@ -8,7 +8,8 @@ edition = "2018"
 
 [dependencies]
 # basics
-anyhow = "1.0"
+# not needed anymore due to having to provide a ResponseError-impl 
+# anyhow = "1.0"
 dotenv = "0.15.0"
 futures = "0.3"
 humantime = "2.1.0"

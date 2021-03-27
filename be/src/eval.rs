@@ -1,6 +1,5 @@
 use crate::model::{CustomError, Game, Outcome, ParsedOutcome, Team};
 use actix_files::NamedFile;
-use anyhow::Result;
 use sqlx::PgPool;
 use std::time::SystemTime;
 use xlsxwriter::*;
