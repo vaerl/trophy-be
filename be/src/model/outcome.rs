@@ -5,7 +5,7 @@ use sqlx::{FromRow, PgPool};
 
 use crate::{derive_responder::Responder, ApiResult};
 
-use super::{CustomError, GameKind, ParsedOutcome, TeamGender};
+use super::{CustomError, Game, ParsedOutcome, TeamGender};
 
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
@@ -100,12 +100,13 @@ impl Outcome {
         Ok(OutcomeVec(outcomes.into_iter().filter(|f| filter(&f.data)).collect()))
     }
 
-    pub async fn parse_by_gender(game_kind: &GameKind, pool: &PgPool) -> ApiResult<(Vec::<ParsedOutcome>, Vec::<ParsedOutcome>)> {
+    /// Parse all outcomes for game and return as ParsedOutcome.
+    pub async fn parse_by_gender_for_game(game: &Game, pool: &PgPool) -> ApiResult<(Vec::<ParsedOutcome>, Vec::<ParsedOutcome>)> {
         let mut female_outcomes = Vec::<ParsedOutcome>::new();
         let mut male_outcomes = Vec::<ParsedOutcome>::new();
         // sort outcomes by gender
-        for outcome in Outcome::find_all(pool).await?.0 {
-            let parsed_outcome = ParsedOutcome::from(&game_kind, outcome, pool).await?;
+        for outcome in Outcome::find_all_for_game(game.id, pool).await?.0 {
+            let parsed_outcome = ParsedOutcome::from(&game.kind, outcome, pool).await?;
             match parsed_outcome.team.gender {
                 TeamGender::Female => female_outcomes.push(parsed_outcome),
                 TeamGender::Male => male_outcomes.push(parsed_outcome),

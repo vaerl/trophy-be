@@ -7,8 +7,8 @@ use crate::ApiResult;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub enum Value {
-    Points(Duration),
-    Time(i32),
+    Time(Duration),
+    Points(i32),
 }
 
 pub struct ParsedOutcome {
@@ -24,8 +24,8 @@ impl ParsedOutcome {
         pool: &PgPool,
     ) -> ApiResult<ParsedOutcome> {
         let value: Value = match game_kind {
-            super::GameKind::Points => Value::Time(outcome.data.unwrap().parse::<i32>()?),
-            super::GameKind::Time => Value::Points(parse_duration(&outcome.data.unwrap())?),
+            super::GameKind::Points => Value::Points(outcome.data.unwrap().parse::<i32>()?),
+            super::GameKind::Time => Value::Time(parse_duration(&outcome.data.unwrap())?),
         };
         Ok(ParsedOutcome {
             game_id: outcome.game_id,
