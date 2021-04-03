@@ -46,12 +46,6 @@ pub struct CreateLogin {
     pub password: String
 }
 
-
-// TODO
-// - tests -> implement on separate branch
-//      - this will include a lot of bugfixing!
-// - write docs -> use separate branch
-
 impl User {
     pub async fn find_all(pool: &PgPool) -> ApiResult<UserVec> {
         let users = sqlx::query_as!(

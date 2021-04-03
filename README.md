@@ -3,13 +3,18 @@
 - [Deutsche Version](./docs/readme-deutsch.md)
 - [Development-Information](./docs/development.md)
 
-// TODO write this
-
 ## Evaluation
 
-This software evaluates exactly like the previous, excel-based mechanism:
-First, all outcomes of a game are fetched. Then the outcomes are separated by gender and sorted by better time or more points. Finally, points are assigned based on the resulting order, stating at 50.
-Note that every gender is rated separately. The staring-point for rating can also be adjusted.
+This software evaluates almost exactly like the previous, excel-based mechanism:
+First, all outcomes of a game are fetched. Then the outcomes are separated by gender and sorted by better time or more points. Finally, points are assigned based on the resulting order, starting at 50. This backend handles the same score differently:
+
+Example:
+
+A -> 100 points
+B -> 100 points
+C -> 90 points
+
+While A and B get 50 points and C 48 in the excel-version, c now gets 49 points.
 
 ## Running the backend
 
@@ -17,7 +22,7 @@ To run this project, install [Docker](https://docker.com) and Docker Compose(whi
 Then, do the following:
 
 1. clone the project with Git
-2. create the containers with `docker build`
+2. create the containers
 3. create the environment
    1. create the secret-key
    2. create a .env-file
