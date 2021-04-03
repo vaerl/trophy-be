@@ -1,11 +1,22 @@
 @BASE = http://127.0.0.1:8080
+@TOKEN = asdf
+
+POST {{BASE}}/login
+Content-Type: application/json
+
+{
+    "username": "lukas",
+    "password": "test"
+}
 
 ### get all teams
 GET {{BASE}}/teams
+Authorization: bearer {{TOKEN}}
 
 ### add new team
 POST {{BASE}}/teams
 Content-Type: : application/json
+Authorization: bearer {{TOKEN}}
 
 {
     "trophy_id": 1,
@@ -15,10 +26,12 @@ Content-Type: : application/json
 
 ### get team with id 1
 GET {{BASE}}/teams/1
+Authorization: bearer {{TOKEN}}
 
 ### update team with id 1
 PUT http://127.0.0.1:8080/teams/1
 Content-Type: application/json
+Authorization: bearer {{TOKEN}}
 
 {
     "trophy_id": 2,
@@ -28,3 +41,4 @@ Content-Type: application/json
 
 ### delete team with id 1
 DELETE http://127.0.0.1:8080/teams/1
+Authorization: bearer {{TOKEN}}

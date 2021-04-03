@@ -48,11 +48,9 @@ pub struct CreateLogin {
 
 
 // TODO
-// - fine-tune permissions
-// - adjust http to login
-// - merge branch
 // - tests -> implement on separate branch
 //      - this will include a lot of bugfixing!
+// - write docs -> use separate branch
 
 impl User {
     pub async fn find_all(pool: &PgPool) -> ApiResult<UserVec> {

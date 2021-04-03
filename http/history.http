@@ -1,4 +1,14 @@
 @BASE = http://127.0.0.1:8080
+@TOKEN = asdf
+
+POST {{BASE}}/login
+Content-Type: application/json
+
+{
+    "username": "lukas",
+    "password": "test"
+}
 
 ### evaluate trophy -> this create an xlsx-file
 GET {{BASE}}/history
+Authorization: bearer {{TOKEN}}

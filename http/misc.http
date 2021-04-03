@@ -1,7 +1,18 @@
 @BASE = http://127.0.0.1:8080
+@TOKEN = asdf
+
+POST {{BASE}}/login
+Content-Type: application/json
+
+{
+    "username": "lukas",
+    "password": "test"
+}
 
 ### ping
 GET {{BASE}}/ping
+Authorization: bearer {{TOKEN}}
 
 ### reset the database
 POST {{BASE}}/reset/database
+Authorization: bearer {{TOKEN}}
