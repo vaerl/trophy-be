@@ -5,12 +5,33 @@
 
 // TODO write this
 
-## Structure
-
-### Evaluation
+## Evaluation
 
 This software evaluates exactly like the previous, excel-based mechanism:
 First, all outcomes of a game are fetched. Then the outcomes are separated by gender and sorted by better time or more points. Finally, points are assigned based on the resulting order, stating at 50.
 Note that every gender is rated separately. The staring-point for rating can also be adjusted.
 
-## Running
+## Running the backend
+
+To run this project, install [Docker](https://docker.com) and Docker Compose(which should come bundled on Linux).
+Then, do the following:
+
+1. clone the project with Git
+2. create the containers with `docker build`
+3. create the environment
+   1. create the secret-key
+   2. create a .env-file
+4. run `docker-compose up`
+
+### Creating the containers
+
+There are handy scripts for doing this located in `/scripts`. You might need to run `chmod +x *` in `/scripts` to make them executable.
+To build the containers run `build-containers.sh`.
+
+### Creating a secret key
+
+Run `head -c16 /dev/urandom > secret.key`. TODO check if this is secure!
+
+### Creating the .env-file
+
+See [this](./be/.env-example) for an example. Just copy this file into a new `.env`-file and set the values accordingly.
