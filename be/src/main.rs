@@ -3,7 +3,7 @@ extern crate log;
 
 extern crate derive_responder;
 
-use actix_web::{error, web, App, HttpResponse, HttpServer};
+use actix_web::{body::Body, error, web, App, BaseHttpResponse, HttpServer};
 use dotenv::dotenv;
 use model::CustomError;
 use sqlx::PgPool;
@@ -51,9 +51,8 @@ async fn main() -> Result<(), CustomError> {
             .app_data(web::JsonConfig::default().error_handler(|err, _req| {
                 error::InternalError::from_response(
                     "",
-                    HttpResponse::BadRequest()
-                        .content_type("application/json")
-                        .body(format!(r#"{{"error":"{}"}}"#, err)),
+                    BaseHttpResponse::bad_request()
+                        .set_body(Body::from(format!(r#"{{"error":"{}"}}"#, err))),
                 )
                 .into()
             }))

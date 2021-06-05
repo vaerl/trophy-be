@@ -1,6 +1,5 @@
-use actix_web::{HttpRequest, HttpResponse, Responder};
+use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
-use futures::future::{Ready, ready};
 use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};

@@ -1,12 +1,9 @@
-use actix_web::{HttpRequest, HttpResponse, Responder};
+use actix_web::{body::Body, HttpRequest, HttpResponse, Responder};
 use chrono::{DateTime, Utc};
-use futures::future::{ready, Ready};
 use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::{derive_responder::Responder, ApiResult};
-
-use super::CustomError;
 
 #[derive(Serialize, Responder)]
 pub struct History {

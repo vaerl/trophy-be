@@ -1,11 +1,10 @@
 use std::fmt;
-use actix_web::{HttpRequest, HttpResponse, Responder};
-use futures::future::{ready, Ready};
+use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
 use crate::{derive_responder::Responder, ApiResult};
-use super::{Amount, CustomError, Game, GameVec, Outcome};
+use super::{Amount, Game, GameVec, Outcome};
 
 #[derive(Serialize, Deserialize, Debug, sqlx::Type)]
 #[sqlx(rename = "team_gender")]

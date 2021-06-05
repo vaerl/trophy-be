@@ -65,13 +65,14 @@ async fn find_all_outcomes_for_game(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
+    let game_id = game_id.into_inner();
     History::log(
         user.id,
-        format!("find all outcomes for game"),
+        format!("find all outcomes for game {}", game_id),
         db_pool.get_ref(),
     )
     .await?;
-    Outcome::find_all_for_game(game_id.into_inner(), db_pool.get_ref()).await
+    Outcome::find_all_for_game(game_id, db_pool.get_ref()).await
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {

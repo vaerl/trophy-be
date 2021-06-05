@@ -1,11 +1,11 @@
-use actix_web::{HttpRequest, HttpResponse, Responder};
-use futures::{Future, future::{ready, Ready}};
+use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
+use futures::{Future};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
 use crate::{derive_responder::Responder, ApiResult};
 
-use super::{CustomError, Game, ParsedOutcome, TeamGender};
+use super::{Game, ParsedOutcome, TeamGender};
 
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".

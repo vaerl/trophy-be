@@ -1,11 +1,10 @@
-use actix_web::{HttpRequest, HttpResponse, Responder};
-use futures::future::{ready, Ready};
+use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
 use crate::{derive_responder::Responder, ApiResult};
 
-use super::{Amount, CustomError, Outcome, Team, TeamVec};
+use super::{Amount, Outcome, Team, TeamVec};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(rename = "game_kind")]

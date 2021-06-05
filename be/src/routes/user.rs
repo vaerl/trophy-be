@@ -100,7 +100,7 @@ async fn login(login: web::Json<CreateLogin>, db_pool: web::Data<PgPool>) -> imp
                 .finish();
             HttpResponse::Ok().cookie(cookie).finish()
         }
-        Err(err) => err.error_response(),
+        Err(err) => err.error_response().into(),
     }
 }
 
