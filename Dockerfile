@@ -1,14 +1,47 @@
-FROM rust:latest as build
-ENV PKG_CONFIG_ALLOW_CROSS=1
+# ------------------------------------------------------------------------------
+# Cargo Build Stage
+# ------------------------------------------------------------------------------
+
+FROM rust:latest as cargo-build
+
+RUN apt-get update
+
+RUN apt-get install musl-tools -y
+
+RUN rustup target add x86_64-unknown-linux-musl
 
 WORKDIR /usr/src/trophy-be
-COPY . .
-RUN ls -la
 
-RUN cargo install --path ./be
+COPY ./be/Cargo.toml Cargo.toml
 
-FROM gcr.io/distroless/cc-debian10
+RUN mkdir src/
 
-COPY --from=build /usr/local/cargo/bin/trophy-be /usr/local/bin/trophy-be
+RUN echo "fn main() {println!(\"if you see this, the build broke\")}" > src/main.rs
 
-CMD ["trophy-be"]
+RUN RUSTFLAGS=-Clinker=musl-gcc cargo build --release --target=x86_64-unknown-linux-musl
+
+RUN rm -f target/x86_64-unknown-linux-musl/release/deps/trophy-be*
+
+COPY ./be .
+
+# ------------------------------------------------------------------------------
+# Final Stage
+# ------------------------------------------------------------------------------
+
+FROM alpine:latest
+
+RUN addgroup -g 1000 trophy-be
+
+RUN adduser -D -s /bin/sh -u 1000 -G trophy-be trophy-be
+
+WORKDIR /home/trophy-be/bin/
+
+COPY --from=cargo-build /usr/src/trophy-be/target/x86_64-unknown-linux-musl/release/trophy-be .
+
+RUN chown trophy-be:trophy-be trophy-be
+
+USER trophy-be
+
+CMD ["./trophy-be"]
+
+RUN RUSTFLAGS=-Clinker=musl-gcc cargo build --release --target=x86_64-unknown-linux-musl
