@@ -15,7 +15,7 @@ WORKDIR /usr/src/trophy-be
 COPY ./be/Cargo.toml Cargo.toml
 
 RUN mkdir ../derive_responder
-COPY ./derive_responder/Cargo.toml ../derive_responder/Cargo.toml
+COPY ./derive_responder ../derive_responder
 
 RUN mkdir src/
 
