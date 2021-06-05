@@ -4,6 +4,8 @@
 
 FROM rust:latest as cargo-build
 
+ENV SQLX_OFFLINE=true
+
 RUN apt-get update
 
 RUN apt-get install musl-tools clang -y
