@@ -1,3 +1,3 @@
 FROM fedora:latest
-COPY target/debug/backend /
+COPY be/target/debug/backend /
 CMD /backend
