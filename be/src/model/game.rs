@@ -7,7 +7,7 @@ use crate::{derive_responder::Responder, ApiResult};
 use super::{Amount, Outcome, Team, TeamVec};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
-#[sqlx(rename = "game_kind")]
+#[sqlx(type_name = "game_kind")]
 #[sqlx(rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum GameKind {

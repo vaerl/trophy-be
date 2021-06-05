@@ -10,7 +10,7 @@ use crate::{derive_responder::Responder, ApiResult, model::Game};
 use super::{CustomError, CreateToken, History, UserToken};
 
 #[derive(Serialize, Deserialize, sqlx::Type, PartialEq)]
-#[sqlx(rename = "user_role")]
+#[sqlx(type_name = "user_role")]
 #[sqlx(rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum UserRole {
