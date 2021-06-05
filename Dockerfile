@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Cargo Build Stage
 # ------------------------------------------------------------------------------
-
+# TODO squash stages
 FROM rust:latest as cargo-build
 
 ENV SQLX_OFFLINE=true
@@ -13,6 +13,8 @@ RUN apt-get install musl-tools clang -y
 RUN rustup target add x86_64-unknown-linux-musl
 
 WORKDIR /usr/src/trophy-be
+
+RUN head -c16 /dev/urandom > secret.key
 
 COPY ./be/Cargo.toml Cargo.toml
 
