@@ -3,6 +3,7 @@ ENV PKG_CONFIG_ALLOW_CROSS=1
 
 WORKDIR /usr/src/trophy-be
 COPY . .
+RUN ls -la
 
 RUN cargo install --path .
 
