@@ -1,5 +1,5 @@
 use actix_web::{body::Body, dev::HttpResponseBuilder, error, http::StatusCode, HttpResponse};
-use argon2::password_hash::HashError;
+use argon2::password_hash;
 use thiserror::Error;
 use xlsxwriter::XlsxError;
 
@@ -125,8 +125,8 @@ impl From<jsonwebtoken::errors::Error> for CustomError {
     }
 }
 
-impl From<HashError> for CustomError {
-    fn from(err: HashError) -> CustomError {
+impl From<password_hash::Error> for CustomError {
+    fn from(err: password_hash::Error) -> CustomError {
         CustomError::BadPasswordError {
             message: err.to_string(),
         }
