@@ -27,6 +27,8 @@ RUN rm -f target/x86_64-unknown-linux-musl/release/deps/trophy-be*
 
 COPY ./be .
 
+RUN RUSTFLAGS=-Clinker=musl-gcc cargo build --release --target=x86_64-unknown-linux-musl
+
 # ------------------------------------------------------------------------------
 # Final Stage
 # ------------------------------------------------------------------------------
