@@ -5,7 +5,7 @@ WORKDIR /usr/src/trophy-be
 COPY . .
 RUN ls -la
 
-RUN cargo install --path .
+RUN cargo install --path ./be
 
 FROM gcr.io/distroless/cc-debian10
 
