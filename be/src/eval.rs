@@ -1,4 +1,9 @@
-use crate::model::{CustomError, Game, Outcome, ParsedOutcome, Team, TeamGender, Value};
+// TODO consider moving the tests to a different file/module because of the unresolved imports
+
+use crate::{
+    model::{CustomError, Game, Outcome, ParsedOutcome, Team, TeamGender, Value},
+    ApiResult,
+};
 use actix_files::NamedFile;
 use sqlx::PgPool;
 use std::time::{Duration, SystemTime};
@@ -6,14 +11,14 @@ use xlsxwriter::*;
 
 const MAX_POINTS: i32 = 50;
 
-pub async fn evaluate_trophy(pool: &PgPool) -> Result<(), CustomError> {
+pub async fn evaluate_trophy(pool: &PgPool) -> ApiResult<()> {
     for game in Game::find_all(pool).await?.0 {
         evaluate_game(game, pool).await?;
     }
     Ok(())
 }
 
-async fn evaluate_game(game: Game, pool: &PgPool) -> Result<(), CustomError> {
+async fn evaluate_game(game: Game, pool: &PgPool) -> ApiResult<()> {
     let pending_amount = Game::pending_teams_amount(game.id, pool).await?.0;
     if pending_amount > 0 {
         // Don't evaluate when teams are still playing - this should never happen!
