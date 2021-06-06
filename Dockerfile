@@ -1,3 +1,5 @@
+# NOTE this Dockerfile needs to be in root so that dokku recognizes it!
+
 # ------------------------------------------------------------------------------
 # Cargo Build Stage
 # ------------------------------------------------------------------------------
@@ -32,11 +34,10 @@ RUN rm -f target/x86_64-unknown-linux-musl/release/deps/trophy-be*
 COPY ./be .
 
 RUN RUSTFLAGS=-Clinker=musl-gcc cargo build --release --target=x86_64-unknown-linux-musl
-
 # ------------------------------------------------------------------------------
 # Final Stage
 # ------------------------------------------------------------------------------
-
+# TODO consider Distroless:  https://dev.to/sergeyzenchenko/actix-web-in-docker-how-to-build-small-and-secure-images-2mjd
 FROM alpine:latest
 
 RUN addgroup -g 1000 trophy-be
@@ -45,9 +46,6 @@ RUN adduser -D -s /bin/sh -u 1000 -G trophy-be trophy-be
 
 WORKDIR /home/trophy-be/bin/
 
-RUN ls /usr/src/trophy-be/target
-RUN ls /usr/src/trophy-be/target/86_64-unknown-linux-musl/release/
-
 COPY --from=cargo-build /usr/src/trophy-be/target/x86_64-unknown-linux-musl/release/trophy-be .
 
 RUN chown trophy-be:trophy-be trophy-be
@@ -55,5 +53,3 @@ RUN chown trophy-be:trophy-be trophy-be
 USER trophy-be
 
 CMD ["./trophy-be"]
-
-RUN RUSTFLAGS=-Clinker=musl-gcc cargo build --release --target=x86_64-unknown-linux-musl
