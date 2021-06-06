@@ -1035,32 +1035,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "klostertrophy-backend"
-version = "1.0.0"
-dependencies = [
- "actix-files",
- "actix-service",
- "actix-web",
- "argon2",
- "chrono",
- "derive_responder",
- "dotenv",
- "env_logger 0.8.2",
- "futures",
- "humantime 2.1.0",
- "jsonwebtoken",
- "log",
- "rand_core",
- "serde",
- "serde_json",
- "sqlx",
- "thiserror",
- "tokio",
- "uuid",
- "xlsxwriter",
-]
-
-[[package]]
 name = "language-tags"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2165,6 +2139,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f50de3927f93d202783f4513cda820ab47ef17f624b03c096e86ef00c67e6b5f"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "trophy-be"
+version = "1.0.0"
+dependencies = [
+ "actix-files",
+ "actix-service",
+ "actix-web",
+ "argon2",
+ "chrono",
+ "derive_responder",
+ "dotenv",
+ "env_logger 0.8.2",
+ "futures",
+ "humantime 2.1.0",
+ "jsonwebtoken",
+ "log",
+ "rand_core",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+ "tokio",
+ "uuid",
+ "xlsxwriter",
 ]
 
 [[package]]

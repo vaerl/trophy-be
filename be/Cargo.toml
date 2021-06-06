@@ -1,5 +1,5 @@
 [package]
-name = "klostertrophy-backend"
+name = "trophy-be"
 version = "1.0.0"
 authors = ["vaerl <lukas@mlel.dev>"]
 edition = "2018"
