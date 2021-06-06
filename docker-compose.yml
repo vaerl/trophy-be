@@ -8,7 +8,7 @@ services:
     ports:
       - "5432:5432"
   web:
-    image: trophy-bak:latest
+    image: trophy-be:latest
     depends_on:
       - db
     ports:
