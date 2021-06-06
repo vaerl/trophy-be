@@ -45,6 +45,9 @@ RUN adduser -D -s /bin/sh -u 1000 -G trophy-be trophy-be
 
 WORKDIR /home/trophy-be/bin/
 
+RUN ls /usr/src/trophy-be/target
+RUN ls /usr/src/trophy-be/target/86_64-unknown-linux-musl/release/
+
 COPY --from=cargo-build /usr/src/trophy-be/target/x86_64-unknown-linux-musl/release/trophy-be .
 
 RUN chown trophy-be:trophy-be trophy-be
