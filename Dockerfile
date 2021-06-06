@@ -1,55 +1,22 @@
-# NOTE this Dockerfile needs to be in root so that dokku recognizes it!
-
-# ------------------------------------------------------------------------------
-# Cargo Build Stage
-# ------------------------------------------------------------------------------
-# TODO squash stages
-FROM rust:latest as cargo-build
-
+FROM rust:latest as build
+ENV PKG_CONFIG_ALLOW_CROSS=1
 ENV SQLX_OFFLINE=true
-
-RUN apt-get update
-
-RUN apt-get install musl-tools clang -y
-
-RUN rustup target add x86_64-unknown-linux-musl
 
 WORKDIR /usr/src/trophy-be
 
-RUN head -c16 /dev/urandom > secret.key
+# install clang for libxlsxwriter
+RUN apt-get update && apt-get install clang -y
 
-COPY ./be/Cargo.toml Cargo.toml
-
+# copy deriver_responder
 RUN mkdir ../derive_responder
 COPY ./derive_responder ../derive_responder
 
-RUN mkdir src/
-
-RUN echo "fn main() {println!(\"if you see this, the build broke\")}" > src/main.rs
-
-RUN RUSTFLAGS=-Clinker=musl-gcc cargo build --release --target=x86_64-unknown-linux-musl
-
-RUN rm -f target/x86_64-unknown-linux-musl/release/deps/trophy-be*
-
 COPY ./be .
 
-RUN RUSTFLAGS=-Clinker=musl-gcc cargo build --release --target=x86_64-unknown-linux-musl
-# ------------------------------------------------------------------------------
-# Final Stage
-# ------------------------------------------------------------------------------
-# TODO consider Distroless:  https://dev.to/sergeyzenchenko/actix-web-in-docker-how-to-build-small-and-secure-images-2mjd
-FROM alpine:latest
+RUN cargo install --path .
 
-RUN addgroup -g 1000 trophy-be
+FROM gcr.io/distroless/cc-debian10
 
-RUN adduser -D -s /bin/sh -u 1000 -G trophy-be trophy-be
+COPY --from=build /usr/local/cargo/bin/trophy-be /usr/local/bin/trophy-be
 
-WORKDIR /home/trophy-be/bin/
-
-COPY --from=cargo-build /usr/src/trophy-be/target/x86_64-unknown-linux-musl/release/trophy-be .
-
-RUN chown trophy-be:trophy-be trophy-be
-
-USER trophy-be
-
-CMD ["./trophy-be"]
+CMD ["trophy-be"]
