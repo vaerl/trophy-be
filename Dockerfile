@@ -11,9 +11,8 @@ RUN apt-get update && apt-get install clang -y
 RUN mkdir ../derive_responder
 COPY ./derive_responder ../derive_responder
 
-# create the secret key and set HOST to localhost
-RUN head -c16 /dev/urandom > secret.key &&\
-    echo HOST=127.0.0.1 > .env 
+# create the secret key
+RUN head -c16 /dev/urandom > secret.key
 
 COPY ./be .
 
