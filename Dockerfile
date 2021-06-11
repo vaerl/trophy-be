@@ -22,6 +22,4 @@ FROM gcr.io/distroless/cc-debian10
 
 COPY --from=build /usr/local/cargo/bin/trophy-be /usr/local/bin/trophy-be
 
-EXPOSE 8080
-
 CMD ["trophy-be"]
