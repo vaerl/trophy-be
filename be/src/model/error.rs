@@ -117,6 +117,14 @@ impl From<actix_web::http::header::ToStrError> for CustomError {
     }
 }
 
+impl From<actix_web::error::Error> for CustomError {
+    fn from(err: actix_web::error::Error) -> CustomError {
+        CustomError::CatchAllError {
+            message: err.to_string(),
+        }
+    }
+}
+
 impl From<jsonwebtoken::errors::Error> for CustomError {
     fn from(err: jsonwebtoken::errors::Error) -> CustomError {
         CustomError::NoTokenError {

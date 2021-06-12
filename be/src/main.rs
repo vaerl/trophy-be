@@ -3,15 +3,19 @@ extern crate log;
 
 extern crate derive_responder;
 
+use actix::Actor;
 use actix_web::{body::Body, error, web, App, HttpResponse, HttpServer};
 use dotenv::dotenv;
 use model::CustomError;
 use sqlx::PgPool;
 use std::env;
 
+use crate::ws::lobby::Lobby;
+
 mod eval;
 mod model;
 mod routes;
+mod ws;
 
 pub type ApiResult<T> = Result<T, CustomError>;
 
@@ -33,11 +37,14 @@ async fn main() -> Result<(), CustomError> {
     let host = env::var("HOST").expect("HOST is not set in .env file!");
     let port = env::var("PORT").expect("PORT is not set in .env file!");
 
+    let ws_server = Lobby::default().start();
+
     let server = HttpServer::new(move || {
         App::new()
             // pass database pool to application so we can access it inside handlers
             .data(db_pool.clone())
             .configure(routes::init)
+            .configure(ws::init)
             // return JSON-parse-errors
             .app_data(web::JsonConfig::default().error_handler(|err, _req| {
                 error::InternalError::from_response(
@@ -47,6 +54,7 @@ async fn main() -> Result<(), CustomError> {
                 )
                 .into()
             }))
+            .data(ws_server.clone())
     })
     .bind(format!("{}:{}", host, port))?;
 

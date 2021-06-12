@@ -40,3 +40,8 @@ Run `head -c16 /dev/urandom > secret.key`. TODO check if this is secure!
 ### Creating the .env-file
 
 See [this](./be/.env-example) for an example. Just copy this file into a new `.env`-file and set the values accordingly.
+
+## Websocket
+
+To create a new lobby, simply connect to `ws/{id}` and supply a Uuid.
+For example: `ws://localhost:5000/ws/0000002a-000c-0005-0c03-0938362b0809`
