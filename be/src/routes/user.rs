@@ -13,7 +13,7 @@ async fn find_all_users(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResu
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::log(user.id, format!("find all users"), db_pool.get_ref()).await?;
+    History::debug(user.id, format!("find all users"), db_pool.get_ref()).await?;
     User::find_all(db_pool.get_ref()).await
 }
 
@@ -26,7 +26,7 @@ async fn find_user(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::log(user.id, format!("get user with ID"), db_pool.get_ref()).await?;
+    History::debug(user.id, format!("find user {}", id), db_pool.get_ref()).await?;
     User::find(id.into_inner(), db_pool.get_ref()).await
 }
 
@@ -39,7 +39,12 @@ async fn find_game_for_ref(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin, UserRole::Referee], db_pool.get_ref())
         .await?;
-    History::log(user.id, format!("get user with ID"), db_pool.get_ref()).await?;
+    History::debug(
+        user.id,
+        format!("find game for referee {}", id),
+        db_pool.get_ref(),
+    )
+    .await?;
     User::find_game_for_ref(id.into_inner(), db_pool.get_ref()).await
 }
 
@@ -52,7 +57,13 @@ async fn create_user(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::log(user.id, format!("create user"), db_pool.get_ref()).await?;
+    History::info(
+        user.id,
+        format!("create user"),
+        create_user.to_string(),
+        db_pool.get_ref(),
+    )
+    .await?;
     User::create(create_user.into_inner(), db_pool.get_ref()).await
 }
 
@@ -66,7 +77,13 @@ async fn update_user(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::log(user.id, format!("update user"), db_pool.get_ref()).await?;
+    History::info(
+        user.id,
+        format!("update user {}", id),
+        altered_user.to_string(),
+        db_pool.get_ref(),
+    )
+    .await?;
     User::update(
         id.into_inner(),
         altered_user.into_inner(),
@@ -84,13 +101,19 @@ async fn delete_user(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::log(user.id, format!("delete user"), db_pool.get_ref()).await?;
+    History::info(
+        user.id,
+        format!("delete user"),
+        id.to_string(),
+        db_pool.get_ref(),
+    )
+    .await?;
     User::delete(id.into_inner(), db_pool.get_ref()).await
 }
 
 #[post("/login")]
 async fn login(login: web::Json<CreateLogin>, db_pool: web::Data<PgPool>) -> impl Responder {
-    // loggin is done in ::login()!
+    // NOTE logging is done in ::login()!
     match User::login(login.into_inner(), db_pool.get_ref()).await {
         Ok(token_string) => {
             let cookie = Cookie::build("session", token_string)
@@ -109,7 +132,7 @@ async fn logout(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<HttpR
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::log(user.id, format!("logged out"), db_pool.get_ref()).await?;
+    History::debug(user.id, format!("logged out"), db_pool.get_ref()).await?;
     match User::logout(user.id, db_pool.get_ref()).await {
         Ok(_) => Ok(HttpResponse::Ok().finish()),
         Err(err) => Err(err),

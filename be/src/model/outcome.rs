@@ -1,5 +1,7 @@
+use std::fmt;
+
 use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
-use futures::{Future};
+use futures::Future;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
@@ -16,6 +18,12 @@ pub struct Outcome {
     pub game_id: i32,
     pub team_id: i32,
     pub data: Option<String>,
+}
+
+impl fmt::Display for Outcome {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Outcome(game_id: {}, team_id: {}, data: {:?})", self.game_id, self.team_id, self.data)
+    }
 }
 
 #[derive(Serialize, Responder)]

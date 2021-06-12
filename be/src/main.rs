@@ -20,15 +20,6 @@ pub type ApiResult<T> = Result<T, CustomError>;
 // TODO log transactions in the transaction table
 // - maybe use services
 
-// TODO think about where and how I create the referees
-// -> creating with a game makes sense
-// TODO adjust start.sql
-// -> add creation and deletion of admin and referee
-// => add these tables to /reset/database
-
-// TODO use metadata-table for storing number of entries, etc.?
-// -> this example is the only thing I can currently think of!
-
 #[actix_web::main]
 async fn main() -> Result<(), CustomError> {
     dotenv().ok();

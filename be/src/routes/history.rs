@@ -14,7 +14,7 @@ async fn find_all_transactions(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::log(user.id, format!("find all transactions"), db_pool.get_ref()).await?;
+    History::debug(user.id, format!("find all transactions"), db_pool.get_ref()).await?;
     History::find_all(db_pool.get_ref()).await
 }
 

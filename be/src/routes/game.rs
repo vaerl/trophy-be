@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
@@ -14,7 +16,7 @@ async fn find_all_games(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResu
             db_pool.get_ref(),
         )
         .await?;
-    History::log(user.id, format!("find all games"), db_pool.get_ref()).await?;
+    History::debug(user.id, format!("find all games"), db_pool.get_ref()).await?;
     Game::find_all(db_pool.get_ref()).await
 }
 
@@ -26,7 +28,7 @@ async fn games_amount(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult
             db_pool.get_ref(),
         )
         .await?;
-    History::log(
+    History::debug(
         user.id,
         format!("get the amount of games"),
         db_pool.get_ref(),
@@ -44,7 +46,14 @@ async fn create_game(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::log(user.id, format!("find all games"), db_pool.get_ref()).await?;
+    History::info(
+        user.id,
+        format!("create a new game"),
+        // apparently calling fmt() on Json<T> delegates the call to T
+        create_game.to_string(),
+        db_pool.get_ref(),
+    )
+    .await?;
     Game::create(create_game.into_inner(), db_pool.get_ref()).await
 }
 
@@ -60,7 +69,7 @@ async fn find_game(
             db_pool.get_ref(),
         )
         .await?;
-    History::log(user.id, format!("find game"), db_pool.get_ref()).await?;
+    History::debug(user.id, format!("find game {}", id), db_pool.get_ref()).await?;
     Game::find(id.into_inner(), db_pool.get_ref()).await
 }
 
@@ -74,7 +83,13 @@ async fn update_game(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::log(user.id, format!("update game"), db_pool.get_ref()).await?;
+    History::info(
+        user.id,
+        format!("update game {}", id),
+        game.to_string(),
+        db_pool.get_ref(),
+    )
+    .await?;
     Game::update(id.into_inner(), game.into_inner(), db_pool.get_ref()).await
 }
 
@@ -87,7 +102,13 @@ async fn delete_game(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::log(user.id, format!("delete game"), db_pool.get_ref()).await?;
+    History::info(
+        user.id,
+        format!("delete game"),
+        format!("{}", id),
+        db_pool.get_ref(),
+    )
+    .await?;
     Game::delete(id.into_inner(), db_pool.get_ref()).await
 }
 
@@ -103,9 +124,9 @@ async fn pending_teams(
             db_pool.get_ref(),
         )
         .await?;
-    History::log(
+    History::debug(
         user.id,
-        format!("get the pending teams for a game"),
+        format!("get the pending teams for game {}", id),
         db_pool.get_ref(),
     )
     .await?;
@@ -124,9 +145,9 @@ async fn pending_teams_amount(
             db_pool.get_ref(),
         )
         .await?;
-    History::log(
+    History::debug(
         user.id,
-        format!("get the amount of pending teams for a game"),
+        format!("get the amount of pending teams for game {}", id),
         db_pool.get_ref(),
     )
     .await?;
@@ -145,9 +166,9 @@ async fn finished_teams(
             db_pool.get_ref(),
         )
         .await?;
-    History::log(
+    History::debug(
         user.id,
-        format!("get the finished teams for a game"),
+        format!("get the finished teams for game {}", id),
         db_pool.get_ref(),
     )
     .await?;

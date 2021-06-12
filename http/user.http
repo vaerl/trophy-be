@@ -1,4 +1,5 @@
 @BASE = http://127.0.0.1:8080
+@PROD_BASE = http://asdf.edith.mlel.dev
 @ID = 2
 
 # TODO check how I can assign to TOKEN
@@ -18,7 +19,7 @@ POST {{BASE}}/logout
 Authorization: bearer {{TOKEN}}
 
 ### get all users
-GET {{BASE}}/users
+GET {{PROD_BASE}}/users
 
 ### get user
 GET {{BASE}}/users/{{ID}}

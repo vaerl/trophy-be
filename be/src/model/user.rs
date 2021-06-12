@@ -1,3 +1,4 @@
+use std::fmt;
 use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
 use rand_core::OsRng;
@@ -19,6 +20,12 @@ pub enum UserRole {
     Visualizer,
 }
 
+impl fmt::Display for UserRole {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 #[derive(Serialize, FromRow, Responder)]
 pub struct User {
     pub id: i32,
@@ -37,6 +44,12 @@ pub struct CreateUser {
     pub username: String,
     pub password: String,
     pub role: UserRole
+}
+
+impl fmt::Display for CreateUser {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "CreateUser(username: {}, password: {}, role: {})", self.username, self.password, self.role)
+    }
 }
 
 #[derive(Deserialize)]
@@ -167,7 +180,7 @@ impl User {
             return Err(CustomError::BadPasswordError {message: "Token is invalid!".to_string()});
         } else {
             let session = User::generate_session();
-            History::log(user.id, format!("logged in"), pool).await?;
+            History::important(user.id, format!("log-in"), pool).await?;
             User::update_session(user.id, &session, &pool).await?;
             return Ok(UserToken::generate_token(&CreateToken {user_id: user.id, session}, user));
         }

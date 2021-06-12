@@ -1,3 +1,5 @@
+use std::fmt::{self};
+
 use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
@@ -13,6 +15,13 @@ use super::{Amount, Outcome, Team, TeamVec};
 pub enum GameKind {
     Points,
     Time,
+}
+
+// Only return the name with no other information - this will be combined later.
+impl fmt::Display for GameKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
 }
 
 #[derive(Serialize, FromRow, Responder)]
@@ -33,6 +42,12 @@ pub struct CreateGame {
     pub name: String,
     pub kind: GameKind,
     pub user_id: i32
+}
+
+impl fmt::Display for CreateGame {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "CreateGame(trophy_id: {}, name: {}, kind: {}, user_id: {})", self.trophy_id, self.name, self.kind, self.user_id)
+    }
 }
 
 impl Game {

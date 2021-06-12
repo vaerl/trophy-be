@@ -18,7 +18,7 @@ pub enum TeamGender {
 // needed for setting the tab-name when creating the xlsx-file!
 impl fmt::Display for TeamGender {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{}", self)
     }
 }
 
@@ -39,6 +39,12 @@ pub struct CreateTeam {
     pub trophy_id: i32,
     pub name: String,
     pub gender: TeamGender,
+}
+
+impl fmt::Display for CreateTeam {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+       write!(f, "CreateTeam(trophy_id: {}, name: {}, gender: {})", self.trophy_id, self.name, self.gender)
+    }
 }
 
 impl Team {
