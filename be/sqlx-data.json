@@ -243,56 +243,6 @@
       ]
     }
   },
-  "440bc330b888dee204709acb97b51076153a4cc2a94a27001bc26f5da0a03203": {
-    "query": "SELECT id, user_id, timestamp, action FROM transaction_history ORDER BY id",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "user_id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 2,
-          "name": "timestamp",
-          "type_info": "Timestamptz"
-        },
-        {
-          "ordinal": 3,
-          "name": "action",
-          "type_info": "Varchar"
-        }
-      ],
-      "parameters": {
-        "Left": []
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
-  "5d60c9ec53c5d6eaced823e72099e0106c55f8d1a069b4fe977534634fa43009": {
-    "query": "INSERT INTO transaction_history (user_id, timestamp, action) VALUES ($1, $2, $3)",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Timestamptz",
-          "Varchar"
-        ]
-      },
-      "nullable": []
-    }
-  },
   "613425492e75036b458d85ec4078e36be010ffb2abf74d618b9a3b9d6347dbbb": {
     "query": "SELECT id, trophy_id, name, kind as \"kind: GameKind\", user_id FROM games ORDER BY id",
     "describe": {
@@ -921,6 +871,33 @@
       ]
     }
   },
+  "cb2b266c5d3fa1fb96ba7bb056b1f1daa2d7af048246579ef71e707f63f299c9": {
+    "query": "INSERT INTO transaction_history (user_id, timestamp, log_level, action, value) VALUES ($1, $2, $3, $4, $5)",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Timestamptz",
+          {
+            "Custom": {
+              "name": "log_level",
+              "kind": {
+                "Enum": [
+                  "debug",
+                  "info",
+                  "important"
+                ]
+              }
+            }
+          },
+          "Varchar",
+          "Varchar"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "d138a13b86ec9cb0794b9053d84491cdf7faf5fd53544777a374b96e52ed1da0": {
     "query": "UPDATE games SET trophy_id = $1, name = $2, kind = $3, user_id = $4 WHERE id = $5 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", user_id",
     "describe": {
@@ -986,6 +963,65 @@
         false,
         false,
         false
+      ]
+    }
+  },
+  "de786f1eaeb3129c9047591f6b32cff7af601926e1bbccb9a98cb2de6180de5f": {
+    "query": "SELECT id, user_id, timestamp, log_level as \"log_level: LogLevel\", action, value FROM transaction_history ORDER BY id",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "user_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 2,
+          "name": "timestamp",
+          "type_info": "Timestamptz"
+        },
+        {
+          "ordinal": 3,
+          "name": "log_level: LogLevel",
+          "type_info": {
+            "Custom": {
+              "name": "log_level",
+              "kind": {
+                "Enum": [
+                  "debug",
+                  "info",
+                  "important"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ordinal": 4,
+          "name": "action",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 5,
+          "name": "value",
+          "type_info": "Varchar"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true
       ]
     }
   },
