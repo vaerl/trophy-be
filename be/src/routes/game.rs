@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 use actix_web::{delete, get, post, put, web, Responder};
 use sqlx::PgPool;
 
