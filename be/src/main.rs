@@ -19,11 +19,6 @@ mod ws;
 
 pub type ApiResult<T> = Result<T, CustomError>;
 
-// TODO routes: user
-
-// TODO log transactions in the transaction table
-// - maybe use services
-
 #[actix_web::main]
 async fn main() -> Result<(), CustomError> {
     dotenv().ok();
