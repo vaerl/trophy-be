@@ -1,4 +1,4 @@
-use actix::{fut, ActorContext, ActorFuture, ActorFutureExt, ContextFutureSpawner, WrapFuture};
+use actix::{fut, ActorContext, ActorFutureExt, ContextFutureSpawner, WrapFuture};
 use actix::{Actor, Addr, Running, StreamHandler};
 use actix::{AsyncContext, Handler};
 use actix_web_actors::ws;
@@ -15,17 +15,15 @@ const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 pub struct WsConn {
-    room: Uuid,
     lobby_addr: Addr<Lobby>,
     hb: Instant,
     id: Uuid,
 }
 
 impl WsConn {
-    pub fn new(room: Uuid, lobby: Addr<Lobby>) -> WsConn {
+    pub fn new(lobby: Addr<Lobby>) -> WsConn {
         WsConn {
             id: Uuid::new_v4(),
-            room,
             hb: Instant::now(),
             lobby_addr: lobby,
         }
@@ -42,7 +40,6 @@ impl Actor for WsConn {
         self.lobby_addr
             .send(Connect {
                 addr: addr.recipient(),
-                lobby_id: self.room,
                 self_id: self.id,
             })
             .into_actor(self)
@@ -57,10 +54,7 @@ impl Actor for WsConn {
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
-        self.lobby_addr.do_send(Disconnect {
-            id: self.id,
-            room_id: self.room,
-        });
+        self.lobby_addr.do_send(Disconnect { id: self.id });
         Running::Stop
     }
 }
@@ -70,10 +64,7 @@ impl WsConn {
         ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
                 debug!("Disconnecting due to failed heartbeat.");
-                act.lobby_addr.do_send(Disconnect {
-                    id: act.id,
-                    room_id: act.room,
-                });
+                act.lobby_addr.do_send(Disconnect { id: act.id });
                 ctx.stop();
                 return;
             }
@@ -105,7 +96,6 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConn {
             Ok(Text(s)) => self.lobby_addr.do_send(ClientActorMessage {
                 id: self.id,
                 msg: s.to_string(),
-                room_id: self.room,
             }),
 
             Err(e) => panic!("{}", e),

@@ -8,25 +8,36 @@ type Socket = Recipient<WsMessage>;
 
 pub struct Lobby {
     sessions: HashMap<Uuid, Socket>, // self_id to self
-    room: HashSet<Uuid>,             // all users
+    users: HashSet<Uuid>,            // all users
 }
 
 impl Default for Lobby {
     fn default() -> Lobby {
         Lobby {
             sessions: HashMap::new(),
-            room: HashSet::new(),
+            users: HashSet::new(),
         }
     }
 }
 
 impl Lobby {
+    /// I send messages on a user-based method. Thus I need this helper to reach everybody.
+    /// Furthermore, this also supports sending specific messages.
     fn send_message(&self, message: &str, id_to: &Uuid) {
         if let Some(socket_recipient) = self.sessions.get(id_to) {
             let _ = socket_recipient.do_send(WsMessage(message.to_owned()));
         } else {
+            // TODO somehow this gets triggered, but I still receive the message
             warn!("Attempted to send a message to an unknown user {}.", id_to);
         }
+    }
+
+    /// Send a message to every registered user. Uses [send_message()](send_message()).
+    fn send_message_to_all(&self, message: &str) {
+        // TODO think about excluding original sender???
+        self.users
+            .iter()
+            .for_each(|user_id| self.send_message(message, user_id));
     }
 }
 
@@ -39,9 +50,7 @@ impl Handler<Disconnect> for Lobby {
 
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
         if self.sessions.remove(&msg.id).is_some() {
-            self.room.iter().for_each(|user_id| {
-                self.send_message(&format!("{} disconnected.", &msg.id), user_id)
-            });
+            self.send_message_to_all(&format!("{} disconnected.", &msg.id))
         }
     }
 }
@@ -50,11 +59,9 @@ impl Handler<Connect> for Lobby {
     type Result = ();
 
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
-        self.room.insert(msg.self_id);
+        self.users.insert(msg.self_id);
 
-        self.room.iter().for_each(|conn_id| {
-            self.send_message(&format!("{} just joined!", msg.self_id), conn_id)
-        });
+        self.send_message_to_all(&format!("{} just joined!", msg.self_id));
 
         self.sessions.insert(msg.self_id, msg.addr);
 
@@ -66,8 +73,6 @@ impl Handler<ClientActorMessage> for Lobby {
     type Result = ();
 
     fn handle(&mut self, msg: ClientActorMessage, _ctx: &mut Context<Self>) -> Self::Result {
-        self.room
-            .iter()
-            .for_each(|client| self.send_message(&msg.msg, client));
+        self.send_message_to_all(&msg.msg);
     }
 }
