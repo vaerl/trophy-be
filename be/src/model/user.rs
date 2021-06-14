@@ -32,6 +32,8 @@ pub struct User {
     pub username: String,
     pub password: String,
     pub role: UserRole,
+    // TODO consider making this a vec to support multiple sessions per user!
+    // -> sessions would need to match to something for this!
     pub session: String,
 }
 
@@ -173,6 +175,8 @@ impl User {
     pub async fn login(login: CreateLogin, pool: &PgPool) -> ApiResult<String> {
         let user = User::find_by_name(&login.username, pool).await?;
         let argon2 = Argon2::default();
+        // TODO what happens when the user is already logged in?
+        // -> I currently overwrite. I should either support multiple sessions or just return the existing session!
 
         let password_hash = PasswordHash::new(&user.password)?;
 

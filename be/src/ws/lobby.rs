@@ -8,7 +8,7 @@ type Socket = Recipient<WsMessage>;
 
 pub struct Lobby {
     sessions: HashMap<Uuid, Socket>,     // self_id to self
-    rooms: HashMap<Uuid, HashSet<Uuid>>, // room_id  to list of users id
+    rooms: HashMap<Uuid, HashSet<Uuid>>, // room_id to list of users id
 }
 
 impl Default for Lobby {

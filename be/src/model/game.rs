@@ -36,11 +36,13 @@ pub struct Game {
 #[derive(Serialize, Responder)]
 pub struct GameVec(pub Vec<Game>);
 
+/// TO create a new game, I have to create a new user (that acts as a referee) first.
 #[derive(Deserialize)]
 pub struct CreateGame {
     pub trophy_id: i32,
     pub name: String,
     pub kind: GameKind,
+    // TODO make this a vec of id's to support multiple referees
     pub user_id: i32
 }
 

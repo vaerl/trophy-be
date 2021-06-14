@@ -24,6 +24,13 @@ pub async fn start_connection(
 
     let resp = ws::start(ws, &req, stream)?;
     Ok(resp)
+
+    // TODO use only one room that everybody can listen to
+    // -> send messages when I receive CREATE, DELETE or UPDATE at the REST-endpoints
+    // -> send only refresh-messages: { subject: "Team" } -> only refresh teams here
+
+    // TODO maybe keep room-architecture for future uses???
+    // -> I could generate a Uuid and pass everybody to that room!
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {
