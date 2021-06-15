@@ -6,6 +6,13 @@ use super::messages::{ClientActorMessage, Connect, Disconnect, WsMessage};
 
 type Socket = Recipient<WsMessage>;
 
+/*
+/ NOTE
+/ The Lobby was not really creating rooms in the sense of separate structs.
+/ It just created entries in a HashMap - this was later used to map incoming requests to their respective "rooms".
+/ Moving away from this architecture only required adding all users to a single room!
+*/
+
 pub struct Lobby {
     sessions: HashMap<Uuid, Socket>, // self_id to self
     users: HashSet<Uuid>,            // all users
