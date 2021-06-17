@@ -65,14 +65,19 @@ impl History {
 
     /// Log the transaction with the DEBUG-level and save it to the database.
     /// Use this for actions like reading from the database - they typically do not have a value.
-    pub async fn debug(user_id: i32, action: String, pool: &PgPool) -> ApiResult<()> {
+    pub async fn read(user_id: i32, action: String, pool: &PgPool) -> ApiResult<()> {
         debug!("User {} executed: '{}'.", user_id, action);
         History::create(user_id, LogLevel::Debug, action, None, pool).await
     }
 
     /// Log the transaction with level INFO and save it to the database.
     /// Use this for all actions that create, delete or update and have a value.
-    pub async fn info(user_id: i32, action: String, value: String, pool: &PgPool) -> ApiResult<()> {
+    pub async fn action(
+        user_id: i32,
+        action: String,
+        value: String,
+        pool: &PgPool,
+    ) -> ApiResult<()> {
         info!(
             "User {} executed: '{}' with value {}.",
             user_id, action, value

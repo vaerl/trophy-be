@@ -14,7 +14,7 @@ async fn find_all_teams(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResu
             db_pool.get_ref(),
         )
         .await?;
-    History::debug(user.id, format!("find all teams"), db_pool.get_ref()).await?;
+    History::read(user.id, format!("find all teams"), db_pool.get_ref()).await?;
     Team::find_all(db_pool.get_ref()).await
 }
 
@@ -27,7 +27,7 @@ async fn teams_amount(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult
             db_pool.get_ref(),
         )
         .await?;
-    History::debug(
+    History::read(
         user.id,
         format!("get the amount of all teams"),
         db_pool.get_ref(),
@@ -45,7 +45,7 @@ async fn create_team(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::info(
+    History::action(
         user.id,
         format!("create team"),
         create_team.to_string(),
@@ -67,7 +67,7 @@ async fn find_team(
             db_pool.get_ref(),
         )
         .await?;
-    History::debug(user.id, format!("find team {}", id), db_pool.get_ref()).await?;
+    History::read(user.id, format!("find team {}", id), db_pool.get_ref()).await?;
     Team::find(id.into_inner(), db_pool.get_ref()).await
 }
 
@@ -81,7 +81,7 @@ async fn update_team(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::info(
+    History::action(
         user.id,
         format!("update team {}", id),
         team.to_string(),
@@ -100,7 +100,7 @@ async fn delete_team(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::info(
+    History::action(
         user.id,
         format!("delete team"),
         id.to_string(),
@@ -122,7 +122,7 @@ async fn pending_games(
             db_pool.get_ref(),
         )
         .await?;
-    History::debug(
+    History::read(
         user.id,
         format!("get all pending games for team {}", id),
         db_pool.get_ref(),
@@ -144,7 +144,7 @@ async fn pending_games_amount(
             db_pool.get_ref(),
         )
         .await?;
-    History::debug(
+    History::read(
         user.id,
         format!("get the amount of all pending games for team {}", id),
         db_pool.get_ref(),
@@ -165,7 +165,7 @@ async fn finished_games(
             db_pool.get_ref(),
         )
         .await?;
-    History::debug(
+    History::read(
         user.id,
         format!("get the all finished games for team {}", id),
         db_pool.get_ref(),

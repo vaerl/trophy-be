@@ -11,7 +11,7 @@ async fn find_all_outcomes(token: UserToken, db_pool: web::Data<PgPool>) -> ApiR
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::debug(user.id, format!("get all outcomes"), db_pool.get_ref()).await?;
+    History::read(user.id, format!("get all outcomes"), db_pool.get_ref()).await?;
     Outcome::find_all(db_pool.get_ref()).await
 }
 
@@ -26,7 +26,7 @@ async fn update_outcome(
         .try_into_authorized_user(vec![UserRole::Admin, UserRole::Referee], db_pool.get_ref())
         .await?;
 
-    History::info(
+    History::action(
         user.id,
         format!("update outcome"),
         outcome.to_string(),
@@ -62,7 +62,7 @@ async fn find_all_outcomes_for_team(
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::debug(
+    History::read(
         user.id,
         format!("find all outcomes for team {}", team_id),
         db_pool.get_ref(),
@@ -81,7 +81,7 @@ async fn find_all_outcomes_for_game(
         .try_into_authorized_user(vec![UserRole::Admin, UserRole::Referee], db_pool.get_ref())
         .await?;
     let game_id = game_id.into_inner();
-    History::debug(
+    History::read(
         user.id,
         format!("find all outcomes for game {}", game_id),
         db_pool.get_ref(),
