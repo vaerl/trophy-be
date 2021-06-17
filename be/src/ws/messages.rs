@@ -18,6 +18,7 @@ pub struct Disconnect {
     pub id: Uuid,
 }
 
+/// This message is used for all client-types.
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct ClientActorMessage {

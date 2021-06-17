@@ -1,5 +1,5 @@
 use actix::prelude::{Actor, Context, Handler, Recipient};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use uuid::Uuid;
 
 use super::messages::{ClientActorMessage, Connect, Disconnect, WsMessage};
@@ -14,15 +14,13 @@ type Socket = Recipient<WsMessage>;
 */
 
 pub struct Lobby {
-    sessions: HashMap<Uuid, Socket>, // self_id to self
-    users: HashSet<Uuid>,            // all users
+    sessions: HashMap<Uuid, Socket>, // save the clients id and address
 }
 
 impl Default for Lobby {
     fn default() -> Lobby {
         Lobby {
             sessions: HashMap::new(),
-            users: HashSet::new(),
         }
     }
 }
@@ -31,20 +29,19 @@ impl Lobby {
     /// I send messages on a user-based method. Thus I need this helper to reach everybody.
     /// Furthermore, this also supports sending specific messages.
     fn send_message(&self, message: &str, id_to: &Uuid) {
+        debug!("Sending message '{}' to {}", message, id_to);
         if let Some(socket_recipient) = self.sessions.get(id_to) {
             let _ = socket_recipient.do_send(WsMessage(message.to_owned()));
         } else {
-            // TODO somehow this gets triggered, but I still receive the message
             warn!("Attempted to send a message to an unknown user {}.", id_to);
         }
     }
 
     /// Send a message to every registered user. Uses [send_message()](send_message()).
     fn send_message_to_all(&self, message: &str) {
-        // TODO think about excluding original sender???
-        self.users
+        self.sessions
             .iter()
-            .for_each(|user_id| self.send_message(message, user_id));
+            .for_each(|(user_id, _)| self.send_message(message, user_id));
     }
 }
 
@@ -66,10 +63,10 @@ impl Handler<Connect> for Lobby {
     type Result = ();
 
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
-        self.users.insert(msg.self_id);
-
+        // notify about user joining
         self.send_message_to_all(&format!("{} just joined!", msg.self_id));
 
+        // then add the user afterwards
         self.sessions.insert(msg.self_id, msg.addr);
 
         self.send_message(&format!("Your id is {}", msg.self_id), &msg.self_id);
