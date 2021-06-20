@@ -1,14 +1,14 @@
+-- drop existing tables
+DROP TABLE IF EXISTS game_team;
+DROP TABLE IF EXISTS transaction_history;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS games;
+DROP TABLE IF EXISTS teams;
 -- drop existing enums
 DROP TYPE IF EXISTS game_kind;
 DROP TYPE IF EXISTS team_gender;
 DROP TYPE IF EXISTS user_role;
 DROP TYPE IF EXISTS log_level;
--- drop existing tables
-DROP TABLE IF EXISTS games;
-DROP TABLE IF EXISTS teams;
-DROP TABLE IF EXISTS game_team;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS transaction_history;
 ---
 ---
 ---
