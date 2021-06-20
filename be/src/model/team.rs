@@ -1,10 +1,10 @@
-use std::fmt;
+use std::fmt::{self, Display};
 use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
 use crate::{derive_responder::Responder, ApiResult};
-use super::{Amount, Game, GameVec, Outcome};
+use super::{Amount, Game, GameVec, Outcome, TypeInfo};
 
 #[derive(Serialize, Deserialize, Debug, sqlx::Type)]
 #[sqlx(type_name = "team_gender")]
@@ -15,10 +15,12 @@ pub enum TeamGender {
     Male,
 }
 
-// needed for setting the tab-name when creating the xlsx-file!
 impl fmt::Display for TeamGender {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self)
+        match self {
+            TeamGender::Female => write!(f, "Female"),
+            TeamGender::Male => write!(f, "Male"),
+        }
     }
 }
 
@@ -39,12 +41,6 @@ pub struct CreateTeam {
     pub trophy_id: i32,
     pub name: String,
     pub gender: TeamGender,
-}
-
-impl fmt::Display for CreateTeam {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-       write!(f, "CreateTeam(trophy_id: {}, name: {}, gender: {})", self.trophy_id, self.name, self.gender)
-    }
 }
 
 impl Team {
@@ -184,4 +180,28 @@ impl Team {
         Ok(Amount(Team::find_all(pool).await?.0.len()))
     }
 
+}
+
+impl fmt::Display for Team {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Team(id: {}, trophy_id: {}, name: {}, gender: {}, points: {})",self.id, self.trophy_id, self.name, self.gender, self.points)
+    }
+}
+
+impl TypeInfo for Team {
+    fn type_name(&self) -> String {
+       format!("Team")
+    }
+}
+
+impl Display for TeamVec {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "TeamVec[{}]", self.0.iter().map(|g| g.to_string()).collect::<String>())
+    }
+}
+
+impl TypeInfo for TeamVec {
+    fn type_name(&self) -> String {
+       format!("TeamVec")
+    }
 }

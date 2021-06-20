@@ -1,11 +1,9 @@
-@BASE = http://127.0.0.1:8080
+@BASE = http://127.0.0.1:5000
 @PROD_BASE = http://asdf.edith.mlel.dev
 @ID = 2
 
 # TODO check how I can assign to TOKEN
-@TOKEN = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MTU2NzQ2NjAsImV4cCI6MTYxNTY3NzU0MCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6ImMzNDM4MDIzYjZkOTQ4NmY5YjJkNTRkODM4NGVjZWQ2In0.dKGsgOxYijGurTXlCWHEkhuXKMVOB5l3vHCrJKInqEQ
-
-### log in -> get token
+@TOKEN = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxMTAxMzMsImV4cCI6MTYyNDExMzAxMywidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6ImY0ZTczNmVkOGM4ZDQ3ZjFiOTkwY2IwZDQ3ZWMxNDhhIn0.yuXyWgsljzLsUubAbRNxVKK0EAhnjGBa2-zWL34HlII
 POST {{BASE}}/login
 Content-Type: application/json
 
@@ -16,10 +14,11 @@ Content-Type: application/json
 
 ### log out
 POST {{BASE}}/logout
-Authorization: bearer {{TOKEN}}
+Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxMTAxMzMsImV4cCI6MTYyNDExMzAxMywidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6ImY0ZTczNmVkOGM4ZDQ3ZjFiOTkwY2IwZDQ3ZWMxNDhhIn0.yuXyWgsljzLsUubAbRNxVKK0EAhnjGBa2-zWL34HlII
 
 ### get all users
-GET {{PROD_BASE}}/users
+GET {{BASE}}/users
+Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxMTAxNzAsImV4cCI6MTYyNDExMzA1MCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjRjMWFiZGNiNTM2ODQ0MGJiODUxOWExMzdjMTE0OGZlIn0.IpGpi_GTRZXUObIBamNycy8f-PbvyxrTpr7MEX9zCPc
 
 ### get user
 GET {{BASE}}/users/{{ID}}

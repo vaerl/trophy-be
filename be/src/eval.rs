@@ -1,13 +1,18 @@
 // TODO consider moving the tests to a different file/module because of the unresolved imports
 
 use crate::{
-    model::{CustomError, Game, Outcome, ParsedOutcome, Team, TeamGender, Value},
+    model::{CustomError, Game, Outcome, ParsedOutcome, Team, TeamGender, TypeInfo, Value},
     ApiResult,
 };
 use actix_files::NamedFile;
 use sqlx::PgPool;
-use std::time::{Duration, SystemTime};
+use std::{
+    fmt::{self, Display},
+    time::{Duration, SystemTime},
+};
 use xlsxwriter::*;
+
+pub struct ResultFile(pub NamedFile);
 
 const MAX_POINTS: i32 = 50;
 
@@ -61,7 +66,7 @@ fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<Team> {
     outcomes.into_iter().map(|e| e.team).collect()
 }
 
-pub async fn create_xlsx_file(pool: &PgPool) -> Result<NamedFile, CustomError> {
+pub async fn create_xlsx_file(pool: &PgPool) -> ApiResult<ResultFile> {
     // this path uses a timestamp to distinguish between versions
     let path = "./static/results-".to_owned()
         + &humantime::format_rfc3339_seconds(SystemTime::now()).to_string()
@@ -75,10 +80,10 @@ pub async fn create_xlsx_file(pool: &PgPool) -> Result<NamedFile, CustomError> {
     workbook.close()?;
 
     // open and return file
-    Ok(NamedFile::open(path)?)
+    Ok(ResultFile(NamedFile::open(path)?))
 }
 
-async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> Result<(), CustomError> {
+async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> ApiResult<()> {
     // create fonts
     let heading = workbook.add_format().set_bold().set_font_size(20.0);
     let values = workbook.add_format().set_font_size(12.0);
@@ -98,6 +103,19 @@ async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> Result<(), Cu
     }
 
     Ok(())
+}
+
+impl Display for ResultFile {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // this is a slight hack, but I'm okay with that
+        write!(f, "ResultFile({:#?})", self.0)
+    }
+}
+
+impl TypeInfo for ResultFile {
+    fn type_name(&self) -> String {
+        format!("ResultFile")
+    }
 }
 
 #[test]

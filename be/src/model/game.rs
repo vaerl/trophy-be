@@ -1,12 +1,11 @@
-use std::fmt::{self};
-
+use std::fmt::{self, Display};
 use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use crate::{derive_responder::Responder, ApiResult};
+use crate::{ApiResult, derive_responder::Responder};
 
-use super::{Amount, Outcome, Team, TeamVec};
+use super::{Amount, Outcome, Team, TeamVec, TypeInfo};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "game_kind")]
@@ -20,7 +19,10 @@ pub enum GameKind {
 // Only return the name with no other information - this will be combined later.
 impl fmt::Display for GameKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+        match self {
+            GameKind::Points => write!(f, "Points"),
+            GameKind::Time => write!(f, "Points"),
+        }
     }
 }
 
@@ -36,20 +38,14 @@ pub struct Game {
 #[derive(Serialize, Responder)]
 pub struct GameVec(pub Vec<Game>);
 
-/// TO create a new game, I have to create a new user (that acts as a referee) first.
+// TODO make this a vec of id's to support multiple referees
+/// To create a new game, I have to create one user (that acts as a referee) first.
 #[derive(Deserialize)]
 pub struct CreateGame {
     pub trophy_id: i32,
     pub name: String,
     pub kind: GameKind,
-    // TODO make this a vec of id's to support multiple referees
     pub user_id: i32
-}
-
-impl fmt::Display for CreateGame {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "CreateGame(trophy_id: {}, name: {}, kind: {}, user_id: {})", self.trophy_id, self.name, self.kind, self.user_id)
-    }
 }
 
 impl Game {
@@ -79,8 +75,8 @@ impl Game {
     pub async fn create(create_game: CreateGame, pool: &PgPool) -> ApiResult<Game> {
         let mut tx = pool.begin().await?;
         let game: Game = sqlx::query_as!(Game, 
-            r#"INSERT INTO games (trophy_id, name, kind) VALUES ($1, $2, $3) RETURNING id, trophy_id, name, kind as "kind: GameKind", user_id"#,
-            create_game.trophy_id, create_game.name, create_game.kind as GameKind
+            r#"INSERT INTO games (trophy_id, name, kind, user_id) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as "kind: GameKind", user_id"#,
+            create_game.trophy_id, create_game.name, create_game.kind as GameKind, create_game.user_id
         )
         .fetch_one(&mut tx)
         .await?;
@@ -105,6 +101,7 @@ impl Game {
         .await?;
 
         tx.commit().await?;
+
         Ok(game)
     }
 
@@ -159,5 +156,29 @@ impl Game {
         // this capsules the functionality, meaning I will only need to change this method.
         
         Ok(Amount(Game::find_all(pool).await?.0.len()))
+    }
+}
+
+impl fmt::Display for Game {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Game(id: {}, trophy_id: {}, name: {}, kind: {}, user_id: {})",self.id, self.trophy_id, self.name, self.kind, self.user_id)
+    }
+}
+
+impl TypeInfo for Game {
+    fn type_name(&self) -> String {
+       format!("Game")
+    }
+}
+
+impl Display for GameVec {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "GameVec[{}]", self.0.iter().map(|g| g.to_string()).collect::<String>())
+    }
+}
+
+impl TypeInfo for GameVec {
+    fn type_name(&self) -> String {
+       format!("GameVec")
     }
 }

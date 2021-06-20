@@ -1,8 +1,14 @@
-use actix_web::{delete, get, post, put, web, Responder};
+use actix::Addr;
+use actix_web::{
+    delete, get, post, put,
+    web::{self, Data},
+    Responder,
+};
 use sqlx::PgPool;
 
 use crate::{
-    model::{Amount, CreateGame, Game, GameVec, History, TeamVec, UserRole, UserToken},
+    model::{Amount, CreateGame, Game, GameVec, Log, TeamVec, UserRole, UserToken},
+    ws::{lobby::Lobby, socket_refresh::SendRefresh},
     ApiResult,
 };
 
@@ -14,8 +20,10 @@ async fn find_all_games(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResu
             db_pool.get_ref(),
         )
         .await?;
-    History::read(user.id, format!("find all games"), db_pool.get_ref()).await?;
-    Game::find_all(db_pool.get_ref()).await
+    Game::find_all(db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
 }
 
 #[get("/games/amount")]
@@ -26,33 +34,31 @@ async fn games_amount(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult
             db_pool.get_ref(),
         )
         .await?;
-    History::read(
-        user.id,
-        format!("get the amount of games"),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Game::amount(db_pool.get_ref()).await
+    Game::amount(db_pool.get_ref())
+        .await?
+        .log_info(
+            user.id,
+            format!("get the amount of games"),
+            db_pool.get_ref(),
+        )
+        .await
 }
 
 #[post("/games")]
 async fn create_game(
     create_game: web::Json<CreateGame>,
     token: UserToken,
-    db_pool: web::Data<PgPool>,
+    db_pool: Data<PgPool>,
+    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<Game> {
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::action(
-        user.id,
-        format!("create a new game"),
-        // apparently calling fmt() on Json<T> delegates the call to T
-        create_game.to_string(),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Game::create(create_game.into_inner(), db_pool.get_ref()).await
+    Game::create(create_game.into_inner(), db_pool.get_ref())
+        .await?
+        .log_create(user.id, db_pool.get_ref())
+        .await?
+        .send_refresh(lobby_addr.get_ref())
 }
 
 #[get("/games/{id}")]
@@ -67,8 +73,10 @@ async fn find_game(
             db_pool.get_ref(),
         )
         .await?;
-    History::read(user.id, format!("find game {}", id), db_pool.get_ref()).await?;
-    Game::find(id.into_inner(), db_pool.get_ref()).await
+    Game::find(id.into_inner(), db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
 }
 
 #[put("/games/{id}")]
@@ -77,18 +85,16 @@ async fn update_game(
     game: web::Json<CreateGame>,
     token: UserToken,
     db_pool: web::Data<PgPool>,
+    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<Game> {
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::action(
-        user.id,
-        format!("update game {}", id),
-        game.to_string(),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Game::update(id.into_inner(), game.into_inner(), db_pool.get_ref()).await
+    Game::update(id.into_inner(), game.into_inner(), db_pool.get_ref())
+        .await?
+        .log_update(user.id, db_pool.get_ref())
+        .await?
+        .send_refresh(lobby_addr.get_ref())
 }
 
 #[delete("/games/{id}")]
@@ -96,18 +102,16 @@ async fn delete_game(
     id: web::Path<i32>,
     token: UserToken,
     db_pool: web::Data<PgPool>,
+    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<Game> {
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::action(
-        user.id,
-        format!("delete game"),
-        format!("{}", id),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Game::delete(id.into_inner(), db_pool.get_ref()).await
+    Game::delete(id.into_inner(), db_pool.get_ref())
+        .await?
+        .log_delete(user.id, db_pool.get_ref())
+        .await?
+        .send_refresh(lobby_addr.get_ref())
 }
 
 #[get("/games/{id}/pending")]
@@ -122,13 +126,10 @@ async fn pending_teams(
             db_pool.get_ref(),
         )
         .await?;
-    History::read(
-        user.id,
-        format!("get the pending teams for game {}", id),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Game::pending_teams(id.into_inner(), db_pool.get_ref()).await
+    Game::pending_teams(id.into_inner(), db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
 }
 
 #[get("/games/{id}/pending/amount")]
@@ -143,13 +144,10 @@ async fn pending_teams_amount(
             db_pool.get_ref(),
         )
         .await?;
-    History::read(
-        user.id,
-        format!("get the amount of pending teams for game {}", id),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Game::pending_teams_amount(id.into_inner(), db_pool.get_ref()).await
+    Game::pending_teams_amount(id.into_inner(), db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
 }
 
 #[get("/games/{id}/finished")]
@@ -164,13 +162,10 @@ async fn finished_teams(
             db_pool.get_ref(),
         )
         .await?;
-    History::read(
-        user.id,
-        format!("get the finished teams for game {}", id),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Game::finished_teams(id.into_inner(), db_pool.get_ref()).await
+    Game::finished_teams(id.into_inner(), db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {

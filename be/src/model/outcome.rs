@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{self, Display};
 
 use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
 use futures::Future;
@@ -7,7 +7,7 @@ use sqlx::{FromRow, PgPool};
 
 use crate::{derive_responder::Responder, ApiResult};
 
-use super::{Game, ParsedOutcome, TeamGender};
+use super::{Game, ParsedOutcome, TeamGender, TypeInfo};
 
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
@@ -18,12 +18,6 @@ pub struct Outcome {
     pub game_id: i32,
     pub team_id: i32,
     pub data: Option<String>,
-}
-
-impl fmt::Display for Outcome {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Outcome(game_id: {}, team_id: {}, data: {:?})", self.game_id, self.team_id, self.data)
-    }
 }
 
 #[derive(Serialize, Responder)]
@@ -122,5 +116,29 @@ impl Outcome {
         }
 
         Ok((female_outcomes, male_outcomes))
+    }
+}
+
+impl Display for Outcome {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Outcome(game_id: {}, team_id: {}, data: {:?})", self.game_id, self.team_id, self.data)
+    }
+}
+
+impl TypeInfo for Outcome {
+    fn type_name(&self) -> String {
+       format!("Outcome")
+    }
+}
+
+impl Display for OutcomeVec {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "OutcomeVec[{}]", self.0.iter().map(|g| g.to_string()).collect::<String>())
+    }
+}
+
+impl TypeInfo for OutcomeVec {
+    fn type_name(&self) -> String {
+       format!("OutcomeVec")
     }
 }

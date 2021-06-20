@@ -22,6 +22,5 @@ pub struct Disconnect {
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct ClientActorMessage {
-    pub id: Uuid,
     pub msg: String,
 }

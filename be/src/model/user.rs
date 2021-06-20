@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{self, Display};
 use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
 use rand_core::OsRng;
@@ -6,9 +6,9 @@ use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
-use crate::{derive_responder::Responder, ApiResult, model::Game};
+use crate::{ApiResult, derive_responder::Responder, model::{Game, LogUserAction}};
 
-use super::{CustomError, CreateToken, History, UserToken};
+use super::{CreateToken, CustomError, TypeInfo, UserToken};
 
 #[derive(Serialize, Deserialize, sqlx::Type, PartialEq)]
 #[sqlx(type_name = "user_role")]
@@ -22,7 +22,11 @@ pub enum UserRole {
 
 impl fmt::Display for UserRole {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+        match self{
+            UserRole::Admin => write!(f, "Admin"),
+            UserRole::Referee => write!(f, "Referee"),
+            UserRole::Visualizer => write!(f, "Visualizer"),
+        }
     }
 }
 
@@ -173,19 +177,21 @@ impl User {
     }
 
     pub async fn login(login: CreateLogin, pool: &PgPool) -> ApiResult<String> {
-        let user = User::find_by_name(&login.username, pool).await?;
+        let mut user = User::find_by_name(&login.username, pool).await?;
         let argon2 = Argon2::default();
         // TODO what happens when the user is already logged in?
-        // -> I currently overwrite. I should either support multiple sessions or just return the existing session!
-
+        // -> I currently overwrite(?). I should either support multiple sessions or just return the existing session!
+        
         let password_hash = PasswordHash::new(&user.password)?;
-
+        
         if user.password.is_empty() || argon2.verify_password(login.password.as_bytes(), &password_hash).is_err() {
             return Err(CustomError::BadPasswordError {message: "Token is invalid!".to_string()});
         } else {
             let session = User::generate_session();
-            History::important(user.id, format!("log-in"), pool).await?;
             User::update_session(user.id, &session, &pool).await?;
+
+            user = user.log_action(format!("log-in"), pool).await?;
+
             return Ok(UserToken::generate_token(&CreateToken {user_id: user.id, session}, user));
         }
     }
@@ -196,5 +202,29 @@ impl User {
 
     pub fn generate_session() -> String {
         Uuid::new_v4().to_simple().to_string()
+    }
+}
+
+impl Display for User {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Game(id: {}, username: {}, role: {})",self.id, self.username, self.role)
+    }
+}
+
+impl TypeInfo for User {
+    fn type_name(&self) -> String {
+       format!("User")
+    }
+}
+
+impl Display for UserVec {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "UserVec[{}]", self.0.iter().map(|g| g.to_string()).collect::<String>())
+    }
+}
+
+impl TypeInfo for UserVec {
+    fn type_name(&self) -> String {
+       format!("UserVec")
     }
 }

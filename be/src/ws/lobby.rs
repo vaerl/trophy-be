@@ -28,7 +28,7 @@ impl Default for Lobby {
 impl Lobby {
     /// I send messages on a user-based method. Thus I need this helper to reach everybody.
     /// Furthermore, this also supports sending specific messages.
-    fn send_message(&self, message: &str, id_to: &Uuid) {
+    pub fn send_message(&self, message: &str, id_to: &Uuid) {
         debug!("Sending message '{}' to {}", message, id_to);
         if let Some(socket_recipient) = self.sessions.get(id_to) {
             let _ = socket_recipient.do_send(WsMessage(message.to_owned()));
@@ -38,7 +38,7 @@ impl Lobby {
     }
 
     /// Send a message to every registered user. Uses [send_message()](send_message()).
-    fn send_message_to_all(&self, message: &str) {
+    pub fn send_message_to_all(&self, message: &str) {
         self.sessions
             .iter()
             .for_each(|(user_id, _)| self.send_message(message, user_id));

@@ -4,7 +4,7 @@ use sqlx::PgPool;
 
 use crate::{
     eval::{create_xlsx_file, evaluate_trophy},
-    model::{History, UserRole, UserToken},
+    model::{Log, UserRole, UserToken},
     ApiResult,
 };
 
@@ -14,9 +14,13 @@ async fn evaluate(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<Nam
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin, UserRole::Referee], db_pool.get_ref())
         .await?;
-    History::important(user.id, format!("evaluate trophy"), db_pool.get_ref()).await?;
     evaluate_trophy(db_pool.get_ref()).await?;
-    create_xlsx_file(db_pool.get_ref()).await
+    let file = create_xlsx_file(db_pool.get_ref())
+        .await?
+        .log_info(user.id, format!("evaluate trophy"), db_pool.get_ref())
+        .await?
+        .0;
+    Ok(file)
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {

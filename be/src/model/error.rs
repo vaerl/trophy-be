@@ -3,6 +3,8 @@ use argon2::password_hash;
 use thiserror::Error;
 use xlsxwriter::XlsxError;
 
+use crate::ws::messages::ClientActorMessage;
+
 /// This enables me to simply call err.error_response() on errors, so all errors
 /// have the correct status-codes.
 
@@ -33,6 +35,10 @@ pub enum CustomError {
     BadPasswordError { message: String },
     #[error("You must log in first!")]
     UnauthorizedError,
+
+    // websocket-errors
+    #[error("Could not send the websocket-message: {message}")]
+    SendError { message: String },
 }
 
 impl error::ResponseError for CustomError {
@@ -58,6 +64,9 @@ impl error::ResponseError for CustomError {
             CustomError::AccessDeniedError => StatusCode::FORBIDDEN,
             CustomError::BadPasswordError { .. } => StatusCode::BAD_REQUEST,
             CustomError::UnauthorizedError => StatusCode::UNAUTHORIZED,
+
+            // websocket-errors
+            CustomError::SendError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
@@ -136,6 +145,14 @@ impl From<jsonwebtoken::errors::Error> for CustomError {
 impl From<password_hash::Error> for CustomError {
     fn from(err: password_hash::Error) -> CustomError {
         CustomError::BadPasswordError {
+            message: err.to_string(),
+        }
+    }
+}
+
+impl From<actix::prelude::SendError<ClientActorMessage>> for CustomError {
+    fn from(err: actix::prelude::SendError<ClientActorMessage>) -> CustomError {
+        CustomError::SendError {
             message: err.to_string(),
         }
     }

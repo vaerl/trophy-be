@@ -1,8 +1,14 @@
-use actix_web::{delete, get, post, put, web, Responder};
+use actix::Addr;
+use actix_web::{
+    delete, get, post, put,
+    web::{self, Data},
+    Responder,
+};
 use sqlx::PgPool;
 
 use crate::{
-    model::{Amount, CreateTeam, History, Team, TeamVec, UserRole, UserToken},
+    model::{Amount, CreateTeam, Log, Team, TeamVec, UserRole, UserToken},
+    ws::{lobby::Lobby, socket_refresh::SendRefresh},
     ApiResult,
 };
 
@@ -14,8 +20,10 @@ async fn find_all_teams(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResu
             db_pool.get_ref(),
         )
         .await?;
-    History::read(user.id, format!("find all teams"), db_pool.get_ref()).await?;
-    Team::find_all(db_pool.get_ref()).await
+    Team::find_all(db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
 }
 
 // TODO determine if this is useful
@@ -27,13 +35,10 @@ async fn teams_amount(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult
             db_pool.get_ref(),
         )
         .await?;
-    History::read(
-        user.id,
-        format!("get the amount of all teams"),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Team::amount(db_pool.get_ref()).await
+    Team::amount(db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
 }
 
 #[post("/teams")]
@@ -41,18 +46,16 @@ async fn create_team(
     create_team: web::Json<CreateTeam>,
     token: UserToken,
     db_pool: web::Data<PgPool>,
+    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<Team> {
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::action(
-        user.id,
-        format!("create team"),
-        create_team.to_string(),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Team::create(create_team.into_inner(), db_pool.get_ref()).await
+    Team::create(create_team.into_inner(), db_pool.get_ref())
+        .await?
+        .log_create(user.id, db_pool.get_ref())
+        .await?
+        .send_refresh(lobby_addr.get_ref())
 }
 
 #[get("/teams/{id}")]
@@ -67,8 +70,10 @@ async fn find_team(
             db_pool.get_ref(),
         )
         .await?;
-    History::read(user.id, format!("find team {}", id), db_pool.get_ref()).await?;
-    Team::find(id.into_inner(), db_pool.get_ref()).await
+    Team::find(id.into_inner(), db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
 }
 
 #[put("/teams/{id}")]
@@ -77,18 +82,16 @@ async fn update_team(
     team: web::Json<CreateTeam>,
     token: UserToken,
     db_pool: web::Data<PgPool>,
+    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<Team> {
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::action(
-        user.id,
-        format!("update team {}", id),
-        team.to_string(),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Team::update(id.into_inner(), team.into_inner(), db_pool.get_ref()).await
+    Team::update(id.into_inner(), team.into_inner(), db_pool.get_ref())
+        .await?
+        .log_update(user.id, db_pool.get_ref())
+        .await?
+        .send_refresh(lobby_addr.get_ref())
 }
 
 #[delete("/teams/{id}")]
@@ -96,18 +99,16 @@ async fn delete_team(
     id: web::Path<i32>,
     token: UserToken,
     db_pool: web::Data<PgPool>,
+    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<Team> {
     let user = token
         .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
         .await?;
-    History::action(
-        user.id,
-        format!("delete team"),
-        id.to_string(),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Team::delete(id.into_inner(), db_pool.get_ref()).await
+    Team::delete(id.into_inner(), db_pool.get_ref())
+        .await?
+        .log_delete(user.id, db_pool.get_ref())
+        .await?
+        .send_refresh(lobby_addr.get_ref())
 }
 
 #[get("/teams/{id}/pending")]
@@ -122,13 +123,10 @@ async fn pending_games(
             db_pool.get_ref(),
         )
         .await?;
-    History::read(
-        user.id,
-        format!("get all pending games for team {}", id),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Team::pending_games(id.into_inner(), db_pool.get_ref()).await
+    Team::pending_games(id.into_inner(), db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
 }
 
 // TODO check if this is useful
@@ -144,13 +142,10 @@ async fn pending_games_amount(
             db_pool.get_ref(),
         )
         .await?;
-    History::read(
-        user.id,
-        format!("get the amount of all pending games for team {}", id),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Team::pending_games_amount(id.into_inner(), db_pool.get_ref()).await
+    Team::pending_games_amount(id.into_inner(), db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
 }
 
 #[get("/teams/{id}/finished")]
@@ -165,13 +160,10 @@ async fn finished_games(
             db_pool.get_ref(),
         )
         .await?;
-    History::read(
-        user.id,
-        format!("get the all finished games for team {}", id),
-        db_pool.get_ref(),
-    )
-    .await?;
-    Team::finished_games(id.into_inner(), db_pool.get_ref()).await
+    Team::finished_games(id.into_inner(), db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {

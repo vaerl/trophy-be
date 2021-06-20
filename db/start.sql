@@ -51,6 +51,5 @@ CREATE TABLE transaction_history (
     user_id int NOT NULL REFERENCES users (id),
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
     log_level log_level NOT NULL,
-    action varchar NOT NULL,
-    value varchar
+    action varchar NOT NULL
 );
