@@ -124,72 +124,6 @@
       ]
     }
   },
-  "1c48d847995fc59ce9618d8e7123235f4b3f382ca12731bdbfc435bba1238d3c": {
-    "query": "INSERT INTO games (trophy_id, name, kind) VALUES ($1, $2, $3) RETURNING id, trophy_id, name, kind as \"kind: GameKind\", user_id",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "trophy_id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 2,
-          "name": "name",
-          "type_info": "Varchar"
-        },
-        {
-          "ordinal": 3,
-          "name": "kind: GameKind",
-          "type_info": {
-            "Custom": {
-              "name": "game_kind",
-              "kind": {
-                "Enum": [
-                  "points",
-                  "time"
-                ]
-              }
-            }
-          }
-        },
-        {
-          "ordinal": 4,
-          "name": "user_id",
-          "type_info": "Int4"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Varchar",
-          {
-            "Custom": {
-              "name": "game_kind",
-              "kind": {
-                "Enum": [
-                  "points",
-                  "time"
-                ]
-              }
-            }
-          }
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "315e2dd82983da44c713279afb8d1b72cdfb1288e07feb774747544352d61fbe": {
     "query": "SELECT id, trophy_id, name, gender as \"gender: TeamGender\", points FROM teams ORDER BY id",
     "describe": {
@@ -384,6 +318,73 @@
         false,
         false,
         true
+      ]
+    }
+  },
+  "66dd07f0cbf5a12974d0411748eb5f3db950a8da00c132f97ce67738f59fab5c": {
+    "query": "INSERT INTO games (trophy_id, name, kind, user_id) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as \"kind: GameKind\", user_id",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "trophy_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 2,
+          "name": "name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "kind: GameKind",
+          "type_info": {
+            "Custom": {
+              "name": "game_kind",
+              "kind": {
+                "Enum": [
+                  "points",
+                  "time"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ordinal": 4,
+          "name": "user_id",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Varchar",
+          {
+            "Custom": {
+              "name": "game_kind",
+              "kind": {
+                "Enum": [
+                  "points",
+                  "time"
+                ]
+              }
+            }
+          },
+          "Int4"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
       ]
     }
   },
