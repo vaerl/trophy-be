@@ -18,19 +18,19 @@ CREATE TYPE team_gender AS ENUM ('female', 'male', 'mixed');
 CREATE TYPE user_role AS ENUM ('admin', 'referee', 'visualizer');
 CREATE TYPE log_level AS ENUM ('debug', 'info', 'important');
 -- create model-tables
+CREATE TABLE games (
+    id serial PRIMARY KEY NOT NULL,
+    trophy_id integer NOT NULL,
+    name varchar (50) NOT NULL,
+    kind game_kind NOT NULL
+);
 CREATE TABLE users (
     id serial PRIMARY KEY NOT NULL,
     username varchar (50) NOT NULL,
     password varchar NOT NULL,
     role user_role NOT NULL,
-    session varchar NOT NULL DEFAULT ''
-);
-CREATE TABLE games (
-    id serial PRIMARY KEY NOT NULL,
-    trophy_id integer NOT NULL,
-    name varchar (50) NOT NULL,
-    kind game_kind NOT NULL,
-    user_id int NOT NULL REFERENCES users (id) ON UPDATE CASCADE
+    session varchar NOT NULL DEFAULT '',
+    game_id int REFERENCES games (id)
 );
 CREATE TABLE teams (
     id serial PRIMARY KEY NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE teams (
 );
 CREATE TABLE game_team (
     game_id int REFERENCES games (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    team_id int REFERENCES teams (id) ON UPDATE CASCADE,
+    team_id int REFERENCES teams (id) ON UPDATE CASCADE ON DELETE CASCADE,
     data text DEFAULT NULL,
     CONSTRAINT game_team_pkey PRIMARY KEY (game_id, team_id) -- explicit pk
 );

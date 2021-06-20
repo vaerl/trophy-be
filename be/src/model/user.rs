@@ -39,6 +39,7 @@ pub struct User {
     // TODO consider making this a vec to support multiple sessions per user!
     // -> sessions would need to match to something for this!
     pub session: String,
+    pub game_id: Option<i32>
 }
 
 #[derive(Serialize, Responder)]
@@ -49,7 +50,8 @@ pub struct UserVec(Vec<User>);
 pub struct CreateUser {
     pub username: String,
     pub password: String,
-    pub role: UserRole
+    pub role: UserRole,
+    pub game_id: Option<i32>
 }
 
 impl fmt::Display for CreateUser {
@@ -68,7 +70,7 @@ impl User {
     pub async fn find_all(pool: &PgPool) -> ApiResult<UserVec> {
         let users = sqlx::query_as!(
             User,
-            r#"SELECT id, username, password, role as "role: UserRole", session FROM users ORDER BY id"#
+            r#"SELECT id, username, password, role as "role: UserRole", game_id, session FROM users ORDER BY id"#
         )
         .fetch_all(pool)
         .await?;
@@ -79,7 +81,7 @@ impl User {
     pub async fn find(id: i32, pool: &PgPool) -> ApiResult<User> {
         let user = sqlx::query_as!(
             User,
-            r#"SELECT id, username, password, role as "role: UserRole", session FROM users WHERE id = $1"#, id
+            r#"SELECT id, username, password, role as "role: UserRole", game_id, session FROM users WHERE id = $1"#, id
         )
         .fetch_one(pool)
         .await?;
@@ -98,11 +100,12 @@ impl User {
     }
 
     pub async fn find_game_for_ref(user_id: i32, pool: &PgPool) -> ApiResult<Game> {
-        let game = Game::find_all(pool).await?.0.into_iter().filter(|game| game.user_id == user_id).next();
+        // let game = Game::find_all(pool).await?.0.into_iter().filter(|game| game.user_id == user_id).next();
+        let user = User::find(user_id, pool).await?;
 
-        match game {
-            Some(game) => Ok(game),
-            None => Err(CustomError::NotFoundError {message: format!("Game for referee could not be found!")})
+        match user.game_id {
+            Some(game_id) => Game::find(game_id, pool).await,
+            None => Err(CustomError::NotFoundError {message: format!("Game for referee {} could not be found!", user_id)}),
         }
     }
 
@@ -117,8 +120,8 @@ impl User {
 
             let mut tx = pool.begin().await?;
             let user = sqlx::query_as!( User, 
-                r#"INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id, username, password, role as "role: UserRole", session"#,
-                create_user.username, password_hash,  create_user.role as UserRole
+                r#"INSERT INTO users (username, password, role, game_id) VALUES ($1, $2, $3, $4) RETURNING id, username, password, role as "role: UserRole", game_id, session"#,
+                create_user.username, password_hash,  create_user.role as UserRole, create_user.game_id
             )
             .fetch_one(&mut tx)
             .await?;
@@ -139,8 +142,8 @@ impl User {
         let mut tx = pool.begin().await?;
         let user = sqlx::query_as!(
             User, 
-            r#"UPDATE users SET username = $1, password = $2, role = $3 WHERE id = $4 RETURNING id, username, password, role as "role: UserRole", session"#,
-            altered_user.username, password_hash, altered_user.role as UserRole, id
+            r#"UPDATE users SET username = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, username, password, role as "role: UserRole", game_id, session"#,
+            altered_user.username, password_hash, altered_user.role as UserRole, altered_user.game_id, id
         )
         .fetch_one(&mut tx)
         .await?;
@@ -166,7 +169,7 @@ impl User {
         let mut tx = pool.begin().await?;
         let user = sqlx::query_as!(
             User,
-            r#"DELETE FROM users WHERE id = $1 RETURNING id, username, password, role as "role: UserRole", session"#,
+            r#"DELETE FROM users WHERE id = $1 RETURNING id, username, password, role as "role: UserRole", game_id, session"#,
             id
         )
         .fetch_one(&mut tx)
@@ -207,7 +210,7 @@ impl User {
 
 impl Display for User {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Game(id: {}, username: {}, role: {})",self.id, self.username, self.role)
+        write!(f, "Game(id: {}, username: {}, role: {}, game_id: {:#?})",self.id, self.username, self.role, self.game_id)
     }
 }
 

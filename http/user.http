@@ -14,11 +14,11 @@ Content-Type: application/json
 
 ### log out
 POST {{BASE}}/logout
-Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxMTAxMzMsImV4cCI6MTYyNDExMzAxMywidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6ImY0ZTczNmVkOGM4ZDQ3ZjFiOTkwY2IwZDQ3ZWMxNDhhIn0.yuXyWgsljzLsUubAbRNxVKK0EAhnjGBa2-zWL34HlII
+Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxODg1MzcsImV4cCI6MTYyNDE5MTQxNywidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjZmZTBmMmFmNjJhZTQ1Y2Y4NmI0MzYzZWQ1Yjg5YzA2In0.hOa7jbAgE21T3nQ6-JRkI2ezTayhy382jVyQNeCGcDQ
 
 ### get all users
 GET {{BASE}}/users
-Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxMTAxNzAsImV4cCI6MTYyNDExMzA1MCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjRjMWFiZGNiNTM2ODQ0MGJiODUxOWExMzdjMTE0OGZlIn0.IpGpi_GTRZXUObIBamNycy8f-PbvyxrTpr7MEX9zCPc
+Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxODg1MzcsImV4cCI6MTYyNDE5MTQxNywidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjZmZTBmMmFmNjJhZTQ1Y2Y4NmI0MzYzZWQ1Yjg5YzA2In0.hOa7jbAgE21T3nQ6-JRkI2ezTayhy382jVyQNeCGcDQ
 
 ### get user
 GET {{BASE}}/users/{{ID}}
@@ -26,11 +26,13 @@ GET {{BASE}}/users/{{ID}}
 ### create new user
 POST {{BASE}}/users
 Content-Type: application/json
+Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxODg1MzcsImV4cCI6MTYyNDE5MTQxNywidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjZmZTBmMmFmNjJhZTQ1Y2Y4NmI0MzYzZWQ1Yjg5YzA2In0.hOa7jbAgE21T3nQ6-JRkI2ezTayhy382jVyQNeCGcDQ
 
 {
-    "username": "lars",
+    "username": "bernd",
     "password": "asdf",
-    "role": "referee"
+    "role": "referee",
+    "game_id": null
 }
 
 ### update user
