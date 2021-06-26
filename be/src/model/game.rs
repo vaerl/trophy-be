@@ -44,7 +44,6 @@ pub struct CreateGame {
     pub trophy_id: i32,
     pub name: String,
     pub kind: GameKind,
-    pub user_id: i32
 }
 
 impl Game {
