@@ -20,7 +20,7 @@ pub async fn start_connection(
     req: HttpRequest,
     stream: Payload,
     token: UserToken,
-    db_pool: web::Data<PgPool>,
+    db_pool: Data<PgPool>,
     srv: Data<Addr<Lobby>>,
 ) -> ApiResult<HttpResponse> {
     let _user = token

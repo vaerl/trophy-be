@@ -4,16 +4,18 @@ extern crate log;
 extern crate derive_responder;
 
 use actix::Actor;
-use actix_web::{body::Body, error, web, App, HttpResponse, HttpServer};
+use actix_web::{
+    body::Body,
+    error,
+    web::{self, Data},
+    App, HttpResponse, HttpServer,
+};
 use dotenv::dotenv;
 use model::CustomError;
 use sqlx::PgPool;
 use std::env;
 
-use crate::{
-    model::{CreateUser, User, UserRole},
-    ws::lobby::Lobby,
-};
+use crate::ws::lobby::Lobby;
 
 mod eval;
 mod model;
@@ -29,18 +31,18 @@ async fn main() -> Result<(), CustomError> {
     env_logger::init();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file!");
-    let db_pool = PgPool::connect(&database_url).await?;
-    let pool_clone = db_pool.clone();
+    let db_pool = Data::new(PgPool::connect(&database_url).await?);
+    // let pool_clone = db_pool.clone();
 
     let host = env::var("HOST").expect("HOST is not set in .env file!");
     let port = env::var("PORT").expect("PORT is not set in .env file!");
 
-    let ws_server = Lobby::default().start();
+    let ws_server = Data::new(Lobby::default().start());
 
     let server = HttpServer::new(move || {
         App::new()
             // pass database pool to application so we can access it inside handlers
-            .data(db_pool.clone())
+            .app_data(db_pool.clone())
             .configure(routes::init)
             .configure(ws::init)
             // return JSON-parse-errors
@@ -52,23 +54,23 @@ async fn main() -> Result<(), CustomError> {
                 )
                 .into()
             }))
-            .data(ws_server.clone())
+            .app_data(ws_server.clone())
     })
     .bind(format!("{}:{}", host, port))?;
 
     // NOTE this needs to be commented, because it errs when the user exists
     // I'm leaving this here in case I have to reset the database - which I most certainly will.
-    info!("Creating admin-user.");
-    User::create(
-        CreateUser {
-            username: "lukas".to_string(),
-            password: "test".to_string(),
-            role: UserRole::Admin,
-            game_id: None,
-        },
-        &pool_clone,
-    )
-    .await?;
+    // info!("Creating admin-user.");
+    // User::create(
+    //     CreateUser {
+    //         username: "lukas".to_string(),
+    //         password: "test".to_string(),
+    //         role: UserRole::Admin,
+    //         game_id: None,
+    //     },
+    //     &pool_clone,
+    // )
+    // .await?;
 
     info!("Starting server.");
     server.run().await?;

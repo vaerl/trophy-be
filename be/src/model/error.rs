@@ -1,4 +1,4 @@
-use actix_web::{body::Body, dev::HttpResponseBuilder, error, http::StatusCode, HttpResponse};
+use actix_web::{body::Body, dev::BaseHttpResponseBuilder, error, http::StatusCode, HttpResponse};
 use argon2::password_hash;
 use thiserror::Error;
 use xlsxwriter::XlsxError;
@@ -43,9 +43,10 @@ pub enum CustomError {
 
 impl error::ResponseError for CustomError {
     fn error_response(&self) -> HttpResponse<Body> {
-        HttpResponseBuilder::new(self.status_code())
+        BaseHttpResponseBuilder::new(self.status_code())
             .append_header(("CONTENT_TYPE", "text/html; charset=utf-8"))
             .body(self.to_string())
+            .into()
     }
     fn status_code(&self) -> StatusCode {
         match *self {
