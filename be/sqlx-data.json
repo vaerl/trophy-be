@@ -130,52 +130,6 @@
       ]
     }
   },
-  "1b9330d040146ef8be35d145d15b31d8c14fd3c8845abc0a378dae7f00487d62": {
-    "query": "SELECT id, trophy_id, name, kind as \"kind: GameKind\" FROM games ORDER BY id",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "trophy_id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 2,
-          "name": "name",
-          "type_info": "Varchar"
-        },
-        {
-          "ordinal": 3,
-          "name": "kind: GameKind",
-          "type_info": {
-            "Custom": {
-              "name": "game_kind",
-              "kind": {
-                "Enum": [
-                  "points",
-                  "time"
-                ]
-              }
-            }
-          }
-        }
-      ],
-      "parameters": {
-        "Left": []
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "315e2dd82983da44c713279afb8d1b72cdfb1288e07feb774747544352d61fbe": {
     "query": "SELECT id, trophy_id, name, gender as \"gender: TeamGender\", points FROM teams ORDER BY id",
     "describe": {
@@ -255,67 +209,6 @@
       "nullable": []
     }
   },
-  "4b7ccf5864870709dc03a2cc2e19190fdf29721e21881168c7cebb0380c34474": {
-    "query": "UPDATE games SET trophy_id = $1, name = $2, kind = $3 WHERE id = $4 RETURNING id, trophy_id, name, kind as \"kind: GameKind\"",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "trophy_id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 2,
-          "name": "name",
-          "type_info": "Varchar"
-        },
-        {
-          "ordinal": 3,
-          "name": "kind: GameKind",
-          "type_info": {
-            "Custom": {
-              "name": "game_kind",
-              "kind": {
-                "Enum": [
-                  "points",
-                  "time"
-                ]
-              }
-            }
-          }
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Varchar",
-          {
-            "Custom": {
-              "name": "game_kind",
-              "kind": {
-                "Enum": [
-                  "points",
-                  "time"
-                ]
-              }
-            }
-          },
-          "Int4"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "4ece3831fb7b897154b28239f08c12cd9505f98897ee8369294b498614db3e08": {
     "query": "SELECT id, username, password, role as \"role: UserRole\", game_id, session FROM users WHERE id = $1",
     "describe": {
@@ -373,6 +266,73 @@
         false,
         false,
         true,
+        false
+      ]
+    }
+  },
+  "4ef46ca5824a2270433d15565e63c072c58a19f6703f128b7bd7bb3078b0362e": {
+    "query": "INSERT INTO games (trophy_id, name, kind, locked) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "trophy_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 2,
+          "name": "name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "kind: GameKind",
+          "type_info": {
+            "Custom": {
+              "name": "game_kind",
+              "kind": {
+                "Enum": [
+                  "points",
+                  "time"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ordinal": 4,
+          "name": "locked",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Varchar",
+          {
+            "Custom": {
+              "name": "game_kind",
+              "kind": {
+                "Enum": [
+                  "points",
+                  "time"
+                ]
+              }
+            }
+          },
+          "Bool"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
         false
       ]
     }
@@ -549,6 +509,58 @@
         false,
         false,
         true
+      ]
+    }
+  },
+  "6dbcfc7eb5f77f6826fb434896a6534cdb79d2121d5c8f13145c842af4973e81": {
+    "query": "SELECT id, trophy_id, name, kind as \"kind: GameKind\", locked FROM games ORDER BY id",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "trophy_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 2,
+          "name": "name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "kind: GameKind",
+          "type_info": {
+            "Custom": {
+              "name": "game_kind",
+              "kind": {
+                "Enum": [
+                  "points",
+                  "time"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ordinal": 4,
+          "name": "locked",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
       ]
     }
   },
@@ -800,54 +812,6 @@
       ]
     }
   },
-  "8330e37825d5ab4a9b7270244606250c25ad681d743e1001b087044858e733f4": {
-    "query": "DELETE FROM games WHERE id = $1 RETURNING id, trophy_id, name, kind as \"kind: GameKind\"",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "trophy_id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 2,
-          "name": "name",
-          "type_info": "Varchar"
-        },
-        {
-          "ordinal": 3,
-          "name": "kind: GameKind",
-          "type_info": {
-            "Custom": {
-              "name": "game_kind",
-              "kind": {
-                "Enum": [
-                  "points",
-                  "time"
-                ]
-              }
-            }
-          }
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Int4"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "867781a3dbdb053e7723acbbebcd66da1325009252a92ebc4735610cb43533a9": {
     "query": "UPDATE users SET session = $1 WHERE id = $2",
     "describe": {
@@ -920,6 +884,60 @@
       ]
     }
   },
+  "90ed791661d9b42bcad85ad19202cf2a35a7f8b696ab9cb676aa9ac978b55bca": {
+    "query": "DELETE FROM games WHERE id = $1 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "trophy_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 2,
+          "name": "name",
+          "type_info": "Varchar"
+        },
+        {
+          "ordinal": 3,
+          "name": "kind: GameKind",
+          "type_info": {
+            "Custom": {
+              "name": "game_kind",
+              "kind": {
+                "Enum": [
+                  "points",
+                  "time"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "ordinal": 4,
+          "name": "locked",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
   "a8d2f837de0f8e0208da1c2098d4c85519ee11fc6a25c1cc02f656fe2d95d491": {
     "query": "DELETE FROM users WHERE id = $1 RETURNING id, username, password, role as \"role: UserRole\", game_id, session",
     "describe": {
@@ -981,8 +999,8 @@
       ]
     }
   },
-  "b0958b253db5b9b79a0896aebc05c91c85ed5f1c4540202840b4632f21c35d73": {
-    "query": "SELECT id, trophy_id, name, kind as \"kind: GameKind\" FROM games WHERE id = $1",
+  "be150bd3fa9060710add260c65d9b4d2b9432fa95c87153f7d2636737fa06e51": {
+    "query": "UPDATE games SET trophy_id = $1, name = $2, kind = $3, locked = $4 WHERE id = $5 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked",
     "describe": {
       "columns": [
         {
@@ -1014,14 +1032,34 @@
               }
             }
           }
+        },
+        {
+          "ordinal": 4,
+          "name": "locked",
+          "type_info": "Bool"
         }
       ],
       "parameters": {
         "Left": [
+          "Int4",
+          "Varchar",
+          {
+            "Custom": {
+              "name": "game_kind",
+              "kind": {
+                "Enum": [
+                  "points",
+                  "time"
+                ]
+              }
+            }
+          },
+          "Bool",
           "Int4"
         ]
       },
       "nullable": [
+        false,
         false,
         false,
         false,
@@ -1082,40 +1120,8 @@
       ]
     }
   },
-  "eab9531f806a37ef00e90dc6f9234ef84fa70baedcc37dd886211c263cf2bc31": {
-    "query": "SELECT game_id, team_id, data FROM game_team WHERE game_id = $1 ORDER BY game_id",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "game_id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "team_id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 2,
-          "name": "data",
-          "type_info": "Text"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Int4"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        true
-      ]
-    }
-  },
-  "eb1a469e3533fffb5d603d2044632d68bf46bdfc4e4f72ca8b98ccedd389d1a1": {
-    "query": "INSERT INTO games (trophy_id, name, kind) VALUES ($1, $2, $3) RETURNING id, trophy_id, name, kind as \"kind: GameKind\"",
+  "e9f6ac0d4329ce1e7a2222c86da5f2f64728b7e24039e7f196cfdca0b00fccda": {
+    "query": "SELECT id, trophy_id, name, kind as \"kind: GameKind\", locked FROM games WHERE id = $1",
     "describe": {
       "columns": [
         {
@@ -1147,30 +1153,56 @@
               }
             }
           }
+        },
+        {
+          "ordinal": 4,
+          "name": "locked",
+          "type_info": "Bool"
         }
       ],
       "parameters": {
         "Left": [
-          "Int4",
-          "Varchar",
-          {
-            "Custom": {
-              "name": "game_kind",
-              "kind": {
-                "Enum": [
-                  "points",
-                  "time"
-                ]
-              }
-            }
-          }
+          "Int4"
         ]
       },
       "nullable": [
         false,
         false,
         false,
+        false,
         false
+      ]
+    }
+  },
+  "eab9531f806a37ef00e90dc6f9234ef84fa70baedcc37dd886211c263cf2bc31": {
+    "query": "SELECT game_id, team_id, data FROM game_team WHERE game_id = $1 ORDER BY game_id",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "game_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "team_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true
       ]
     }
   },
