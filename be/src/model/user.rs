@@ -100,12 +100,11 @@ impl User {
     }
 
     pub async fn find_game_for_ref(user_id: i32, pool: &PgPool) -> ApiResult<Game> {
-        // let game = Game::find_all(pool).await?.0.into_iter().filter(|game| game.user_id == user_id).next();
         let user = User::find(user_id, pool).await?;
 
         match user.game_id {
             Some(game_id) => Game::find(game_id, pool).await,
-            None => Err(CustomError::NotFoundError {message: format!("Game for referee {} could not be found!", user_id)}),
+            None => Err(CustomError::NotFoundError {message: format!("Game for user {} could not be found!", user_id)}),
         }
     }
 

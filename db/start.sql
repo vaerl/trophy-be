@@ -22,7 +22,8 @@ CREATE TABLE games (
     id serial PRIMARY KEY NOT NULL,
     trophy_id integer NOT NULL,
     name varchar (50) NOT NULL,
-    kind game_kind NOT NULL
+    kind game_kind NOT NULL,
+    locked boolean DEFAULT FALSE NOT NULL
 );
 CREATE TABLE users (
     id serial PRIMARY KEY NOT NULL,

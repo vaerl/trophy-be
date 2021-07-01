@@ -5,9 +5,9 @@ use futures::Future;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use crate::{derive_responder::Responder, ApiResult};
+use crate::{ApiResult, derive_responder::Responder, model::{CreateGame, CustomError}};
 
-use super::{Game, ParsedOutcome, TeamGender, TypeInfo};
+use super::{Game, ParsedOutcome, TeamGender, TypeInfo, UserRole};
 
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
@@ -61,6 +61,8 @@ impl Outcome {
 
     pub async fn create(game_id: i32, team_id: i32, pool: &PgPool) -> ApiResult<Outcome> {
         // there is no need to check if the ids are valid here - because this is called while iterating over existing entities 
+        // NOTE all needed entities are created, because if a Team or Game is created,
+        // the missing outcomes are created, but not any more! 
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
             Outcome, 
@@ -74,18 +76,44 @@ impl Outcome {
         Ok(outcome)
     }
 
-    pub async fn update(outcome: Outcome, pool: &PgPool) -> ApiResult<Outcome> {
-        let mut tx = pool.begin().await?;
-        let outcome = sqlx::query_as!(
-            Outcome, 
-            "UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data",
-            outcome.data, outcome.game_id, outcome.team_id
-        )
-        .fetch_one(&mut tx)
-        .await?;
+    pub async fn update(outcome: Outcome, role: UserRole, pool: &PgPool) -> ApiResult<Outcome> {
+        // TODO update the eval-code to use game.locked???
+        // -> sync to the new locked-mechanism if useful
+        match outcome.data {
+            Some(data) => {
+                let game = Game::find(outcome.game_id, &pool).await?;
 
-        tx.commit().await?;
-        Ok(outcome)
+                // if the game is locked, only allow admins to proceed
+                if game.locked && role != UserRole::Admin {
+                    return Err(CustomError::AccessDeniedError);
+                }
+                
+                // update the outcome, so we find it later
+                let mut tx = pool.begin().await?;
+                let outcome = sqlx::query_as!(
+                        Outcome, 
+                        "UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data",
+                        data, outcome.game_id, outcome.team_id
+                    )
+                    .fetch_one(&mut tx)
+                    .await?;
+                tx.commit().await?;
+                
+                let outcomes = Outcome::find_all_for_game(outcome.game_id, &pool).await?;
+                // lock the game if there are no unset outcomes
+                if outcomes.0.into_iter().filter(|o| o.data.is_none()).collect::<Vec<Outcome>>().len() == 0 {
+                    Game::update(game.id, CreateGame {
+                        trophy_id: game.trophy_id,
+                        name: game.name,
+                        kind: game.kind,
+                        locked: true,
+                    }, &pool).await?;
+                }
+                
+                Ok(outcome)
+            },
+            None => Err(CustomError::NoDataSendError { message: format!("Outcome had no data!") }),
+        }
     }
 
     pub async fn filter_for<'r, Fut>(

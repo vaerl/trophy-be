@@ -1,4 +1,4 @@
-@BASE = http://127.0.0.1:8080
+@BASE = http://127.0.0.1:5000
 @TOKEN = asdf
 
 POST {{BASE}}/login
@@ -11,16 +11,16 @@ Content-Type: application/json
 
 ### get all teams
 GET {{BASE}}/teams
-Authorization: bearer {{TOKEN}}
+Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjUxNTI4NDAsImV4cCI6MTYyNTE1NTcyMCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjgyN2ExNTIyYzRjMTQ1YmJhZjMyMTk5NzQ3ZjUzYTIwIn0.ArngkK-UMJAAukPo9VWRYytV32gyG0wHzI_BaHZKeb8
 
 ### add new team
 POST {{BASE}}/teams
-Content-Type: : application/json
-Authorization: bearer {{TOKEN}}
+Content-Type: application/json
+Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjUxNTI4NDAsImV4cCI6MTYyNTE1NTcyMCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjgyN2ExNTIyYzRjMTQ1YmJhZjMyMTk5NzQ3ZjUzYTIwIn0.ArngkK-UMJAAukPo9VWRYytV32gyG0wHzI_BaHZKeb8
 
 {
-    "trophy_id": 1,
-    "name": "test",
+    "trophy_id": 3,
+    "name": "sadf",
     "gender": "male"
 }
 

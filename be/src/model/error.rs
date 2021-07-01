@@ -19,6 +19,8 @@ pub enum CustomError {
     CatchAllError { message: String },
     #[error("The resource already exists: {message}")]
     AlreadyExistsError { message: String },
+    #[error("No data when there should have been some: {message}")]
+    NoDataSendError { message: String },
 
     // eval-errors
     #[error("You tried to evaluate while teams are still playing: {message}")]
@@ -54,6 +56,7 @@ impl error::ResponseError for CustomError {
             CustomError::NotFoundError { .. } => StatusCode::NOT_FOUND,
             CustomError::AlreadyExistsError { .. } => StatusCode::BAD_REQUEST,
             CustomError::CatchAllError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            CustomError::NoDataSendError { .. } => StatusCode::BAD_REQUEST,
 
             // eval-errors
             // 425 -> too early, experimental API!

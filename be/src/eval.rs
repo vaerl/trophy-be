@@ -17,6 +17,7 @@ pub struct ResultFile(pub NamedFile);
 const MAX_POINTS: i32 = 50;
 
 pub async fn evaluate_trophy(pool: &PgPool) -> ApiResult<()> {
+    // I cannot use locked here, as locked might be changed arbitrarily by admins(me)
     for game in Game::find_all(pool).await?.0 {
         evaluate_game(game, pool).await?;
     }

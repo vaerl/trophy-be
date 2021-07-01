@@ -11,18 +11,19 @@ Content-Type: application/json
 
 ### get all games
 GET {{BASE}}/games
-Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxODg1MzcsImV4cCI6MTYyNDE5MTQxNywidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjZmZTBmMmFmNjJhZTQ1Y2Y4NmI0MzYzZWQ1Yjg5YzA2In0.hOa7jbAgE21T3nQ6-JRkI2ezTayhy382jVyQNeCGcDQ
+Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjUxNTI4NDAsImV4cCI6MTYyNTE1NTcyMCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjgyN2ExNTIyYzRjMTQ1YmJhZjMyMTk5NzQ3ZjUzYTIwIn0.ArngkK-UMJAAukPo9VWRYytV32gyG0wHzI_BaHZKeb8
 
 ### create a new game
 POST {{BASE}}/games
 Content-Type: application/json
-Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxODg1MzcsImV4cCI6MTYyNDE5MTQxNywidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjZmZTBmMmFmNjJhZTQ1Y2Y4NmI0MzYzZWQ1Yjg5YzA2In0.hOa7jbAgE21T3nQ6-JRkI2ezTayhy382jVyQNeCGcDQ
+Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjUwODI4MTAsImV4cCI6MTYyNTA4NTY5MCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6ImVjNTNjNGJhNGY2YjQ4MmJhMDg1NjliYjFlNTVjZDRlIn0.2j9d7LeSwq9G5uQKUJs_kssSyZwkQcDzzo2-guQ3TSc
 
 {
     "trophy_id": 1,
     "name": "asdf",
     "kind": "time",
-    "user_id": 1
+    "user_id": 1,
+    "locked": false
 }
 
 ### get game with id 1

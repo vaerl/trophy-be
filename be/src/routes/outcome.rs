@@ -1,8 +1,15 @@
 use actix::Addr;
-use actix_web::{get, put, web::{self, Data}};
+use actix_web::{
+    get, put,
+    web::{self, Data},
+};
 use sqlx::PgPool;
 
-use crate::{ApiResult, model::{CustomError, Log, Outcome, OutcomeVec, User, UserRole, UserToken}, ws::{lobby::Lobby, socket_refresh::SendRefresh}};
+use crate::{
+    model::{CustomError, Log, Outcome, OutcomeVec, User, UserRole, UserToken},
+    ws::{lobby::Lobby, socket_refresh::SendRefresh},
+    ApiResult,
+};
 
 #[get("/outcomes")]
 async fn find_all_outcomes(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<OutcomeVec> {
@@ -16,7 +23,7 @@ async fn find_all_outcomes(token: UserToken, db_pool: web::Data<PgPool>) -> ApiR
 }
 
 /// Outcomes are automatically initialized , thus we only need an update-method().
-#[put("/outcomes/{id}")]
+#[put("/outcomes")]
 async fn update_outcome(
     token: UserToken,
     outcome: web::Json<Outcome>,
@@ -29,7 +36,7 @@ async fn update_outcome(
 
     match user.role {
         UserRole::Admin => {
-            Outcome::update(outcome.into_inner(), db_pool.get_ref())
+            Outcome::update(outcome.into_inner(), user.role, db_pool.get_ref())
                 .await?
                 .log_update(user.id, db_pool.get_ref())
                 .await
@@ -41,7 +48,7 @@ async fn update_outcome(
                     .await?
                     .id
             {
-                Outcome::update(outcome.into_inner(), db_pool.get_ref())
+                Outcome::update(outcome.into_inner(), user.role, db_pool.get_ref())
                     .await?
                     .log_update(user.id, db_pool.get_ref())
                     .await?

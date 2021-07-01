@@ -6,7 +6,7 @@ use sqlx::{FromRow, PgPool};
 use crate::{derive_responder::Responder, ApiResult};
 use super::{Amount, Game, GameVec, Outcome, TypeInfo};
 
-#[derive(Serialize, Deserialize, Debug, sqlx::Type)]
+#[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "team_gender")]
 #[sqlx(rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
