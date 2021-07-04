@@ -5,9 +5,9 @@ use futures::Future;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use crate::{ApiResult, derive_responder::Responder, model::{CreateGame, CustomError}};
+use crate::{ApiResult, derive_responder::Responder, model::{CreateGame, CustomError, Log}};
 
-use super::{Game, ParsedOutcome, TeamGender, TypeInfo, UserRole};
+use super::{Game, ParsedOutcome, TeamGender, TypeInfo, User, UserRole};
 
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
@@ -76,15 +76,14 @@ impl Outcome {
         Ok(outcome)
     }
 
-    pub async fn update(outcome: Outcome, role: UserRole, pool: &PgPool) -> ApiResult<Outcome> {
-        // TODO update the eval-code to use game.locked???
-        // -> sync to the new locked-mechanism if useful
+    /// This method needs the calling user as it might modify a game's state.
+    pub async fn update(outcome: Outcome, user: &User, pool: &PgPool) -> ApiResult<Outcome> {
         match outcome.data {
             Some(data) => {
                 let game = Game::find(outcome.game_id, &pool).await?;
 
                 // if the game is locked, only allow admins to proceed
-                if game.locked && role != UserRole::Admin {
+                if game.locked && user.role != UserRole::Admin {
                     return Err(CustomError::AccessDeniedError);
                 }
                 
@@ -107,12 +106,13 @@ impl Outcome {
                         name: game.name,
                         kind: game.kind,
                         locked: true,
-                    }, &pool).await?;
+                    }, &pool).await?
+                    .log_update(user.id, pool).await?;
                 }
                 
                 Ok(outcome)
             },
-            None => Err(CustomError::NoDataSendError { message: format!("Outcome had no data!") }),
+            None => Err(CustomError::NoDataSentError { message: format!("Outcome had no data!") }),
         }
     }
 

@@ -36,7 +36,7 @@ async fn update_outcome(
 
     match user.role {
         UserRole::Admin => {
-            Outcome::update(outcome.into_inner(), user.role, db_pool.get_ref())
+            Outcome::update(outcome.into_inner(), &user, db_pool.get_ref())
                 .await?
                 .log_update(user.id, db_pool.get_ref())
                 .await
@@ -48,7 +48,7 @@ async fn update_outcome(
                     .await?
                     .id
             {
-                Outcome::update(outcome.into_inner(), user.role, db_pool.get_ref())
+                Outcome::update(outcome.into_inner(), &user, db_pool.get_ref())
                     .await?
                     .log_update(user.id, db_pool.get_ref())
                     .await?
