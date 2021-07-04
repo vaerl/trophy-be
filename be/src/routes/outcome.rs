@@ -36,10 +36,15 @@ async fn update_outcome(
 
     match user.role {
         UserRole::Admin => {
-            Outcome::update(outcome.into_inner(), &user, db_pool.get_ref())
-                .await?
-                .log_update(user.id, db_pool.get_ref())
-                .await
+            Outcome::update(
+                outcome.into_inner(),
+                &user,
+                lobby_addr.get_ref(),
+                db_pool.get_ref(),
+            )
+            .await?
+            .log_update(user.id, db_pool.get_ref())
+            .await
         }
         UserRole::Referee => {
             // if the user is a referee, check if he is accessing the correct game
@@ -48,11 +53,16 @@ async fn update_outcome(
                     .await?
                     .id
             {
-                Outcome::update(outcome.into_inner(), &user, db_pool.get_ref())
-                    .await?
-                    .log_update(user.id, db_pool.get_ref())
-                    .await?
-                    .send_refresh(lobby_addr.get_ref())
+                Outcome::update(
+                    outcome.into_inner(),
+                    &user,
+                    lobby_addr.get_ref(),
+                    db_pool.get_ref(),
+                )
+                .await?
+                .log_update(user.id, db_pool.get_ref())
+                .await?
+                .send_refresh(lobby_addr.get_ref())
             } else {
                 Err(CustomError::AccessDeniedError)
             }

@@ -1,11 +1,12 @@
 use std::fmt::{self, Display};
 
+use actix::Addr;
 use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
 use futures::Future;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use crate::{ApiResult, derive_responder::Responder, model::{CreateGame, CustomError, Log}};
+use crate::{ApiResult, derive_responder::Responder, model::{CreateGame, CustomError, Log}, ws::{lobby::Lobby, socket_refresh::SendRefresh}};
 
 use super::{Game, ParsedOutcome, TeamGender, TypeInfo, User, UserRole};
 
@@ -77,7 +78,7 @@ impl Outcome {
     }
 
     /// This method needs the calling user as it might modify a game's state.
-    pub async fn update(outcome: Outcome, user: &User, pool: &PgPool) -> ApiResult<Outcome> {
+    pub async fn update(outcome: Outcome, user: &User, lobby: &Addr<Lobby>, pool: &PgPool) -> ApiResult<Outcome> {
         match outcome.data {
             Some(data) => {
                 let game = Game::find(outcome.game_id, &pool).await?;
@@ -107,7 +108,8 @@ impl Outcome {
                         kind: game.kind,
                         locked: true,
                     }, &pool).await?
-                    .log_update(user.id, pool).await?;
+                    .log_update(user.id, pool).await?
+                    .send_refresh(lobby)?;
                 }
                 
                 Ok(outcome)
