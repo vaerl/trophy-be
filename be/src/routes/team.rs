@@ -2,7 +2,7 @@ use actix::Addr;
 use actix_web::{
     delete, get, post, put,
     web::{self, Data},
-    Responder,
+    HttpRequest, Responder,
 };
 use sqlx::PgPool;
 
@@ -13,13 +13,13 @@ use crate::{
 };
 
 #[get("/teams")]
-async fn find_all_teams(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<TeamVec> {
-    let user = token
-        .try_into_authorized_user(
-            vec![UserRole::Admin, UserRole::Visualizer],
-            db_pool.get_ref(),
-        )
-        .await?;
+async fn find_all_teams(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<TeamVec> {
+    let user = UserToken::try_into_authorized_user(
+        &req,
+        vec![UserRole::Admin, UserRole::Visualizer],
+        db_pool.get_ref(),
+    )
+    .await?;
     Team::find_all(db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
@@ -28,13 +28,13 @@ async fn find_all_teams(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResu
 
 // TODO determine if this is useful
 #[get("/teams/amount")]
-async fn teams_amount(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<Amount> {
-    let user = token
-        .try_into_authorized_user(
-            vec![UserRole::Admin, UserRole::Visualizer],
-            db_pool.get_ref(),
-        )
-        .await?;
+async fn teams_amount(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<Amount> {
+    let user = UserToken::try_into_authorized_user(
+        &req,
+        vec![UserRole::Admin, UserRole::Visualizer],
+        db_pool.get_ref(),
+    )
+    .await?;
     Team::amount(db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
@@ -44,13 +44,12 @@ async fn teams_amount(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult
 #[post("/teams")]
 async fn create_team(
     create_team: web::Json<CreateTeam>,
-    token: UserToken,
+    req: HttpRequest,
     db_pool: web::Data<PgPool>,
     lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<Team> {
-    let user = token
-        .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
-        .await?;
+    let user =
+        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
     Team::create(create_team.into_inner(), db_pool.get_ref())
         .await?
         .log_create(user.id, db_pool.get_ref())
@@ -61,15 +60,15 @@ async fn create_team(
 #[get("/teams/{id}")]
 async fn find_team(
     id: web::Path<i32>,
-    token: UserToken,
+    req: HttpRequest,
     db_pool: web::Data<PgPool>,
 ) -> ApiResult<Team> {
-    let user = token
-        .try_into_authorized_user(
-            vec![UserRole::Admin, UserRole::Visualizer],
-            db_pool.get_ref(),
-        )
-        .await?;
+    let user = UserToken::try_into_authorized_user(
+        &req,
+        vec![UserRole::Admin, UserRole::Visualizer],
+        db_pool.get_ref(),
+    )
+    .await?;
     Team::find(id.into_inner(), db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
@@ -80,13 +79,12 @@ async fn find_team(
 async fn update_team(
     id: web::Path<i32>,
     team: web::Json<CreateTeam>,
-    token: UserToken,
+    req: HttpRequest,
     db_pool: web::Data<PgPool>,
     lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<Team> {
-    let user = token
-        .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
-        .await?;
+    let user =
+        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
     Team::update(id.into_inner(), team.into_inner(), db_pool.get_ref())
         .await?
         .log_update(user.id, db_pool.get_ref())
@@ -97,13 +95,12 @@ async fn update_team(
 #[delete("/teams/{id}")]
 async fn delete_team(
     id: web::Path<i32>,
-    token: UserToken,
+    req: HttpRequest,
     db_pool: web::Data<PgPool>,
     lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<Team> {
-    let user = token
-        .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
-        .await?;
+    let user =
+        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
     Team::delete(id.into_inner(), db_pool.get_ref())
         .await?
         .log_delete(user.id, db_pool.get_ref())
@@ -114,15 +111,15 @@ async fn delete_team(
 #[get("/teams/{id}/pending")]
 async fn pending_games(
     id: web::Path<i32>,
-    token: UserToken,
+    req: HttpRequest,
     db_pool: web::Data<PgPool>,
 ) -> impl Responder {
-    let user = token
-        .try_into_authorized_user(
-            vec![UserRole::Admin, UserRole::Visualizer],
-            db_pool.get_ref(),
-        )
-        .await?;
+    let user = UserToken::try_into_authorized_user(
+        &req,
+        vec![UserRole::Admin, UserRole::Visualizer],
+        db_pool.get_ref(),
+    )
+    .await?;
     Team::pending_games(id.into_inner(), db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
@@ -133,15 +130,15 @@ async fn pending_games(
 #[get("/teams/{id}/pending/amount")]
 async fn pending_games_amount(
     id: web::Path<i32>,
-    token: UserToken,
+    req: HttpRequest,
     db_pool: web::Data<PgPool>,
 ) -> ApiResult<Amount> {
-    let user = token
-        .try_into_authorized_user(
-            vec![UserRole::Admin, UserRole::Visualizer],
-            db_pool.get_ref(),
-        )
-        .await?;
+    let user = UserToken::try_into_authorized_user(
+        &req,
+        vec![UserRole::Admin, UserRole::Visualizer],
+        db_pool.get_ref(),
+    )
+    .await?;
     Team::pending_games_amount(id.into_inner(), db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
@@ -151,15 +148,15 @@ async fn pending_games_amount(
 #[get("/teams/{id}/finished")]
 async fn finished_games(
     id: web::Path<i32>,
-    token: UserToken,
+    req: HttpRequest,
     db_pool: web::Data<PgPool>,
 ) -> impl Responder {
-    let user = token
-        .try_into_authorized_user(
-            vec![UserRole::Admin, UserRole::Visualizer],
-            db_pool.get_ref(),
-        )
-        .await?;
+    let user = UserToken::try_into_authorized_user(
+        &req,
+        vec![UserRole::Admin, UserRole::Visualizer],
+        db_pool.get_ref(),
+    )
+    .await?;
     Team::finished_games(id.into_inner(), db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())

@@ -2,6 +2,7 @@ use actix::Addr;
 use actix_web::{
     get, put,
     web::{self, Data},
+    HttpRequest,
 };
 use sqlx::PgPool;
 
@@ -12,10 +13,9 @@ use crate::{
 };
 
 #[get("/outcomes")]
-async fn find_all_outcomes(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<OutcomeVec> {
-    let user = token
-        .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
-        .await?;
+async fn find_all_outcomes(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<OutcomeVec> {
+    let user =
+        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
     Outcome::find_all(db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
@@ -25,14 +25,17 @@ async fn find_all_outcomes(token: UserToken, db_pool: web::Data<PgPool>) -> ApiR
 /// Outcomes are automatically initialized , thus we only need an update-method().
 #[put("/outcomes")]
 async fn update_outcome(
-    token: UserToken,
+    req: HttpRequest,
     outcome: web::Json<Outcome>,
     db_pool: web::Data<PgPool>,
     lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<Outcome> {
-    let user = token
-        .try_into_authorized_user(vec![UserRole::Admin, UserRole::Referee], db_pool.get_ref())
-        .await?;
+    let user = UserToken::try_into_authorized_user(
+        &req,
+        vec![UserRole::Admin, UserRole::Referee],
+        db_pool.get_ref(),
+    )
+    .await?;
 
     match user.role {
         UserRole::Admin => {
@@ -73,14 +76,13 @@ async fn update_outcome(
 
 #[get("/outcomes/teams/{id}")]
 async fn find_all_outcomes_for_team(
-    token: UserToken,
+    req: HttpRequest,
     team_id: web::Path<i32>,
     db_pool: web::Data<PgPool>,
 ) -> ApiResult<OutcomeVec> {
     // only admins should be able to access this information
-    let user = token
-        .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
-        .await?;
+    let user =
+        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
     Outcome::find_all_for_team(team_id.into_inner(), db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
@@ -89,13 +91,16 @@ async fn find_all_outcomes_for_team(
 
 #[get("/outcomes/games/{id}")]
 async fn find_all_outcomes_for_game(
-    token: UserToken,
+    req: HttpRequest,
     game_id: web::Path<i32>,
     db_pool: web::Data<PgPool>,
 ) -> ApiResult<OutcomeVec> {
-    let user = token
-        .try_into_authorized_user(vec![UserRole::Admin, UserRole::Referee], db_pool.get_ref())
-        .await?;
+    let user = UserToken::try_into_authorized_user(
+        &req,
+        vec![UserRole::Admin, UserRole::Referee],
+        db_pool.get_ref(),
+    )
+    .await?;
     let game_id = game_id.into_inner();
 
     match user.role {

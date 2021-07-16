@@ -11,7 +11,6 @@ Content-Type: application/json
 
 ### get all games
 GET {{BASE}}/games
-Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjUxNTI4NDAsImV4cCI6MTYyNTE1NTcyMCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjgyN2ExNTIyYzRjMTQ1YmJhZjMyMTk5NzQ3ZjUzYTIwIn0.ArngkK-UMJAAukPo9VWRYytV32gyG0wHzI_BaHZKeb8
 
 ### create a new game
 POST {{BASE}}/games

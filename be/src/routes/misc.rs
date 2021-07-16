@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{HttpRequest, HttpResponse, Responder, get, post, web};
 use sqlx::PgPool;
 
 use crate::{
@@ -13,10 +13,10 @@ async fn ping() -> impl Responder {
 }
 
 #[post("/reset/database")]
-async fn reset_database(token: UserToken, db_pool: web::Data<PgPool>) -> ApiResult<HttpResponse> {
+async fn reset_database(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<HttpResponse> {
     // this resets the database COMPLETELY - use with care!
-    let _user = token
-        .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
+    let _user = UserToken::try_into_authorized_user(
+        &req,vec![UserRole::Admin], db_pool.get_ref())
         .await?
         .log_action(format!("reset database"), db_pool.get_ref())
         .await?;

@@ -1,4 +1,4 @@
-use actix_web::{get, web};
+use actix_web::{get, web, HttpRequest};
 use sqlx::PgPool;
 
 use crate::{
@@ -8,11 +8,10 @@ use crate::{
 
 #[get("/history")]
 async fn find_all_transactions(
-    token: UserToken,
+    req: HttpRequest,
     db_pool: web::Data<PgPool>,
 ) -> ApiResult<HistoryVec> {
-    let _user = token
-        .try_into_authorized_user(vec![UserRole::Admin], db_pool.get_ref())
+    let _user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref())
         .await?
         .log_action(format!("find all transactions"), db_pool.get_ref())
         .await?;
