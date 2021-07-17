@@ -15,7 +15,6 @@ GET {{BASE}}/games
 ### create a new game
 POST {{BASE}}/games
 Content-Type: application/json
-Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjUwODI4MTAsImV4cCI6MTYyNTA4NTY5MCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6ImVjNTNjNGJhNGY2YjQ4MmJhMDg1NjliYjFlNTVjZDRlIn0.2j9d7LeSwq9G5uQKUJs_kssSyZwkQcDzzo2-guQ3TSc
 
 {
     "trophy_id": 1,

@@ -1,15 +1,15 @@
-use actix_web::{
-    cookie::Cookie, delete, get, post, put, web, HttpRequest, HttpResponse, Responder,
-    ResponseError,
-};
-use sqlx::PgPool;
-
 use crate::{
     model::{
         CreateLogin, CreateUser, Game, Log, LogUserAction, User, UserRole, UserToken, UserVec,
     },
     ApiResult,
 };
+use actix_web::{
+    cookie::{Cookie, SameSite},
+    delete, get, post, put, web, HttpRequest, HttpResponse, Responder, ResponseError,
+};
+use sqlx::PgPool;
+use std::env;
 
 #[get("/users")]
 async fn find_all_users(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<UserVec> {
@@ -102,13 +102,18 @@ async fn delete_user(
 
 #[post("/login")]
 async fn login(login: web::Json<CreateLogin>, db_pool: web::Data<PgPool>) -> impl Responder {
+    let domain = env::var("COOKIE_DOMAIN").expect("COOKIE_DOMAIN is not set in .env file!");
+    let secure = env::var("COOKIE_SECURE").expect("COOKIE_SECURE is not set in .env file!");
+
     // NOTE logging is done in ::login()!
     match User::login(login.into_inner(), db_pool.get_ref()).await {
         Ok(token_string) => {
             let cookie = Cookie::build("session", token_string)
-                .domain("/")
-                .secure(true)
+                .domain(domain.as_str())
+                .path("/")
+                .secure(secure.parse::<bool>().unwrap())
                 .http_only(true)
+                .same_site(SameSite::None)
                 .finish();
             HttpResponse::Ok().cookie(cookie).finish()
         }

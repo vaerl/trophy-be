@@ -4,6 +4,7 @@ extern crate log;
 extern crate derive_responder;
 
 use actix::Actor;
+use actix_cors::Cors;
 use actix_web::{
     error,
     web::{self, Data},
@@ -35,10 +36,19 @@ async fn main() -> Result<(), CustomError> {
 
     let host = env::var("HOST").expect("HOST is not set in .env file!");
     let port = env::var("PORT").expect("PORT is not set in .env file!");
+    let origin = env::var("CORS_ORIGIN").expect("CORS_ORIGIN is not set in .env file!");
 
     let ws_server = Data::new(Lobby::default().start());
 
     let server = HttpServer::new(move || {
+        // more here: https://docs.rs/actix-cors/0.5.4/actix_cors/
+        let cors = Cors::default()
+            .supports_credentials()
+            .allowed_origin(origin.as_str())
+            .allow_any_method()
+            .allow_any_header()
+            .max_age(3600);
+
         App::new()
             // pass database pool to application so we can access it inside handlers
             .app_data(db_pool.clone())
@@ -55,6 +65,7 @@ async fn main() -> Result<(), CustomError> {
                 .into()
             }))
             .app_data(ws_server.clone())
+            .wrap(cors)
     })
     .bind(format!("{}:{}", host, port))?;
 
