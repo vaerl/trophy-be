@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, Responder, get, post, web};
+use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use sqlx::PgPool;
 
 use crate::{
@@ -12,11 +12,24 @@ async fn ping() -> impl Responder {
     HttpResponse::Ok().body("pong")
 }
 
+#[get("/status")]
+async fn status(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<HttpResponse> {
+    debug!("Received new request: check user-status.");
+    match UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await
+    {
+        Ok(user) => {
+            user.log_action(format!("check user-status"), db_pool.get_ref())
+                .await?;
+            Ok(HttpResponse::Ok().body("true"))
+        }
+        Err(err) => Ok(HttpResponse::Ok().body(err.to_string())),
+    }
+}
+
 #[post("/reset/database")]
 async fn reset_database(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<HttpResponse> {
     // this resets the database COMPLETELY - use with care!
-    let _user = UserToken::try_into_authorized_user(
-        &req,vec![UserRole::Admin], db_pool.get_ref())
+    let _user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref())
         .await?
         .log_action(format!("reset database"), db_pool.get_ref())
         .await?;
@@ -38,5 +51,6 @@ async fn reset_database(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResu
 
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(ping);
+    cfg.service(status);
     cfg.service(reset_database);
 }
