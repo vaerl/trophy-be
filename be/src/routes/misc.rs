@@ -1,28 +1,37 @@
-use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{
+    body::Body, get, http::header::ContentType, post, web, HttpRequest, HttpResponse, Responder,
+};
+use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::{
+    derive_responder::Responder,
     model::{LogUserAction, UserRole, UserToken},
     ApiResult,
 };
 
+#[derive(Serialize, Responder)]
+pub struct StatusResponse {
+    status: bool,
+}
+
 #[get("/ping")]
-async fn ping() -> impl Responder {
+async fn ping() -> ApiResult<StatusResponse> {
     debug!("Received new request: ping.");
-    HttpResponse::Ok().body("pong")
+    Ok(StatusResponse { status: true })
 }
 
 #[get("/status")]
-async fn status(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<HttpResponse> {
+async fn status(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<StatusResponse> {
     debug!("Received new request: check user-status.");
     match UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await
     {
         Ok(user) => {
             user.log_action(format!("check user-status"), db_pool.get_ref())
                 .await?;
-            Ok(HttpResponse::Ok().body("true"))
+            Ok(StatusResponse { status: true })
         }
-        Err(err) => Ok(HttpResponse::Ok().body(err.to_string())),
+        Err(_err) => Ok(StatusResponse { status: false }),
     }
 }
 

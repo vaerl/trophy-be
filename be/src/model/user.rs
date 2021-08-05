@@ -1,5 +1,5 @@
 use std::fmt::{self, Display};
-use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
+use actix_web::{HttpRequest, HttpResponse, Responder, body::Body, http::header::ContentType};
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
 use rand_core::OsRng;
 use serde::{Deserialize, Serialize};

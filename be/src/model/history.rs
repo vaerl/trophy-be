@@ -1,4 +1,4 @@
-use actix_web::{body::Body, HttpRequest, HttpResponse, Responder};
+use actix_web::{body::Body, http::header::ContentType, HttpRequest, HttpResponse, Responder};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::Serialize;

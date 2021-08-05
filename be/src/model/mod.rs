@@ -7,7 +7,7 @@ mod team;
 mod user;
 mod user_token;
 
-use actix_web::{body::Body, HttpRequest, HttpResponse, Responder};
+use actix_web::{body::Body, http::header::ContentType, HttpRequest, HttpResponse, Responder};
 pub use error::*;
 pub use game::*;
 pub use history::*;

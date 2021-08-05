@@ -1,9 +1,21 @@
-use actix_web::{body::Body, dev::BaseHttpResponseBuilder, error, http::StatusCode, HttpResponse};
+use actix_web::{
+    body::Body,
+    dev::BaseHttpResponseBuilder,
+    error,
+    http::{header::ContentType, StatusCode},
+    HttpResponse,
+};
 use argon2::password_hash;
+use serde::Serialize;
 use thiserror::Error;
 use xlsxwriter::XlsxError;
 
 use crate::ws::messages::ClientActorMessage;
+
+#[derive(Serialize)]
+pub struct ErrorResponse {
+    pub error: String,
+}
 
 /// This enables me to simply call err.error_response() on errors, so all errors
 /// have the correct status-codes.
@@ -45,11 +57,25 @@ pub enum CustomError {
 
 impl error::ResponseError for CustomError {
     fn error_response(&self) -> HttpResponse<Body> {
-        BaseHttpResponseBuilder::new(self.status_code())
-            .append_header(("CONTENT_TYPE", "text/html; charset=utf-8"))
-            .body(self.to_string())
-            .into()
+        let response = ErrorResponse {
+            error: self.to_string(),
+        };
+
+        match serde_json::to_string(&response) {
+            Ok(json) => BaseHttpResponseBuilder::new(self.status_code())
+                .content_type(ContentType::json())
+                .body(json)
+                .into(),
+            Err(_) => BaseHttpResponseBuilder::new(StatusCode::INTERNAL_SERVER_ERROR)
+                .content_type(ContentType::json())
+                .body(format!(
+                    r#"{{error: "Error while serializing actual error: {}"}}"#,
+                    self.to_string()
+                ))
+                .into(),
+        }
     }
+
     fn status_code(&self) -> StatusCode {
         match *self {
             // db-errors

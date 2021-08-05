@@ -1,10 +1,8 @@
 use std::fmt::{self, Display};
-use actix_web::{HttpRequest, HttpResponse, Responder, body::Body};
+use actix_web::{HttpRequest, HttpResponse, Responder, body::Body, http::header::ContentType};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
-
 use crate::{ApiResult, derive_responder::Responder};
-
 use super::{Amount, Outcome, Team, TeamVec, TypeInfo};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]

@@ -15,7 +15,7 @@ pub fn derive_responder(input: TokenStream) -> TokenStream {
             fn respond_to(self, _req: &HttpRequest) -> HttpResponse {
                 let body = serde_json::to_string(&self).unwrap();
                 // create response and set content type
-                HttpResponse::Ok().content_type("application/json").body(Body::from(body))
+                HttpResponse::Ok().content_type(ContentType::json()).body(Body::from(body))
             }
         }
     };
