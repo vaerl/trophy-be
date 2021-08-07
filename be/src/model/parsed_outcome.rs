@@ -15,14 +15,11 @@ pub struct ParsedOutcome {
     pub game_id: i32,
     pub team: Team,
     pub value: Value,
+    pub point_value: Option<i32>,
 }
 
 impl ParsedOutcome {
-    pub async fn from(
-        game_kind: &GameKind,
-        outcome: Outcome,
-        pool: &PgPool,
-    ) -> ApiResult<ParsedOutcome> {
+    pub async fn from(game_kind: &GameKind, outcome: Outcome, pool: &PgPool) -> ApiResult<Self> {
         let value: Value = match game_kind {
             super::GameKind::Points => Value::Points(outcome.data.unwrap().parse::<i32>()?),
             super::GameKind::Time => Value::Time(parse_duration(&outcome.data.unwrap())?),
@@ -31,6 +28,9 @@ impl ParsedOutcome {
             game_id: outcome.game_id,
             team: Team::find(outcome.team_id, pool).await?,
             value,
+            point_value: None,
         })
     }
+
+    pub async fn set_points_points(&self) {}
 }

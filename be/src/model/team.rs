@@ -115,12 +115,12 @@ impl Team {
         Ok(team)
     }
 
-    pub async fn update_points(team: Team, pool: &PgPool)-> ApiResult<Team> {
+    pub async fn update_points(&self, pool: &PgPool)-> ApiResult<Team> {
         let mut tx = pool.begin().await?;
         let team = sqlx::query_as!(
             Team, 
             r#"UPDATE teams SET points = $1 WHERE id = $2 RETURNING id, trophy_id, name, gender as "gender: TeamGender", points"#,
-            team.points, team.id
+            self.points, self.id
         )
         .fetch_one(&mut tx)
         .await?;

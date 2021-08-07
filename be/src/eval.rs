@@ -36,12 +36,14 @@ async fn evaluate_game(game: Game, pool: &PgPool) -> ApiResult<()> {
         let (female, male) = Outcome::parse_by_gender_for_game(&game, pool).await?;
 
         // using for-loops allows using await and ?
-        for team in evaluate(female) {
-            Team::update_points(team, pool).await?;
+        for outcome in evaluate(female) {
+            outcome.team.update_points(pool).await?;
+            Outcome::set_point_value(outcome, pool).await?;
         }
 
-        for team in evaluate(male) {
-            Team::update_points(team, pool).await?;
+        for outcome in evaluate(male) {
+            outcome.team.update_points(pool).await?;
+            Outcome::set_point_value(outcome, pool).await?;
         }
 
         Ok(())
@@ -49,7 +51,7 @@ async fn evaluate_game(game: Game, pool: &PgPool) -> ApiResult<()> {
 }
 
 /// Evaluate a game by its ParsedOutcomes.
-fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<Team> {
+fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
     let mut current_points = MAX_POINTS;
 
     match outcomes[0].value {
@@ -58,13 +60,17 @@ fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<Team> {
     }
 
     for i in 0..outcomes.len() {
+        // set the team's points for later usage
         outcomes[i].team.points += current_points;
+        outcomes[i].point_value = Some(current_points);
+
         // decrement current_points if the next result is less
         if i + 1 < outcomes.len() && outcomes[i].value != outcomes[i + 1].value {
             current_points -= 1;
         }
     }
-    outcomes.into_iter().map(|e| e.team).collect()
+
+    outcomes
 }
 
 pub async fn create_xlsx_file(pool: &PgPool) -> ApiResult<ResultFile> {
@@ -158,24 +164,31 @@ fn test_evaluate_points() {
         game_id,
         team: a,
         value: Value::Points(1),
+        point_value: None,
     });
     parsed_outcomes.push(ParsedOutcome {
         game_id,
         team: b,
         value: Value::Points(10),
+        point_value: None,
     });
     parsed_outcomes.push(ParsedOutcome {
         game_id,
         team: c,
         value: Value::Points(100),
+        point_value: None,
     });
     parsed_outcomes.push(ParsedOutcome {
         game_id,
         team: d,
         value: Value::Points(5),
+        point_value: None,
     });
 
-    let mut teams = evaluate(parsed_outcomes);
+    let mut teams: Vec<Team> = evaluate(parsed_outcomes)
+        .into_iter()
+        .map(|e| e.team)
+        .collect();
     teams.sort_by(|a, b| a.points.cmp(&b.points).reverse());
 
     assert!(
@@ -237,24 +250,31 @@ fn test_evaluate_time() {
         game_id,
         team: a,
         value: Value::Time(Duration::new(120, 0)),
+        point_value: None,
     });
     parsed_outcomes.push(ParsedOutcome {
         game_id,
         team: b,
         value: Value::Time(Duration::new(60, 0)),
+        point_value: None,
     });
     parsed_outcomes.push(ParsedOutcome {
         game_id,
         team: c,
         value: Value::Time(Duration::new(40, 0)),
+        point_value: None,
     });
     parsed_outcomes.push(ParsedOutcome {
         game_id,
         team: d,
         value: Value::Time(Duration::new(80, 0)),
+        point_value: None,
     });
 
-    let mut teams = evaluate(parsed_outcomes);
+    let mut teams: Vec<Team> = evaluate(parsed_outcomes)
+        .into_iter()
+        .map(|e| e.team)
+        .collect();
     teams.sort_by(|a, b| a.points.cmp(&b.points).reverse());
 
     println!("{}", teams[0].name);

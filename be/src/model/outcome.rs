@@ -8,7 +8,7 @@ use sqlx::{FromRow, PgPool};
 
 use crate::{ApiResult, derive_responder::Responder, model::{CreateGame, CustomError, Log}, ws::{lobby::Lobby, socket_refresh::SendRefresh}};
 
-use super::{Game, ParsedOutcome, TeamGender, TypeInfo, User, UserRole};
+use super::{Game, ParsedOutcome, TeamGender, TypeInfo, User};
 
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
@@ -19,6 +19,7 @@ pub struct Outcome {
     pub game_id: i32,
     pub team_id: i32,
     pub data: Option<String>,
+    pub point_value: Option<i32>
 }
 
 #[derive(Serialize, Responder)]
@@ -28,7 +29,7 @@ impl Outcome {
     pub async fn find_all(pool: &PgPool) -> ApiResult<OutcomeVec> {
         let outcomes = sqlx::query_as!(
             Outcome,
-            r#"SELECT game_id, team_id, data FROM game_team ORDER BY game_id"#
+            r#"SELECT game_id, team_id, data, point_value FROM game_team ORDER BY game_id"#
         )
         .fetch_all(pool)
         .await?;
@@ -39,7 +40,7 @@ impl Outcome {
     pub async fn find_all_for_game(game_id: i32, pool: &PgPool) -> ApiResult<OutcomeVec> {
         let outcomes = sqlx::query_as!(
             Outcome,
-            "SELECT game_id, team_id, data FROM game_team WHERE game_id = $1 ORDER BY game_id",
+            "SELECT game_id, team_id, data, point_value FROM game_team WHERE game_id = $1 ORDER BY game_id",
             game_id
         )
         .fetch_all(pool)
@@ -51,7 +52,7 @@ impl Outcome {
     pub async fn find_all_for_team(team_id: i32, pool: &PgPool) -> ApiResult<OutcomeVec> {
         let outcomes = sqlx::query_as!(
             Outcome,
-            "SELECT game_id, team_id, data FROM game_team WHERE team_id = $1 ORDER BY game_id",
+            "SELECT game_id, team_id, data, point_value FROM game_team WHERE team_id = $1 ORDER BY game_id",
             team_id
         )
         .fetch_all(pool)
@@ -67,7 +68,7 @@ impl Outcome {
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
             Outcome, 
-            "INSERT INTO game_team (game_id, team_id) VALUES ($1, $2) RETURNING game_id, team_id, data", 
+            "INSERT INTO game_team (game_id, team_id) VALUES ($1, $2) RETURNING game_id, team_id, data, point_value", 
             game_id, team_id
         )
         .fetch_one(&mut tx)
@@ -78,28 +79,24 @@ impl Outcome {
     }
 
     /// This method needs the calling user as it might modify a game's state.
-    pub async fn update(outcome: Outcome, user: &User, lobby: &Addr<Lobby>, pool: &PgPool) -> ApiResult<Outcome> {
-        match outcome.data {
+    pub async fn set_data(&self, user: &User, lobby: &Addr<Lobby>, pool: &PgPool) -> ApiResult<Outcome> {
+        match &self.data {
             Some(data) => {
-                let game = Game::find(outcome.game_id, &pool).await?;
-
-                // if the game is locked, only allow admins to proceed
-                if game.locked && user.role != UserRole::Admin {
-                    return Err(CustomError::AccessDeniedError);
-                }
+                let game = Game::find(self.game_id, &pool).await?;
                 
                 // update the outcome, so we find it later
                 let mut tx = pool.begin().await?;
                 let outcome = sqlx::query_as!(
                         Outcome, 
-                        "UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data",
-                        data, outcome.game_id, outcome.team_id
+                        "UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data, point_value",
+                        data, self.game_id, self.team_id
                     )
                     .fetch_one(&mut tx)
                     .await?;
                 tx.commit().await?;
                 
                 let outcomes = Outcome::find_all_for_game(outcome.game_id, &pool).await?;
+
                 // lock the game if there are no unset outcomes
                 if outcomes.0.into_iter().filter(|o| o.data.is_none()).collect::<Vec<Outcome>>().len() == 0 {
                     Game::update(game.id, CreateGame {
@@ -116,6 +113,20 @@ impl Outcome {
             },
             None => Err(CustomError::NoDataSentError { message: format!("Outcome had no data!") }),
         }
+    }
+
+    pub async fn set_point_value(parsed_outcome: ParsedOutcome, pool: &PgPool) -> ApiResult<Outcome> {
+        let mut tx = pool.begin().await?;
+        let outcome = sqlx::query_as!(
+                Outcome, 
+                "UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data, point_value",
+                parsed_outcome.point_value, parsed_outcome.game_id, parsed_outcome.team.id
+            )
+            .fetch_one(&mut tx)
+            .await?;
+        tx.commit().await?;
+
+        Ok(outcome)
     }
 
     pub async fn filter_for<'r, Fut>(
