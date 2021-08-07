@@ -44,6 +44,7 @@ CREATE TABLE game_team (
     game_id int REFERENCES games (id) ON UPDATE CASCADE ON DELETE CASCADE,
     team_id int REFERENCES teams (id) ON UPDATE CASCADE ON DELETE CASCADE,
     data text DEFAULT NULL,
+    point_value int DEFAULT NULL,
     CONSTRAINT game_team_pkey PRIMARY KEY (game_id, team_id) -- explicit pk
 );
 --- create meta-tables
