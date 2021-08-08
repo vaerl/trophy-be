@@ -377,6 +377,46 @@
       ]
     }
   },
+  "5ea1a9dfbdda42861ccc4f220f0091867a3a5c53436385e893688e0b282efe7d": {
+    "query": "UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data, point_value",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "game_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 1,
+          "name": "team_id",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 2,
+          "name": "data",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "point_value",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Int4"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true,
+        true
+      ]
+    }
+  },
   "63b360aaf9826d37d06866afe798017f8320f255c8b86181005c3a7f38251aa0": {
     "query": "UPDATE users SET username = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, username, password, role as \"role: UserRole\", game_id, session",
     "describe": {

@@ -32,7 +32,7 @@ async fn main() -> Result<(), CustomError> {
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file!");
     let db_pool = Data::new(PgPool::connect(&database_url).await?);
-    // let pool_clone = db_pool.clone();
+    let pool_clone = db_pool.clone();
 
     let host = env::var("HOST").expect("HOST is not set in .env file!");
     let port = env::var("PORT").expect("PORT is not set in .env file!");
@@ -72,16 +72,16 @@ async fn main() -> Result<(), CustomError> {
     // NOTE this needs to be commented, because it errs when the user exists
     // I'm leaving this here in case I have to reset the database - which I most certainly will.
     // info!("Creating admin-user.");
-    // User::create(
-    //     CreateUser {
-    //         username: "lukas".to_string(),
-    //         password: "test".to_string(),
-    //         role: UserRole::Admin,
-    //         game_id: None,
-    //     },
-    //     &pool_clone,
-    // )
-    // .await?;
+    model::User::create(
+        model::CreateUser {
+            username: "lukas".to_string(),
+            password: "test".to_string(),
+            role: model::UserRole::Admin,
+            game_id: None,
+        },
+        &pool_clone,
+    )
+    .await?;
 
     info!("Starting server.");
     server.run().await?;
