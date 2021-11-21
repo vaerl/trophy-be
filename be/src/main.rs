@@ -12,10 +12,13 @@ use actix_web::{
 };
 use dotenv::dotenv;
 use model::CustomError;
-use sqlx::PgPool;
+use sqlx::{PgPool, Pool, Postgres};
 use std::env;
 
-use crate::ws::lobby::Lobby;
+use crate::{
+    model::{CreateUser, User},
+    ws::lobby::Lobby,
+};
 
 mod eval;
 mod model;
@@ -32,7 +35,7 @@ async fn main() -> Result<(), CustomError> {
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file!");
     let db_pool = Data::new(PgPool::connect(&database_url).await?);
-    // let pool_clone = db_pool.clone();
+    let db_pool_clone = db_pool.clone();
 
     let host = env::var("HOST").expect("HOST is not set in .env file!");
     let port = env::var("PORT").expect("PORT is not set in .env file!");
@@ -69,22 +72,37 @@ async fn main() -> Result<(), CustomError> {
     })
     .bind(format!("{}:{}", host, port))?;
 
-    // NOTE this needs to be commented, because it errs when the user exists
-    // I'm leaving this here in case I have to reset the database - which I most certainly will.
-    // info!("Creating admin-user.");
-    // model::User::create(
-    //     model::CreateUser {
-    //         username: "lukas".to_string(),
-    //         password: "test".to_string(),
-    //         role: model::UserRole::Admin,
-    //         game_id: None,
-    //     },
-    //     &pool_clone,
-    // )
-    // .await?;
+    create_admin_user(db_pool_clone).await?;
 
     info!("Starting server.");
     server.run().await?;
 
     Ok(())
+}
+
+async fn create_admin_user(pool: Data<Pool<Postgres>>) -> ApiResult<()> {
+    let admin_name = env::var("ADMIN_NAME").expect("ADMIN_NAME is not set in .env file!");
+    let admin_password =
+        env::var("ADMIN_PASSWORD").expect("ADMIN_PASSWORD is not set in .env file!");
+
+    match User::find_by_name(&admin_name, &pool).await {
+        Ok(_) => {
+            info!("Not creating a new admin-user, because a user of that name exists.");
+            Ok(())
+        }
+        Err(_) => {
+            info!("Creating admin-user, because it does not exist yet.");
+            User::create(
+                CreateUser {
+                    username: admin_name,
+                    password: admin_password,
+                    role: model::UserRole::Admin,
+                    game_id: None,
+                },
+                &pool,
+            )
+            .await?;
+            Ok(())
+        }
+    }
 }

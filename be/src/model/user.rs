@@ -89,7 +89,7 @@ impl User {
         Ok(user)
     }
 
-    async fn find_by_name(name: &String, pool: &PgPool) -> ApiResult<User> {
+    pub async fn find_by_name(name: &String, pool: &PgPool) -> ApiResult<User> {
         let users = User::find_all(pool).await?.0;
         for user in users {
             if user.username.eq(name) {
