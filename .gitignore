@@ -1,6 +1,13 @@
-.vscode
+# VSCode
+!.vscode/tasks.json
+
+# Rust
 **/target
 db-data
+
+# Secrets
 **/.env
-*.xlsx
 secret.key
+
+# Excel-Data
+*.xlsx
