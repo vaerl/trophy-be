@@ -1,5 +1,3 @@
-// TODO consider moving the tests to a different file/module because of the unresolved imports
-
 use crate::{
     model::{CustomError, Game, Outcome, ParsedOutcome, Team, TypeInfo, Value},
     ApiResult,
@@ -212,9 +210,6 @@ mod tests {
             "A is has the right number of points: {}",
             teams[3].points
         );
-
-        // TODO
-        // - do the same for more teams of both genders with existing points
     }
 
     #[test]

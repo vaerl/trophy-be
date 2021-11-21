@@ -44,7 +44,6 @@ impl History {
         Ok(HistoryVec(transaction_history))
     }
 
-    // TODO run cargo sqlx prepare
     pub async fn create(
         user_id: i32,
         log_level: LogLevel,
