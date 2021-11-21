@@ -31,6 +31,4 @@ impl ParsedOutcome {
             point_value: None,
         })
     }
-
-    pub async fn set_points_points(&self) {}
 }
