@@ -100,6 +100,13 @@ async fn delete_user(
         .await
 }
 
+/// # Behavior when logging in twice:
+///
+/// Logging in from a different browser or device changes the users' session.
+/// This results in the old session being invalid. The specific check is done
+/// in `try_into_authorized_user` in [UserToken].
+/// _Supporting multiple sessions per user should be unnecessary, just add more users.
+/// If this bit is ever needed the [user](User) needs to support multiple sessions._
 #[post("/login")]
 async fn login(login: web::Json<CreateLogin>, db_pool: web::Data<PgPool>) -> impl Responder {
     let domain = env::var("COOKIE_DOMAIN").expect("COOKIE_DOMAIN is not set in .env file!");

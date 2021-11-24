@@ -89,11 +89,12 @@ impl UserToken {
                 )?
                 .claims;
                 // NOTE I've not found a way to get rid of the if-cascade - because I want specific errors!
+
                 // 1: check if token is valid
                 if token.is_valid() {
                     let user = User::find(token.user_id, pool).await?;
-                    // 2: check if user is logged in
-                    if !user.session.is_empty() {
+                    // 2: check if user is logged with the supplied session; if a different session is given, deny access
+                    if !user.session.is_empty() && user.session.eq(&token.login_session) {
                         // 3: check if user is allowed to access the resource
                         if roles.contains(&user.role) {
                             Ok(user)
