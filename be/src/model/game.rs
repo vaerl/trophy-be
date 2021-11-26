@@ -154,6 +154,30 @@ impl Game {
         
         Ok(Amount(Game::find_all(pool).await?.0.len()))
     }
+
+    pub async fn pending(pool: &PgPool) -> ApiResult<GameVec> {
+        let mut games= vec!();
+        for game in Game::find_all(pool).await?.0 {
+            // I could also use pending_games_amount, but that could be removed later
+            let pending_teams_of_game = Game::pending_teams(game.id, pool).await?.0;
+            if pending_teams_of_game.len() > 0 {
+                games.push(game)
+            }
+        }
+        Ok(GameVec(games))
+    }
+
+    pub async fn finished(pool: &PgPool) -> ApiResult<GameVec> {
+        let mut games= vec!();
+        for game in Game::find_all(pool).await?.0 {
+            // I could also use pending_games_amount, but that could be removed later
+            let pending_teams_of_game = Game::pending_teams(game.id, pool).await?.0;
+            if pending_teams_of_game.len() ==0 {
+                games.push(game)
+            }
+        }
+        Ok(GameVec(games))
+    }
 }
 
 impl fmt::Display for Game {

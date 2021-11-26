@@ -26,7 +26,6 @@ async fn find_all_teams(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResu
         .await
 }
 
-// TODO determine if this is useful
 #[get("/teams/amount")]
 async fn teams_amount(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<Amount> {
     let user = UserToken::try_into_authorized_user(
@@ -36,6 +35,34 @@ async fn teams_amount(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult
     )
     .await?;
     Team::amount(db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
+}
+
+#[get("/teams/pending")]
+async fn teams_pending(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<TeamVec> {
+    let user = UserToken::try_into_authorized_user(
+        &req,
+        vec![UserRole::Admin, UserRole::Visualizer],
+        db_pool.get_ref(),
+    )
+    .await?;
+    Team::pending(db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
+}
+
+#[get("/teams/finished")]
+async fn teams_finished(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<TeamVec> {
+    let user = UserToken::try_into_authorized_user(
+        &req,
+        vec![UserRole::Admin, UserRole::Visualizer],
+        db_pool.get_ref(),
+    )
+    .await?;
+    Team::finished(db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
         .await
@@ -126,25 +153,6 @@ async fn pending_games(
         .await
 }
 
-// TODO check if this is useful
-#[get("/teams/{id}/pending/amount")]
-async fn pending_games_amount(
-    id: web::Path<i32>,
-    req: HttpRequest,
-    db_pool: web::Data<PgPool>,
-) -> ApiResult<Amount> {
-    let user = UserToken::try_into_authorized_user(
-        &req,
-        vec![UserRole::Admin, UserRole::Visualizer],
-        db_pool.get_ref(),
-    )
-    .await?;
-    Team::pending_games_amount(id.into_inner(), db_pool.get_ref())
-        .await?
-        .log_read(user.id, db_pool.get_ref())
-        .await
-}
-
 #[get("/teams/{id}/finished")]
 async fn finished_games(
     id: web::Path<i32>,
@@ -163,13 +171,16 @@ async fn finished_games(
         .await
 }
 
+// NOTE order matters!
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(find_all_teams);
+    cfg.service(teams_amount);
+    cfg.service(teams_pending);
+    cfg.service(teams_finished);
     cfg.service(create_team);
     cfg.service(find_team);
     cfg.service(update_team);
     cfg.service(delete_team);
     cfg.service(pending_games);
-    cfg.service(pending_games_amount);
     cfg.service(finished_games);
 }

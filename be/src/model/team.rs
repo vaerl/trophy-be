@@ -163,21 +163,35 @@ impl Team {
         Ok(GameVec(games))
     }
 
-    pub async fn pending_games_amount(id: i32, pool: &PgPool) -> ApiResult<Amount> {
-        // I am choosing to not use outstanding_teams as it encompasses loading all outstanding teams before counting.
-
-        let outcomes = Outcome::find_all_for_team(id, pool).await?.0;
-
-        // filter every outcome that has data, then count the items
-        Ok(Amount(outcomes.iter().filter(|e | e.data.is_none()).count()))
-    }
-
     pub async fn amount(pool: &PgPool) -> ApiResult<Amount> {
         // This function currently calls find_all and uses its size.
         // If performance warrants a better implementation(f.e. caching the result in the db or memory), 
         // this capsules the functionality, meaning I will only need to change this method.
-        
         Ok(Amount(Team::find_all(pool).await?.0.len()))
+    }
+
+    pub async fn pending(pool: &PgPool) -> ApiResult<TeamVec> {
+        let mut teams= vec!();
+        for team in Team::find_all(pool).await?.0 {
+            // I could also use pending_games_amount, but that could be removed later
+            let pending_games_of_team = Team::pending_games(team.id, pool).await?.0;
+            if pending_games_of_team.len() > 0 {
+                teams.push(team)
+            }
+        }
+        Ok(TeamVec(teams))
+    }
+
+    pub async fn finished(pool: &PgPool) -> ApiResult<TeamVec> {
+        let mut teams= vec!();
+        for team in Team::find_all(pool).await?.0 {
+            let pending_games_of_team = Team::pending_games(team.id, pool).await?.0;
+            // if there are no pending games, the team must be finished
+            if pending_games_of_team.len() == 0 {
+                teams.push(team)
+            }
+        }
+        Ok(TeamVec(teams))
     }
 
 }

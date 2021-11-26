@@ -44,6 +44,34 @@ async fn games_amount(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult
         .await
 }
 
+#[get("/games/pending")]
+async fn games_pending(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<GameVec> {
+    let user = UserToken::try_into_authorized_user(
+        &req,
+        vec![UserRole::Admin, UserRole::Visualizer],
+        db_pool.get_ref(),
+    )
+    .await?;
+    Game::pending(db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
+}
+
+#[get("/games/finished")]
+async fn games_finished(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<GameVec> {
+    let user = UserToken::try_into_authorized_user(
+        &req,
+        vec![UserRole::Admin, UserRole::Visualizer],
+        db_pool.get_ref(),
+    )
+    .await?;
+    Game::finished(db_pool.get_ref())
+        .await?
+        .log_read(user.id, db_pool.get_ref())
+        .await
+}
+
 #[post("/games")]
 async fn create_game(
     create_game: web::Json<CreateGame>,
@@ -165,10 +193,13 @@ async fn finished_teams(
         .await
 }
 
+// NOTE order matters!
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(find_all_games);
     cfg.service(games_amount);
     cfg.service(create_game);
+    cfg.service(games_pending);
+    cfg.service(games_finished);
     cfg.service(find_game);
     cfg.service(update_game);
     cfg.service(delete_game);
