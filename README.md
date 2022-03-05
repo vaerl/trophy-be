@@ -30,8 +30,7 @@ Then, do the following:
 
 ### Creating the containers
 
-There are handy scripts for doing this located in `/scripts`. You might need to run `chmod +x *` in `/scripts` to make them executable.
-To build the containers run `build-containers.sh`.
+- [setup on caprover](docs/caprover-setup.md)
 
 ### Creating a secret key
 
