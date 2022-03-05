@@ -7,13 +7,13 @@ use actix_web::{
 use sqlx::PgPool;
 
 use crate::{
-    model::{Amount, CreateTeam, Log, Team, TeamVec, UserRole, UserToken},
+    model::{CreateTeam, Log, Team, UserRole, UserToken},
     ws::{lobby::Lobby, socket_refresh::SendRefresh},
-    ApiResult,
+    ApiResult, ToJson,
 };
 
 #[get("/teams")]
-async fn find_all_teams(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<TeamVec> {
+async fn find_all_teams(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
@@ -23,11 +23,12 @@ async fn find_all_teams(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResu
     Team::find_all(db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
-        .await
+        .await?
+        .to_json()
 }
 
 #[get("/teams/amount")]
-async fn teams_amount(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<Amount> {
+async fn teams_amount(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
@@ -37,11 +38,12 @@ async fn teams_amount(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult
     Team::amount(db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
-        .await
+        .await?
+        .to_json()
 }
 
 #[get("/teams/pending")]
-async fn teams_pending(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<TeamVec> {
+async fn teams_pending(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
@@ -51,11 +53,12 @@ async fn teams_pending(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResul
     Team::pending(db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
-        .await
+        .await?
+        .to_json()
 }
 
 #[get("/teams/finished")]
-async fn teams_finished(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<TeamVec> {
+async fn teams_finished(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
@@ -65,7 +68,8 @@ async fn teams_finished(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResu
     Team::finished(db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
-        .await
+        .await?
+        .to_json()
 }
 
 #[post("/teams")]
@@ -74,14 +78,15 @@ async fn create_team(
     req: HttpRequest,
     db_pool: web::Data<PgPool>,
     lobby_addr: Data<Addr<Lobby>>,
-) -> ApiResult<Team> {
+) -> ApiResult<impl Responder> {
     let user =
         UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
     Team::create(create_team.into_inner(), db_pool.get_ref())
         .await?
         .log_create(user.id, db_pool.get_ref())
         .await?
-        .send_refresh(lobby_addr.get_ref())
+        .send_refresh(lobby_addr.get_ref())?
+        .to_json()
 }
 
 #[get("/teams/{id}")]
@@ -89,7 +94,7 @@ async fn find_team(
     id: web::Path<i32>,
     req: HttpRequest,
     db_pool: web::Data<PgPool>,
-) -> ApiResult<Team> {
+) -> ApiResult<impl Responder> {
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
@@ -99,7 +104,8 @@ async fn find_team(
     Team::find(id.into_inner(), db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
-        .await
+        .await?
+        .to_json()
 }
 
 #[put("/teams/{id}")]
@@ -109,14 +115,15 @@ async fn update_team(
     req: HttpRequest,
     db_pool: web::Data<PgPool>,
     lobby_addr: Data<Addr<Lobby>>,
-) -> ApiResult<Team> {
+) -> ApiResult<impl Responder> {
     let user =
         UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
     Team::update(id.into_inner(), team.into_inner(), db_pool.get_ref())
         .await?
         .log_update(user.id, db_pool.get_ref())
         .await?
-        .send_refresh(lobby_addr.get_ref())
+        .send_refresh(lobby_addr.get_ref())?
+        .to_json()
 }
 
 #[delete("/teams/{id}")]
@@ -125,14 +132,15 @@ async fn delete_team(
     req: HttpRequest,
     db_pool: web::Data<PgPool>,
     lobby_addr: Data<Addr<Lobby>>,
-) -> ApiResult<Team> {
+) -> ApiResult<impl Responder> {
     let user =
         UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
     Team::delete(id.into_inner(), db_pool.get_ref())
         .await?
         .log_delete(user.id, db_pool.get_ref())
         .await?
-        .send_refresh(lobby_addr.get_ref())
+        .send_refresh(lobby_addr.get_ref())?
+        .to_json()
 }
 
 #[get("/teams/{id}/pending")]
@@ -140,7 +148,7 @@ async fn pending_games(
     id: web::Path<i32>,
     req: HttpRequest,
     db_pool: web::Data<PgPool>,
-) -> impl Responder {
+) -> ApiResult<impl Responder> {
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
@@ -150,7 +158,8 @@ async fn pending_games(
     Team::pending_games(id.into_inner(), db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
-        .await
+        .await?
+        .to_json()
 }
 
 #[get("/teams/{id}/finished")]
@@ -158,7 +167,7 @@ async fn finished_games(
     id: web::Path<i32>,
     req: HttpRequest,
     db_pool: web::Data<PgPool>,
-) -> impl Responder {
+) -> ApiResult<impl Responder> {
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
@@ -168,7 +177,8 @@ async fn finished_games(
     Team::finished_games(id.into_inner(), db_pool.get_ref())
         .await?
         .log_read(user.id, db_pool.get_ref())
-        .await
+        .await?
+        .to_json()
 }
 
 // NOTE order matters!

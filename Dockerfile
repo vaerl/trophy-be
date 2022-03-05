@@ -7,10 +7,6 @@ WORKDIR /usr/src/trophy-be
 # install clang for libxlsxwriter
 RUN apt-get update && apt-get install clang -y
 
-# copy deriver_responder
-RUN mkdir ../derive_responder
-COPY ./derive_responder ../derive_responder
-
 # create the secret key
 RUN head -c16 /dev/urandom > secret.key
 

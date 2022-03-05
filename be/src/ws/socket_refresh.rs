@@ -3,7 +3,7 @@ use std::fmt::Display;
 use actix::Addr;
 use actix_web::web::Json;
 
-use crate::{model::TypeInfo, ApiResult};
+use crate::{ApiResult, TypeInfo};
 
 use super::{lobby::Lobby, messages::ClientActorMessage};
 use serde::Serialize;
@@ -28,13 +28,13 @@ impl Display for SocketRefresh {
     }
 }
 
-pub trait SendRefresh<T> {
+pub trait SendRefresh<T: Serialize> {
     fn send_refresh(self, lobby: &Addr<Lobby>) -> ApiResult<T>;
 }
 
 impl<T> SendRefresh<T> for T
 where
-    T: TypeInfo,
+    T: TypeInfo + Serialize,
 {
     fn send_refresh(self, lobby: &Addr<Lobby>) -> ApiResult<T> {
         SocketRefresh::send_socket_refresh(lobby, self.type_name())?;

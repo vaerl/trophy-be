@@ -1,8 +1,6 @@
 #[macro_use]
 extern crate log;
 
-extern crate derive_responder;
-
 use actix::Actor;
 use actix_cors::Cors;
 use actix_web::{
@@ -12,6 +10,7 @@ use actix_web::{
 };
 use dotenv::dotenv;
 use model::CustomError;
+use serde::Serialize;
 use sqlx::{PgPool, Pool, Postgres};
 use std::env;
 
@@ -24,8 +23,6 @@ mod eval;
 mod model;
 mod routes;
 mod ws;
-
-pub type ApiResult<T> = Result<T, CustomError>;
 
 #[actix_web::main]
 async fn main() -> Result<(), CustomError> {
@@ -105,4 +102,25 @@ async fn create_admin_user(pool: Data<Pool<Postgres>>) -> ApiResult<()> {
             Ok(())
         }
     }
+}
+
+// NOTE using this would be nicer (tracking issue: https://github.com/rust-lang/rust/issues/63063):
+// pub type ApiResult = Result<impl Responder, CustomError>;
+pub type ApiResult<T> = Result<T, CustomError>;
+
+pub trait ToJson<T> {
+    fn to_json(self) -> ApiResult<web::Json<T>>;
+}
+
+impl<T> ToJson<T> for T
+where
+    T: Serialize,
+{
+    fn to_json(self) -> ApiResult<web::Json<T>> {
+        Ok(web::Json(self))
+    }
+}
+
+pub trait TypeInfo {
+    fn type_name(&self) -> String;
 }

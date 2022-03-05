@@ -1,12 +1,11 @@
 use std::fmt::{self, Display};
-use actix_web::{HttpRequest, HttpResponse, Responder, body::Body, http::header::ContentType};
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
 use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
-use crate::{ApiResult, derive_responder::Responder, model::{Game, LogUserAction}};
+use crate::{ApiResult, model::{Game, LogUserAction}};
 
 use super::{CreateToken, CustomError, TypeInfo, UserToken};
 
@@ -30,7 +29,7 @@ impl fmt::Display for UserRole {
     }
 }
 
-#[derive(Serialize, FromRow, Responder)]
+#[derive(Serialize, FromRow)]
 pub struct User {
     pub id: i32,
     pub username: String,
@@ -40,7 +39,7 @@ pub struct User {
     pub game_id: Option<i32>
 }
 
-#[derive(Serialize, Responder)]
+#[derive(Serialize)]
 // this syntax is brilliant!
 pub struct UserVec(Vec<User>);
 

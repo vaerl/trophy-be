@@ -1,9 +1,8 @@
 use std::fmt::{self, Display};
-use actix_web::{HttpRequest, HttpResponse, Responder, body::Body, http::header::ContentType};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use crate::{derive_responder::Responder, ApiResult};
+use crate::{ApiResult};
 use super::{Amount, Game, GameVec, Outcome, TypeInfo};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
@@ -24,7 +23,7 @@ impl fmt::Display for TeamGender {
     }
 }
 
-#[derive(Serialize, FromRow, Responder)]
+#[derive(Serialize, FromRow)]
 pub struct Team {
     pub id: i32,
     pub trophy_id: i32,
@@ -33,7 +32,7 @@ pub struct Team {
     pub points: i32
 }
 
-#[derive(Serialize, Responder)]
+#[derive(Serialize)]
 pub struct TeamVec(pub Vec<Team>);
 
 #[derive(Deserialize)]

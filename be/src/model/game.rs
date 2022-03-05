@@ -1,9 +1,8 @@
 use std::fmt::{self, Display};
-use actix_web::{HttpRequest, HttpResponse, Responder, body::Body, http::header::ContentType};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
-use crate::{ApiResult, derive_responder::Responder};
-use super::{Amount, Outcome, Team, TeamVec, TypeInfo};
+use crate::{ApiResult, TypeInfo};
+use super::{Amount, Outcome, Team, TeamVec};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "game_kind")]
@@ -24,7 +23,7 @@ impl fmt::Display for GameKind {
     }
 }
 
-#[derive(Serialize, FromRow, Responder)]
+#[derive(Serialize, FromRow)]
 pub struct Game {
     pub id: i32,
     pub trophy_id: i32,
@@ -33,7 +32,7 @@ pub struct Game {
     pub locked: bool
 }
 
-#[derive(Serialize, Responder)]
+#[derive(Serialize)]
 pub struct GameVec(pub Vec<Game>);
 
 /// To create a new game, I have to create one user (that acts as a referee) first.

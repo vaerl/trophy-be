@@ -1,11 +1,10 @@
-use actix_web::{body::Body, http::header::ContentType, HttpRequest, HttpResponse, Responder};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::{PgPool, Type};
 use std::fmt::Display;
 
-use crate::{derive_responder::Responder, ApiResult};
+use crate::{eval::ResultFile, ApiResult, TypeInfo};
 
 use super::User;
 
@@ -19,7 +18,7 @@ pub enum LogLevel {
     Important,
 }
 
-#[derive(Serialize, Responder)]
+#[derive(Serialize)]
 pub struct History {
     pub id: i32,
     pub user_id: i32,
@@ -28,7 +27,7 @@ pub struct History {
     pub action: String,
 }
 
-#[derive(Serialize, Responder)]
+#[derive(Serialize)]
 pub struct HistoryVec(Vec<History>);
 
 impl History {
@@ -71,10 +70,6 @@ impl History {
     }
 }
 
-pub trait TypeInfo {
-    fn type_name(&self) -> String;
-}
-
 // NOTE using "?Send" might go horribly wrong!
 #[async_trait(?Send)]
 pub trait Log<T> {
@@ -88,7 +83,7 @@ pub trait Log<T> {
 #[async_trait(?Send)]
 impl<T> Log<T> for T
 where
-    T: Display + TypeInfo,
+    T: Display + TypeInfo + Serialize,
 {
     async fn log_read(self, user_id: i32, pool: &PgPool) -> ApiResult<T> {
         let action = format!("User {} read {} -> {}", user_id, self.type_name(), self);
@@ -120,6 +115,45 @@ where
     }
 
     async fn log_info(self, user_id: i32, action: String, pool: &PgPool) -> ApiResult<T> {
+        let action = format!("User {} executed: {}", user_id, action);
+        History::create(user_id, LogLevel::Info, action, pool).await?;
+        Ok(self)
+    }
+}
+
+// TODO there has to be a better solution, maybe use default implementation?
+#[async_trait(?Send)]
+impl Log<ResultFile> for ResultFile {
+    async fn log_read(self, user_id: i32, pool: &PgPool) -> ApiResult<ResultFile> {
+        let action = format!("User {} read {} -> {}", user_id, self.type_name(), self);
+        History::create(user_id, LogLevel::Debug, action, pool).await?;
+        Ok(self)
+    }
+
+    async fn log_create(self, user_id: i32, pool: &PgPool) -> ApiResult<ResultFile> {
+        let action = format!("User {} created {} -> {}.", user_id, self.type_name(), self);
+        History::create(user_id, LogLevel::Info, action, pool).await?;
+        Ok(self)
+    }
+
+    async fn log_update(self, user_id: i32, pool: &PgPool) -> ApiResult<ResultFile> {
+        let action = format!(
+            "User {} updated {} ->  value changed to {}.",
+            user_id,
+            self.type_name(),
+            self
+        );
+        History::create(user_id, LogLevel::Info, action, pool).await?;
+        Ok(self)
+    }
+
+    async fn log_delete(self, user_id: i32, pool: &PgPool) -> ApiResult<ResultFile> {
+        let action = format!("User {} deleted {} -> {}.", user_id, self.type_name(), self);
+        History::create(user_id, LogLevel::Info, action, pool).await?;
+        Ok(self)
+    }
+
+    async fn log_info(self, user_id: i32, action: String, pool: &PgPool) -> ApiResult<ResultFile> {
         let action = format!("User {} executed: {}", user_id, action);
         History::create(user_id, LogLevel::Info, action, pool).await?;
         Ok(self)

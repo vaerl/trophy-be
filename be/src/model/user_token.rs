@@ -120,7 +120,6 @@ impl UserToken {
 impl FromRequest for UserToken {
     type Error = CustomError;
     type Future = Ready<ApiResult<UserToken>>;
-    type Config = ();
 
     fn from_request(request: &HttpRequest, _payload: &mut actix_web::dev::Payload) -> Self::Future {
         let auth_header = match request.headers().get("Authorization") {

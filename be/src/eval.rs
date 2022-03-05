@@ -1,6 +1,6 @@
 use crate::{
-    model::{CustomError, Game, Outcome, ParsedOutcome, Team, TypeInfo, Value},
-    ApiResult,
+    model::{CustomError, Game, Outcome, ParsedOutcome, Team, Value},
+    ApiResult, TypeInfo,
 };
 use actix_files::NamedFile;
 use sqlx::PgPool;

@@ -7,7 +7,6 @@ mod team;
 mod user;
 mod user_token;
 
-use actix_web::{body::Body, http::header::ContentType, HttpRequest, HttpResponse, Responder};
 pub use error::*;
 pub use game::*;
 pub use history::*;
@@ -19,9 +18,9 @@ pub use team::*;
 pub use user::*;
 pub use user_token::*;
 
-use crate::derive_responder::Responder;
+use crate::TypeInfo;
 
-#[derive(Serialize, Responder)]
+#[derive(Serialize)]
 pub struct Amount(pub usize);
 
 impl Display for Amount {

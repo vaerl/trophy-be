@@ -1,18 +1,17 @@
 use std::fmt::{self, Display};
 
 use actix::Addr;
-use actix_web::{HttpRequest, HttpResponse, Responder, body::Body, http::header::ContentType};
 use futures::Future;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use crate::{ApiResult, derive_responder::Responder, model::{CreateGame, CustomError, Log}, ws::{lobby::Lobby, socket_refresh::SendRefresh}};
+use crate::{ApiResult, model::{CreateGame, CustomError, Log}, ws::{lobby::Lobby, socket_refresh::SendRefresh}};
 
 use super::{Game, ParsedOutcome, TeamGender, TypeInfo, User};
 
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
-#[derive(Deserialize, Serialize, FromRow, Responder)]
+#[derive(Deserialize, Serialize, FromRow)]
 #[sqlx(rename = "game_team")]
 #[sqlx(rename_all = "lowercase")]
 pub struct Outcome {
@@ -22,7 +21,7 @@ pub struct Outcome {
     pub point_value: Option<i32>
 }
 
-#[derive(Serialize, Responder)]
+#[derive(Serialize)]
 pub struct OutcomeVec(pub Vec<Outcome>);
 
 impl Outcome {

@@ -1,9 +1,7 @@
 use actix_web::{
-    body::Body,
-    dev::BaseHttpResponseBuilder,
     error,
     http::{header::ContentType, StatusCode},
-    HttpResponse,
+    HttpResponse, HttpResponseBuilder,
 };
 use argon2::password_hash;
 use serde::Serialize;
@@ -56,17 +54,17 @@ pub enum CustomError {
 }
 
 impl error::ResponseError for CustomError {
-    fn error_response(&self) -> HttpResponse<Body> {
+    fn error_response(&self) -> HttpResponse {
         let response = ErrorResponse {
             error: self.to_string(),
         };
 
         match serde_json::to_string(&response) {
-            Ok(json) => BaseHttpResponseBuilder::new(self.status_code())
+            Ok(json) => HttpResponseBuilder::new(self.status_code())
                 .content_type(ContentType::json())
                 .body(json)
                 .into(),
-            Err(_) => BaseHttpResponseBuilder::new(StatusCode::INTERNAL_SERVER_ERROR)
+            Err(_) => HttpResponseBuilder::new(StatusCode::INTERNAL_SERVER_ERROR)
                 .content_type(ContentType::json())
                 .body(format!(
                     r#"{{error: "Error while serializing actual error: {}"}}"#,

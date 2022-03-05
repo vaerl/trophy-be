@@ -1,70 +1,50 @@
 {
   "db": "PostgreSQL",
   "04c704b09eed22f6b8ca9643a0be58132bbd320eb9a2f91a41786bc161e15c4d": {
-    "query": "INSERT INTO users (username, password, role, game_id) VALUES ($1, $2, $3, $4) RETURNING id, username, password, role as \"role: UserRole\", game_id, session",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "username",
+          "ordinal": 1,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 2,
           "name": "password",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "role: UserRole",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "user_role",
               "kind": {
                 "Enum": [
                   "admin",
                   "referee",
                   "visualizer"
                 ]
-              }
+              },
+              "name": "user_role"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "game_id",
+          "ordinal": 4,
           "type_info": "Int4"
         },
         {
-          "ordinal": 5,
           "name": "session",
+          "ordinal": 5,
           "type_info": "Varchar"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Varchar",
-          "Varchar",
-          {
-            "Custom": {
-              "name": "user_role",
-              "kind": {
-                "Enum": [
-                  "admin",
-                  "referee",
-                  "visualizer"
-                ]
-              }
-            }
-          },
-          "Int4"
-        ]
-      },
       "nullable": [
         false,
         false,
@@ -72,88 +52,113 @@
         false,
         true,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "admin",
+                  "referee",
+                  "visualizer"
+                ]
+              },
+              "name": "user_role"
+            }
+          },
+          "Int4"
+        ]
+      }
+    },
+    "query": "INSERT INTO users (username, password, role, game_id) VALUES ($1, $2, $3, $4) RETURNING id, username, password, role as \"role: UserRole\", game_id, session"
   },
   "07e658c2bf552b5bb7a946b8f80eb1e6389f53b165387afec27fbe4b38e7f5e0": {
-    "query": "DELETE FROM teams WHERE id = $1 RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "trophy_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "name",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "gender: TeamGender",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "team_gender",
               "kind": {
                 "Enum": [
                   "female",
                   "male",
                   "mixed"
                 ]
-              }
+              },
+              "name": "team_gender"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "points",
+          "ordinal": 4,
           "type_info": "Int4"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Int4"
-        ]
-      },
       "nullable": [
         false,
         false,
         false,
         false,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "DELETE FROM teams WHERE id = $1 RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points"
   },
   "16a28abc70312878a5f81d09af5005fd4a7c5cad009c95251df9a414d0f6ae97": {
-    "query": "UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data, point_value",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "game_id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "team_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "data",
+          "ordinal": 2,
           "type_info": "Text"
         },
         {
-          "ordinal": 3,
           "name": "point_value",
+          "ordinal": 3,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true
       ],
       "parameters": {
         "Left": [
@@ -161,145 +166,134 @@
           "Int4",
           "Int4"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        true,
-        true
-      ]
-    }
+      }
+    },
+    "query": "UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data, point_value"
   },
   "315e2dd82983da44c713279afb8d1b72cdfb1288e07feb774747544352d61fbe": {
-    "query": "SELECT id, trophy_id, name, gender as \"gender: TeamGender\", points FROM teams ORDER BY id",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "trophy_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "name",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "gender: TeamGender",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "team_gender",
               "kind": {
                 "Enum": [
                   "female",
                   "male",
                   "mixed"
                 ]
-              }
+              },
+              "name": "team_gender"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "points",
+          "ordinal": 4,
           "type_info": "Int4"
         }
       ],
-      "parameters": {
-        "Left": []
-      },
       "nullable": [
         false,
         false,
         false,
         false,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id, trophy_id, name, gender as \"gender: TeamGender\", points FROM teams ORDER BY id"
   },
   "43db4cfa12738b921aded84295eaa7bdc81ab5ecac256bbf6f84e58af6077456": {
-    "query": "INSERT INTO transaction_history (user_id, timestamp, log_level, action) VALUES ($1, $2, $3, $4)",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Int4",
           "Timestamptz",
           {
             "Custom": {
-              "name": "log_level",
               "kind": {
                 "Enum": [
                   "debug",
                   "info",
                   "important"
                 ]
-              }
+              },
+              "name": "log_level"
             }
           },
           "Varchar"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "INSERT INTO transaction_history (user_id, timestamp, log_level, action) VALUES ($1, $2, $3, $4)"
   },
   "4ece3831fb7b897154b28239f08c12cd9505f98897ee8369294b498614db3e08": {
-    "query": "SELECT id, username, password, role as \"role: UserRole\", game_id, session FROM users WHERE id = $1",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "username",
+          "ordinal": 1,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 2,
           "name": "password",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "role: UserRole",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "user_role",
               "kind": {
                 "Enum": [
                   "admin",
                   "referee",
                   "visualizer"
                 ]
-              }
+              },
+              "name": "user_role"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "game_id",
+          "ordinal": 4,
           "type_info": "Int4"
         },
         {
-          "ordinal": 5,
           "name": "session",
+          "ordinal": 5,
           "type_info": "Varchar"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Int4"
-        ]
-      },
       "nullable": [
         false,
         false,
@@ -307,48 +301,60 @@
         false,
         true,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT id, username, password, role as \"role: UserRole\", game_id, session FROM users WHERE id = $1"
   },
   "4ef46ca5824a2270433d15565e63c072c58a19f6703f128b7bd7bb3078b0362e": {
-    "query": "INSERT INTO games (trophy_id, name, kind, locked) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "trophy_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "name",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "kind: GameKind",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "game_kind",
               "kind": {
                 "Enum": [
                   "points",
                   "time"
                 ]
-              }
+              },
+              "name": "game_kind"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "locked",
+          "ordinal": 4,
           "type_info": "Bool"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
@@ -356,51 +362,50 @@
           "Varchar",
           {
             "Custom": {
-              "name": "game_kind",
               "kind": {
                 "Enum": [
                   "points",
                   "time"
                 ]
-              }
+              },
+              "name": "game_kind"
             }
           },
           "Bool"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "INSERT INTO games (trophy_id, name, kind, locked) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked"
   },
   "5ea1a9dfbdda42861ccc4f220f0091867a3a5c53436385e893688e0b282efe7d": {
-    "query": "UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data, point_value",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "game_id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "team_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "data",
+          "ordinal": 2,
           "type_info": "Text"
         },
         {
-          "ordinal": 3,
           "name": "point_value",
+          "ordinal": 3,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true
       ],
       "parameters": {
         "Left": [
@@ -408,81 +413,55 @@
           "Int4",
           "Int4"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        true,
-        true
-      ]
-    }
+      }
+    },
+    "query": "UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data, point_value"
   },
   "63b360aaf9826d37d06866afe798017f8320f255c8b86181005c3a7f38251aa0": {
-    "query": "UPDATE users SET username = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, username, password, role as \"role: UserRole\", game_id, session",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "username",
+          "ordinal": 1,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 2,
           "name": "password",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "role: UserRole",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "user_role",
               "kind": {
                 "Enum": [
                   "admin",
                   "referee",
                   "visualizer"
                 ]
-              }
+              },
+              "name": "user_role"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "game_id",
+          "ordinal": 4,
           "type_info": "Int4"
         },
         {
-          "ordinal": 5,
           "name": "session",
+          "ordinal": 5,
           "type_info": "Varchar"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Varchar",
-          "Varchar",
-          {
-            "Custom": {
-              "name": "user_role",
-              "kind": {
-                "Enum": [
-                  "admin",
-                  "referee",
-                  "visualizer"
-                ]
-              }
-            }
-          },
-          "Int4",
-          "Int4"
-        ]
-      },
       "nullable": [
         false,
         false,
@@ -490,157 +469,184 @@
         false,
         true,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "admin",
+                  "referee",
+                  "visualizer"
+                ]
+              },
+              "name": "user_role"
+            }
+          },
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE users SET username = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, username, password, role as \"role: UserRole\", game_id, session"
   },
   "6dbcfc7eb5f77f6826fb434896a6534cdb79d2121d5c8f13145c842af4973e81": {
-    "query": "SELECT id, trophy_id, name, kind as \"kind: GameKind\", locked FROM games ORDER BY id",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "trophy_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "name",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "kind: GameKind",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "game_kind",
               "kind": {
                 "Enum": [
                   "points",
                   "time"
                 ]
-              }
+              },
+              "name": "game_kind"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "locked",
+          "ordinal": 4,
           "type_info": "Bool"
         }
       ],
-      "parameters": {
-        "Left": []
-      },
       "nullable": [
         false,
         false,
         false,
         false,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id, trophy_id, name, kind as \"kind: GameKind\", locked FROM games ORDER BY id"
   },
   "6f1cdb49a71923cd3d7180a60739763cef2a843b159438cd3207cbc2f75baf42": {
-    "query": "UPDATE teams SET points = $1 WHERE id = $2 RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "trophy_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "name",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "gender: TeamGender",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "team_gender",
               "kind": {
                 "Enum": [
                   "female",
                   "male",
                   "mixed"
                 ]
-              }
+              },
+              "name": "team_gender"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "points",
+          "ordinal": 4,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
           "Int4",
           "Int4"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "UPDATE teams SET points = $1 WHERE id = $2 RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points"
   },
   "75b596762e3b8eeaea9ab976c630ca4f46dfb83e5241e7fc761029ba0efee0a6": {
-    "query": "UPDATE teams SET trophy_id = $1, name = $2, gender = $3 WHERE id = $4 RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "trophy_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "name",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "gender: TeamGender",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "team_gender",
               "kind": {
                 "Enum": [
                   "female",
                   "male",
                   "mixed"
                 ]
-              }
+              },
+              "name": "team_gender"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "points",
+          "ordinal": 4,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
@@ -648,68 +654,68 @@
           "Varchar",
           {
             "Custom": {
-              "name": "team_gender",
               "kind": {
                 "Enum": [
                   "female",
                   "male",
                   "mixed"
                 ]
-              }
+              },
+              "name": "team_gender"
             }
           },
           "Int4"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "UPDATE teams SET trophy_id = $1, name = $2, gender = $3 WHERE id = $4 RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points"
   },
   "79d851b1791b9d79df776e2ecbc3dec16380bf63cce05e601251484ac8a2f21f": {
-    "query": "INSERT INTO teams (trophy_id, name, gender) VALUES ($1, $2, $3) RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "trophy_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "name",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "gender: TeamGender",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "team_gender",
               "kind": {
                 "Enum": [
                   "female",
                   "male",
                   "mixed"
                 ]
-              }
+              },
+              "name": "team_gender"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "points",
+          "ordinal": 4,
           "type_info": "Int4"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
@@ -717,144 +723,134 @@
           "Varchar",
           {
             "Custom": {
-              "name": "team_gender",
               "kind": {
                 "Enum": [
                   "female",
                   "male",
                   "mixed"
                 ]
-              }
+              },
+              "name": "team_gender"
             }
           }
         ]
-      },
+      }
+    },
+    "query": "INSERT INTO teams (trophy_id, name, gender) VALUES ($1, $2, $3) RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points"
+  },
+  "7fe6ae83f0f7839c86c53d818d00848b21a2e8607248804fd27432a55fde8919": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "trophy_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "name",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "gender: TeamGender",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "female",
+                  "male",
+                  "mixed"
+                ]
+              },
+              "name": "team_gender"
+            }
+          }
+        },
+        {
+          "name": "points",
+          "ordinal": 4,
+          "type_info": "Int4"
+        }
+      ],
       "nullable": [
         false,
         false,
         false,
         false,
         false
-      ]
-    }
-  },
-  "7fe6ae83f0f7839c86c53d818d00848b21a2e8607248804fd27432a55fde8919": {
-    "query": "SELECT id, trophy_id, name, gender as \"gender: TeamGender\", points FROM teams WHERE id = $1",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "trophy_id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 2,
-          "name": "name",
-          "type_info": "Varchar"
-        },
-        {
-          "ordinal": 3,
-          "name": "gender: TeamGender",
-          "type_info": {
-            "Custom": {
-              "name": "team_gender",
-              "kind": {
-                "Enum": [
-                  "female",
-                  "male",
-                  "mixed"
-                ]
-              }
-            }
-          }
-        },
-        {
-          "ordinal": 4,
-          "name": "points",
-          "type_info": "Int4"
-        }
       ],
       "parameters": {
         "Left": [
           "Int4"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "SELECT id, trophy_id, name, gender as \"gender: TeamGender\", points FROM teams WHERE id = $1"
   },
   "867781a3dbdb053e7723acbbebcd66da1325009252a92ebc4735610cb43533a9": {
-    "query": "UPDATE users SET session = $1 WHERE id = $2",
     "describe": {
       "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Varchar",
           "Int4"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "UPDATE users SET session = $1 WHERE id = $2"
   },
   "8c1910e3918e0d0e27069ad89d724717f12888dac43ca203b71298f892e9e3b7": {
-    "query": "SELECT id, username, password, role as \"role: UserRole\", game_id, session FROM users ORDER BY id",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "username",
+          "ordinal": 1,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 2,
           "name": "password",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "role: UserRole",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "user_role",
               "kind": {
                 "Enum": [
                   "admin",
                   "referee",
                   "visualizer"
                 ]
-              }
+              },
+              "name": "user_role"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "game_id",
+          "ordinal": 4,
           "type_info": "Int4"
         },
         {
-          "ordinal": 5,
           "name": "session",
+          "ordinal": 5,
           "type_info": "Varchar"
         }
       ],
-      "parameters": {
-        "Left": []
-      },
       "nullable": [
         false,
         false,
@@ -862,153 +858,151 @@
         false,
         true,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id, username, password, role as \"role: UserRole\", game_id, session FROM users ORDER BY id"
   },
   "90ed791661d9b42bcad85ad19202cf2a35a7f8b696ab9cb676aa9ac978b55bca": {
-    "query": "DELETE FROM games WHERE id = $1 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "trophy_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "name",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "kind: GameKind",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "game_kind",
               "kind": {
                 "Enum": [
                   "points",
                   "time"
                 ]
-              }
+              },
+              "name": "game_kind"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "locked",
+          "ordinal": 4,
           "type_info": "Bool"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Int4"
-        ]
-      },
       "nullable": [
         false,
         false,
         false,
         false,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "DELETE FROM games WHERE id = $1 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked"
   },
   "9dc38950de431d5bc14c9b635f1c5bc61addddcf8d7fb680bbe9993a2b8e1765": {
-    "query": "INSERT INTO game_team (game_id, team_id) VALUES ($1, $2) RETURNING game_id, team_id, data, point_value",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "game_id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "team_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "data",
+          "ordinal": 2,
           "type_info": "Text"
         },
         {
-          "ordinal": 3,
           "name": "point_value",
+          "ordinal": 3,
           "type_info": "Int4"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Int4"
-        ]
-      },
       "nullable": [
         false,
         false,
         true,
         true
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "INSERT INTO game_team (game_id, team_id) VALUES ($1, $2) RETURNING game_id, team_id, data, point_value"
   },
   "a8d2f837de0f8e0208da1c2098d4c85519ee11fc6a25c1cc02f656fe2d95d491": {
-    "query": "DELETE FROM users WHERE id = $1 RETURNING id, username, password, role as \"role: UserRole\", game_id, session",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "username",
+          "ordinal": 1,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 2,
           "name": "password",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "role: UserRole",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "user_role",
               "kind": {
                 "Enum": [
                   "admin",
                   "referee",
                   "visualizer"
                 ]
-              }
+              },
+              "name": "user_role"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "game_id",
+          "ordinal": 4,
           "type_info": "Int4"
         },
         {
-          "ordinal": 5,
           "name": "session",
+          "ordinal": 5,
           "type_info": "Varchar"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Int4"
-        ]
-      },
       "nullable": [
         false,
         false,
@@ -1016,48 +1010,60 @@
         false,
         true,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "DELETE FROM users WHERE id = $1 RETURNING id, username, password, role as \"role: UserRole\", game_id, session"
   },
   "be150bd3fa9060710add260c65d9b4d2b9432fa95c87153f7d2636737fa06e51": {
-    "query": "UPDATE games SET trophy_id = $1, name = $2, kind = $3, locked = $4 WHERE id = $5 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "trophy_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "name",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "kind: GameKind",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "game_kind",
               "kind": {
                 "Enum": [
                   "points",
                   "time"
                 ]
-              }
+              },
+              "name": "game_kind"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "locked",
+          "ordinal": 4,
           "type_info": "Bool"
         }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
@@ -1065,245 +1071,239 @@
           "Varchar",
           {
             "Custom": {
-              "name": "game_kind",
               "kind": {
                 "Enum": [
                   "points",
                   "time"
                 ]
-              }
+              },
+              "name": "game_kind"
             }
           },
           "Bool",
           "Int4"
         ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
+      }
+    },
+    "query": "UPDATE games SET trophy_id = $1, name = $2, kind = $3, locked = $4 WHERE id = $5 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked"
   },
   "df90a09abe398676c9540a8eeb361238b9f9ea625171eefac1c7df6150e0b214": {
-    "query": "SELECT game_id, team_id, data, point_value FROM game_team WHERE team_id = $1 ORDER BY game_id",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "game_id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "team_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "data",
+          "ordinal": 2,
           "type_info": "Text"
         },
         {
-          "ordinal": 3,
           "name": "point_value",
+          "ordinal": 3,
           "type_info": "Int4"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Int4"
-        ]
-      },
       "nullable": [
         false,
         false,
         true,
         true
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT game_id, team_id, data, point_value FROM game_team WHERE team_id = $1 ORDER BY game_id"
   },
   "e2c4cc1d14d662e61db5094c8a3bff3ace05592304034498019fa9f613534aec": {
-    "query": "SELECT id, user_id, timestamp, log_level as \"log_level: LogLevel\", action FROM transaction_history ORDER BY id",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "user_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "timestamp",
+          "ordinal": 2,
           "type_info": "Timestamptz"
         },
         {
-          "ordinal": 3,
           "name": "log_level: LogLevel",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "log_level",
               "kind": {
                 "Enum": [
                   "debug",
                   "info",
                   "important"
                 ]
-              }
+              },
+              "name": "log_level"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "action",
+          "ordinal": 4,
           "type_info": "Varchar"
         }
       ],
-      "parameters": {
-        "Left": []
-      },
       "nullable": [
         false,
         false,
         false,
         false,
         false
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id, user_id, timestamp, log_level as \"log_level: LogLevel\", action FROM transaction_history ORDER BY id"
   },
   "e9f6ac0d4329ce1e7a2222c86da5f2f64728b7e24039e7f196cfdca0b00fccda": {
-    "query": "SELECT id, trophy_id, name, kind as \"kind: GameKind\", locked FROM games WHERE id = $1",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "id",
+          "ordinal": 0,
           "type_info": "Int4"
         },
         {
-          "ordinal": 1,
           "name": "trophy_id",
+          "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "ordinal": 2,
           "name": "name",
+          "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "ordinal": 3,
           "name": "kind: GameKind",
+          "ordinal": 3,
           "type_info": {
             "Custom": {
-              "name": "game_kind",
               "kind": {
                 "Enum": [
                   "points",
                   "time"
                 ]
-              }
+              },
+              "name": "game_kind"
             }
           }
         },
         {
-          "ordinal": 4,
           "name": "locked",
+          "ordinal": 4,
           "type_info": "Bool"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Int4"
-        ]
-      },
       "nullable": [
         false,
         false,
         false,
         false,
         false
-      ]
-    }
-  },
-  "eee6ab2e82675d710b2d13c4248c913fcddbf5639284cc30e9003b8d99bbbf70": {
-    "query": "SELECT game_id, team_id, data, point_value FROM game_team ORDER BY game_id",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "game_id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "team_id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 2,
-          "name": "data",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "point_value",
-          "type_info": "Int4"
-        }
-      ],
-      "parameters": {
-        "Left": []
-      },
-      "nullable": [
-        false,
-        false,
-        true,
-        true
-      ]
-    }
-  },
-  "f0464d4b97eb02f7043544ebf4be20d22f728b2d7c445e396244102695cd852e": {
-    "query": "SELECT game_id, team_id, data, point_value FROM game_team WHERE game_id = $1 ORDER BY game_id",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "game_id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 1,
-          "name": "team_id",
-          "type_info": "Int4"
-        },
-        {
-          "ordinal": 2,
-          "name": "data",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "point_value",
-          "type_info": "Int4"
-        }
       ],
       "parameters": {
         "Left": [
           "Int4"
         ]
-      },
+      }
+    },
+    "query": "SELECT id, trophy_id, name, kind as \"kind: GameKind\", locked FROM games WHERE id = $1"
+  },
+  "eee6ab2e82675d710b2d13c4248c913fcddbf5639284cc30e9003b8d99bbbf70": {
+    "describe": {
+      "columns": [
+        {
+          "name": "game_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "data",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "point_value",
+          "ordinal": 3,
+          "type_info": "Int4"
+        }
+      ],
       "nullable": [
         false,
         false,
         true,
         true
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT game_id, team_id, data, point_value FROM game_team ORDER BY game_id"
+  },
+  "f0464d4b97eb02f7043544ebf4be20d22f728b2d7c445e396244102695cd852e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "game_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "data",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "point_value",
+          "ordinal": 3,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT game_id, team_id, data, point_value FROM game_team WHERE game_id = $1 ORDER BY game_id"
   }
 }
