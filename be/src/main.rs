@@ -44,9 +44,9 @@ async fn main() -> Result<(), CustomError> {
         // more here: https://docs.rs/actix-cors/0.5.4/actix_cors/
         let cors = Cors::default()
             .supports_credentials()
-            .allowed_origin(origin.as_str())
+            // .allowed_origin(origin.as_str())
             // TODO remove this after development
-            .allow_any_origin()
+            .send_wildcard()
             .allow_any_method()
             .allow_any_header()
             .max_age(3600);
