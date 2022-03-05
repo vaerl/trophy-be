@@ -45,6 +45,8 @@ async fn main() -> Result<(), CustomError> {
         let cors = Cors::default()
             .supports_credentials()
             .allowed_origin(origin.as_str())
+            // TODO remove this after development
+            .allow_any_origin()
             .allow_any_method()
             .allow_any_header()
             .max_age(3600);
