@@ -47,8 +47,6 @@ async fn main() -> Result<(), CustomError> {
             // explicitly allow localhost for development
             .allowed_origin("http://localhost:4999")
             .allowed_origin(origin.as_str())
-            // TODO remove this after development
-            // .send_wildcard()
             .allow_any_method()
             .allow_any_header()
             .max_age(3600);
