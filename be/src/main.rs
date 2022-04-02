@@ -45,7 +45,7 @@ async fn main() -> Result<(), CustomError> {
         let cors = Cors::default()
             .supports_credentials()
             // explicitly allow localhost for development
-            .allowed_origin("http://localhost:4999")
+            .allowed_origin("http://localhost:3000")
             .allowed_origin(origin.as_str())
             .allow_any_method()
             .allow_any_header()
