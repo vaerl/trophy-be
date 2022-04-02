@@ -49,6 +49,7 @@ async fn main() -> Result<(), CustomError> {
             .send_wildcard()
             .allow_any_method()
             .allow_any_header()
+            .allow_any_origin()
             .max_age(3600);
 
         App::new()
