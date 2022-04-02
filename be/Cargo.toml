@@ -33,7 +33,7 @@ actix-web-actors = "4.1"
 actix = "0.13"
 # auth
 jsonwebtoken = "8.0"
-argon2 = "0.3"
+argon2 = "0.4"
 rand_core = { version = "0.6", features = ["std"] }
 chrono = { version = "0.4", features = ["serde"]}
 uuid = { version = "0.8", features = ["v4", "serde"] }
