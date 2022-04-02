@@ -120,7 +120,7 @@ async fn login(login: web::Json<CreateLogin>, db_pool: web::Data<PgPool>) -> imp
     match User::login(login.into_inner(), db_pool.get_ref()).await {
         Ok(token_string) => {
             let cookie = Cookie::build("session", token_string)
-                .domain(domain.as_str())
+                // .domain(domain.as_str())
                 .path("/")
                 .secure(secure.parse::<bool>().unwrap())
                 .http_only(true)
