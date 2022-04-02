@@ -4,7 +4,7 @@ extern crate log;
 use actix::Actor;
 use actix_cors::Cors;
 use actix_web::{
-    error,
+    error::{self, InternalError, JsonPayloadError},
     web::{self, Data},
     App, HttpResponse, HttpServer,
 };
@@ -54,21 +54,16 @@ async fn main() -> Result<(), CustomError> {
 
         App::new()
             // pass database pool to application so we can access it inside handlers
+            .wrap(cors)
             .app_data(db_pool.clone())
             .configure(routes::init)
             .configure(ws::init)
             // return JSON-parse-errors
-            .app_data(web::JsonConfig::default().error_handler(|err, _req| {
-                error::InternalError::from_response(
-                    "",
-                    HttpResponse::BadRequest()
-                        .body(format!("Error while parsing: {}", err))
-                        .into(),
-                )
-                .into()
-            }))
+            .app_data(
+                web::JsonConfig::default()
+                    .error_handler(|err, _req| verbose_json_error(err).into()),
+            )
             .app_data(ws_server.clone())
-            .wrap(cors)
     })
     .bind(format!("{}:{}", host, port))?;
 
@@ -78,6 +73,16 @@ async fn main() -> Result<(), CustomError> {
     server.run().await?;
 
     Ok(())
+}
+
+// doing this here is easier to read
+fn verbose_json_error(err: JsonPayloadError) -> InternalError<String> {
+    error::InternalError::from_response(
+        "".to_string(),
+        HttpResponse::BadRequest()
+            .body(format!("Error while parsing: {}", err))
+            .into(),
+    )
 }
 
 async fn create_admin_user(pool: Data<Pool<Postgres>>) -> ApiResult<()> {
