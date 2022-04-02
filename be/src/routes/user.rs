@@ -113,14 +113,12 @@ async fn delete_user(
 /// If this bit is ever needed the [user](User) needs to support multiple sessions._
 #[post("/login")]
 async fn login(login: web::Json<CreateLogin>, db_pool: web::Data<PgPool>) -> impl Responder {
-    let domain = env::var("COOKIE_DOMAIN").expect("COOKIE_DOMAIN is not set in .env file!");
     let secure = env::var("COOKIE_SECURE").expect("COOKIE_SECURE is not set in .env file!");
 
     // NOTE logging is done in ::login()!
     match User::login(login.into_inner(), db_pool.get_ref()).await {
         Ok(token_string) => {
             let cookie = Cookie::build("session", token_string)
-                // .domain(domain.as_str())
                 .path("/")
                 .secure(secure.parse::<bool>().unwrap())
                 .http_only(true)
