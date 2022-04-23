@@ -27,7 +27,7 @@ CREATE TABLE games (
 );
 CREATE TABLE users (
     id serial PRIMARY KEY NOT NULL,
-    username varchar (50) NOT NULL,
+    name varchar (50) NOT NULL,
     password varchar NOT NULL,
     role user_role NOT NULL,
     session varchar NOT NULL DEFAULT '',

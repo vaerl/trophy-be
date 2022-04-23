@@ -5,7 +5,7 @@ POST {{BASE}}/login
 Content-Type: application/json
 
 {
-    "username": "lukas",
+    "name": "lukas",
     "password": "test"
 }
 

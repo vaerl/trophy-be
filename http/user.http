@@ -8,7 +8,7 @@ POST {{BASE}}/login
 Content-Type: application/json
 
 {
-    "username": "lukas",
+    "name": "lukas",
     "password": "test"
 }
 
@@ -29,7 +29,7 @@ Content-Type: application/json
 Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxODg1MzcsImV4cCI6MTYyNDE5MTQxNywidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjZmZTBmMmFmNjJhZTQ1Y2Y4NmI0MzYzZWQ1Yjg5YzA2In0.hOa7jbAgE21T3nQ6-JRkI2ezTayhy382jVyQNeCGcDQ
 
 {
-    "username": "bernd",
+    "name": "bernd",
     "password": "asdf",
     "role": "referee",
     "game_id": null
@@ -40,7 +40,7 @@ PUT {{BASE}}/users/{{ID}}
 Content-Type: application/json
 
 {
-    "username": "lars",
+    "name": "lars",
     "password": "hermann",
     "role": "admin"
 }

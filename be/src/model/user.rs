@@ -32,7 +32,7 @@ impl fmt::Display for UserRole {
 #[derive(Serialize, FromRow)]
 pub struct User {
     pub id: i32,
-    pub username: String,
+    pub name: String,
     pub password: String,
     pub role: UserRole,
     pub session: String,
@@ -45,7 +45,7 @@ pub struct UserVec(Vec<User>);
 
 #[derive(Deserialize)]
 pub struct CreateUser {
-    pub username: String,
+    pub name: String,
     pub password: String,
     pub role: UserRole,
     pub game_id: Option<i32>
@@ -53,13 +53,13 @@ pub struct CreateUser {
 
 impl fmt::Display for CreateUser {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "CreateUser(username: {}, password: {}, role: {})", self.username, self.password, self.role)
+        write!(f, "CreateUser(name: {}, password: {}, role: {})", self.name, self.password, self.role)
     }
 }
 
 #[derive(Deserialize)]
 pub struct CreateLogin {
-    pub username: String,
+    pub name: String,
     pub password: String
 }
 
@@ -67,7 +67,7 @@ impl User {
     pub async fn find_all(pool: &PgPool) -> ApiResult<UserVec> {
         let users = sqlx::query_as!(
             User,
-            r#"SELECT id, username, password, role as "role: UserRole", game_id, session FROM users ORDER BY id"#
+            r#"SELECT id, name, password, role as "role: UserRole", game_id, session FROM users ORDER BY id"#
         )
         .fetch_all(pool)
         .await?;
@@ -78,7 +78,7 @@ impl User {
     pub async fn find(id: i32, pool: &PgPool) -> ApiResult<User> {
         let user = sqlx::query_as!(
             User,
-            r#"SELECT id, username, password, role as "role: UserRole", game_id, session FROM users WHERE id = $1"#, id
+            r#"SELECT id, name, password, role as "role: UserRole", game_id, session FROM users WHERE id = $1"#, id
         )
         .fetch_one(pool)
         .await?;
@@ -89,7 +89,7 @@ impl User {
     pub async fn find_by_name(name: &String, pool: &PgPool) -> ApiResult<User> {
         let users = User::find_all(pool).await?.0;
         for user in users {
-            if user.username.eq(name) {
+            if user.name.eq(name) {
                 return Ok(user);
             }
         }
@@ -106,7 +106,7 @@ impl User {
     }
 
     pub async fn create(create_user: CreateUser, pool: &PgPool) -> ApiResult<User> {
-        if User::find_by_name(&create_user.username, pool)
+        if User::find_by_name(&create_user.name, pool)
             .await
             .is_err()
         {
@@ -116,8 +116,8 @@ impl User {
 
             let mut tx = pool.begin().await?;
             let user = sqlx::query_as!( User, 
-                r#"INSERT INTO users (username, password, role, game_id) VALUES ($1, $2, $3, $4) RETURNING id, username, password, role as "role: UserRole", game_id, session"#,
-                create_user.username, password_hash,  create_user.role as UserRole, create_user.game_id
+                r#"INSERT INTO users (name, password, role, game_id) VALUES ($1, $2, $3, $4) RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
+                create_user.name, password_hash,  create_user.role as UserRole, create_user.game_id
             )
             .fetch_one(&mut tx)
             .await?;
@@ -125,7 +125,7 @@ impl User {
 
             Ok(user)
         } else {
-            Err(CustomError::AlreadyExistsError {message: format!("User {} already exists!", create_user.username)})
+            Err(CustomError::AlreadyExistsError {message: format!("User {} already exists!", create_user.name)})
         }
     }
 
@@ -138,8 +138,8 @@ impl User {
         let mut tx = pool.begin().await?;
         let user = sqlx::query_as!(
             User, 
-            r#"UPDATE users SET username = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, username, password, role as "role: UserRole", game_id, session"#,
-            altered_user.username, password_hash, altered_user.role as UserRole, altered_user.game_id, id
+            r#"UPDATE users SET name = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
+            altered_user.name, password_hash, altered_user.role as UserRole, altered_user.game_id, id
         )
         .fetch_one(&mut tx)
         .await?;
@@ -165,7 +165,7 @@ impl User {
         let mut tx = pool.begin().await?;
         let user = sqlx::query_as!(
             User,
-            r#"DELETE FROM users WHERE id = $1 RETURNING id, username, password, role as "role: UserRole", game_id, session"#,
+            r#"DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
             id
         )
         .fetch_one(&mut tx)
@@ -176,7 +176,7 @@ impl User {
     }
 
     pub async fn login(login: CreateLogin, pool: &PgPool) -> ApiResult<String> {
-        let mut user = User::find_by_name(&login.username, pool).await?;
+        let mut user = User::find_by_name(&login.name, pool).await?;
         let argon2 = Argon2::default();
         let password_hash = PasswordHash::new(&user.password)?;
         
@@ -203,7 +203,7 @@ impl User {
 
 impl Display for User {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Game(id: {}, username: {}, role: {}, game_id: {:#?})",self.id, self.username, self.role, self.game_id)
+        write!(f, "Game(id: {}, name: {}, role: {}, game_id: {:#?})",self.id, self.name, self.role, self.game_id)
     }
 }
 

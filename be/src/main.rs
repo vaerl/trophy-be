@@ -98,7 +98,7 @@ async fn create_admin_user(pool: Data<Pool<Postgres>>) -> ApiResult<()> {
             info!("Creating admin-user, because it does not exist yet.");
             User::create(
                 CreateUser {
-                    username: admin_name,
+                    name: admin_name,
                     password: admin_password,
                     role: model::UserRole::Admin,
                     game_id: None,
