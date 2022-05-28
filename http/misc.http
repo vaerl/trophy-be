@@ -1,4 +1,4 @@
-@BASE = http://127.0.0.1:8080
+@BASE = http://127.0.0.1:4998
 @TOKEN = asdf
 
 POST {{BASE}}/login
