@@ -26,7 +26,13 @@ pub enum CustomError {
     // Since sqlx does not differentiate between different database-errors and there are
     // not enough status-codes, I'm not differentiating here.
     #[error("An error occurred while interacting with the database: {message}")]
-    CatchAllError { message: String },
+    DatabaseError { message: String },
+    #[error("An error occurred while trying to parse something: {message}")]
+    ParseError { message: String },
+    #[error("An error occurred in/with HumanTime : {message}")]
+    HumanTimeError { message: String },
+    #[error("An error occurred in/with Actix: {message}")]
+    ActixError { message: String },
     #[error("The resource already exists: {message}")]
     AlreadyExistsError { message: String },
     #[error("No data when there should have been some: {message}")]
@@ -35,7 +41,7 @@ pub enum CustomError {
     // eval-errors
     #[error("You tried to evaluate while teams are still playing: {message}")]
     EarlyEvaluationError { message: String },
-    #[error("An error occurred while creating the excel-file: {message}")]
+    #[error("An error occurred while interacting with an excel-file: {message}")]
     XlsxError { message: String },
 
     // auth-errors
@@ -79,7 +85,10 @@ impl error::ResponseError for CustomError {
             // db-errors
             CustomError::NotFoundError { .. } => StatusCode::NOT_FOUND,
             CustomError::AlreadyExistsError { .. } => StatusCode::BAD_REQUEST,
-            CustomError::CatchAllError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            CustomError::DatabaseError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            CustomError::ParseError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            CustomError::ActixError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            CustomError::HumanTimeError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
             CustomError::NoDataSentError { .. } => StatusCode::BAD_REQUEST,
 
             // eval-errors
@@ -107,7 +116,7 @@ impl From<sqlx::Error> for CustomError {
                     message: err.to_string(),
                 }
             }
-            _ => CustomError::CatchAllError {
+            _ => CustomError::DatabaseError {
                 message: err.to_string(),
             },
         }
@@ -116,7 +125,7 @@ impl From<sqlx::Error> for CustomError {
 
 impl From<humantime::DurationError> for CustomError {
     fn from(err: humantime::DurationError) -> CustomError {
-        CustomError::CatchAllError {
+        CustomError::HumanTimeError {
             message: err.to_string(),
         }
     }
@@ -124,7 +133,7 @@ impl From<humantime::DurationError> for CustomError {
 
 impl From<std::num::ParseIntError> for CustomError {
     fn from(err: std::num::ParseIntError) -> CustomError {
-        CustomError::CatchAllError {
+        CustomError::ParseError {
             message: err.to_string(),
         }
     }
@@ -156,7 +165,7 @@ impl From<actix_web::http::header::ToStrError> for CustomError {
 
 impl From<actix_web::error::Error> for CustomError {
     fn from(err: actix_web::error::Error) -> CustomError {
-        CustomError::CatchAllError {
+        CustomError::ActixError {
             message: err.to_string(),
         }
     }
