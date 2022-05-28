@@ -6,6 +6,7 @@ use actix_files::NamedFile;
 use sqlx::PgPool;
 use std::{
     fmt::{self, Display},
+    fs::File,
     time::SystemTime,
 };
 use xlsxwriter::*;
@@ -50,6 +51,10 @@ async fn evaluate_game(game: Game, pool: &PgPool) -> ApiResult<()> {
 
 /// Evaluate a game by its ParsedOutcomes.
 fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
+    if outcomes.len() == 0 {
+        return outcomes;
+    }
+
     let mut current_points = MAX_POINTS;
 
     match outcomes[0].value {
@@ -73,15 +78,23 @@ fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
 
 pub async fn create_xlsx_file(pool: &PgPool) -> ApiResult<ResultFile> {
     // this path uses a timestamp to distinguish between versions
-    let path = "./static/results-".to_owned()
-        + &humantime::format_rfc3339_seconds(SystemTime::now()).to_string()
-        + &".xlsx".to_owned();
+    let path = format!(
+        "results-{}.xlsx",
+        humantime::format_rfc3339_seconds(SystemTime::now())
+    );
 
     // create file
+    File::create(&path)?;
     let workbook = Workbook::new(&path);
     let (female, male) = Team::find_all_by_gender(pool).await?;
-    write_teams(female.0, &workbook).await?;
-    write_teams(male.0, &workbook).await?;
+
+    // only write teams if any exist
+    if female.0.len() > 0 {
+        write_teams(female.0, &workbook).await?;
+    }
+    if male.0.len() > 0 {
+        write_teams(male.0, &workbook).await?;
+    }
     workbook.close()?;
 
     // open and return file
