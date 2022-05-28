@@ -46,10 +46,11 @@ async fn reset_database(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResu
         .await?;
     sqlx::query("DELETE FROM games").execute(&mut tx).await?;
     sqlx::query("DELETE FROM teams").execute(&mut tx).await?;
-    sqlx::query("DELETE FROM users").execute(&mut tx).await?;
     sqlx::query("DELETE FROM transaction_history")
         .execute(&mut tx)
         .await?;
+    // NOTE do not delete users per default
+    // sqlx::query("DELETE FROM users").execute(&mut tx).await?;
     tx.commit().await?;
 
     Ok(HttpResponse::Ok().finish())
