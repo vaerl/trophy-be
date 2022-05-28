@@ -197,7 +197,7 @@ impl User {
     }
 
     pub fn generate_session() -> String {
-        Uuid::new_v4().to_simple().to_string()
+        Uuid::new_v4().as_simple().to_string()
     }
 }
 
