@@ -80,7 +80,7 @@ impl Game {
 
         // create outcomes
         for team in Team::find_all(pool).await?.0 {
-            Outcome::create(game.id, team.id, pool).await?;
+            Outcome::create(game.id, game.trophy_id, team.id, team.trophy_id, pool).await?;
         }
 
         Ok(game)

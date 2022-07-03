@@ -55,46 +55,6 @@
     },
     "query": "DELETE FROM teams WHERE id = $1 RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points"
   },
-  "16a28abc70312878a5f81d09af5005fd4a7c5cad009c95251df9a414d0f6ae97": {
-    "describe": {
-      "columns": [
-        {
-          "name": "game_id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "team_id",
-          "ordinal": 1,
-          "type_info": "Int4"
-        },
-        {
-          "name": "data",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "point_value",
-          "ordinal": 3,
-          "type_info": "Int4"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Int4",
-          "Int4"
-        ]
-      }
-    },
-    "query": "UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data, point_value"
-  },
   "315e2dd82983da44c713279afb8d1b72cdfb1288e07feb774747544352d61fbe": {
     "describe": {
       "columns": [
@@ -300,7 +260,7 @@
     },
     "query": "INSERT INTO games (trophy_id, name, kind, locked) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked"
   },
-  "5ea1a9dfbdda42861ccc4f220f0091867a3a5c53436385e893688e0b282efe7d": {
+  "53b14ecf631c07918524d3db80ff1b608ab509450cecaf2dc3f1ed8552c6d437": {
     "describe": {
       "columns": [
         {
@@ -309,22 +269,34 @@
           "type_info": "Int4"
         },
         {
-          "name": "team_id",
+          "name": "game_trophy_id",
           "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "name": "data",
+          "name": "team_id",
           "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team_trophy_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "data",
+          "ordinal": 4,
           "type_info": "Text"
         },
         {
           "name": "point_value",
-          "ordinal": 3,
+          "ordinal": 5,
           "type_info": "Int4"
         }
       ],
       "nullable": [
+        false,
+        false,
         false,
         false,
         true,
@@ -338,7 +310,57 @@
         ]
       }
     },
-    "query": "UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, team_id, data, point_value"
+    "query": "UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, game_trophy_id, team_id, team_trophy_id, data, point_value"
+  },
+  "6163964d101446ba8ed0b5299bf74aac7fdfe1fc8b4fa89d7505c65e4e54d873": {
+    "describe": {
+      "columns": [
+        {
+          "name": "game_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "game_trophy_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team_id",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team_trophy_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "data",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "point_value",
+          "ordinal": 5,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT game_id, game_trophy_id, team_id, team_trophy_id, data, point_value FROM game_team WHERE team_id = $1 ORDER BY game_id"
   },
   "6dbcfc7eb5f77f6826fb434896a6534cdb79d2121d5c8f13145c842af4973e81": {
     "describe": {
@@ -447,6 +469,59 @@
       }
     },
     "query": "UPDATE teams SET points = $1 WHERE id = $2 RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points"
+  },
+  "71a46fe9bf30fe60e718551de3c230e5e4e7f08b589d32c5365bf955fe7098be": {
+    "describe": {
+      "columns": [
+        {
+          "name": "game_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "game_trophy_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team_id",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team_trophy_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "data",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "point_value",
+          "ordinal": 5,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "INSERT INTO game_team (game_id, game_trophy_id, team_id, team_trophy_id) VALUES ($1, $2, $3, $4) RETURNING game_id, game_trophy_id, team_id, team_trophy_id, data, point_value"
   },
   "75b596762e3b8eeaea9ab976c630ca4f46dfb83e5241e7fc761029ba0efee0a6": {
     "describe": {
@@ -640,6 +715,54 @@
     },
     "query": "SELECT id, trophy_id, name, gender as \"gender: TeamGender\", points FROM teams WHERE id = $1"
   },
+  "84a1a641d9d208a3a8e7fff56ce501f3cef9be9fef1ae9cb08bc51063d0fbfc8": {
+    "describe": {
+      "columns": [
+        {
+          "name": "game_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "game_trophy_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team_id",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team_trophy_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "data",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "point_value",
+          "ordinal": 5,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT game_id, game_trophy_id, team_id, team_trophy_id, data, point_value FROM game_team ORDER BY game_id"
+  },
   "867781a3dbdb053e7723acbbebcd66da1325009252a92ebc4735610cb43533a9": {
     "describe": {
       "columns": [],
@@ -707,7 +830,7 @@
     },
     "query": "DELETE FROM games WHERE id = $1 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked"
   },
-  "9dc38950de431d5bc14c9b635f1c5bc61addddcf8d7fb680bbe9993a2b8e1765": {
+  "9c6e8aa13812bdc749af46a0e2afb0fa2bc5ed6ff148169e9c72a5445319e6ca": {
     "describe": {
       "columns": [
         {
@@ -716,22 +839,34 @@
           "type_info": "Int4"
         },
         {
-          "name": "team_id",
+          "name": "game_trophy_id",
           "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "name": "data",
+          "name": "team_id",
           "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team_trophy_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "data",
+          "ordinal": 4,
           "type_info": "Text"
         },
         {
           "name": "point_value",
-          "ordinal": 3,
+          "ordinal": 5,
           "type_info": "Int4"
         }
       ],
       "nullable": [
+        false,
+        false,
         false,
         false,
         true,
@@ -739,12 +874,11 @@
       ],
       "parameters": {
         "Left": [
-          "Int4",
           "Int4"
         ]
       }
     },
-    "query": "INSERT INTO game_team (game_id, team_id) VALUES ($1, $2) RETURNING game_id, team_id, data, point_value"
+    "query": "SELECT game_id, game_trophy_id, team_id, team_trophy_id, data, point_value FROM game_team WHERE game_id = $1 ORDER BY game_id"
   },
   "b625afcbb3a0288f2a8ac440998ab637d462d863926422057656bd54cd10b055": {
     "describe": {
@@ -951,7 +1085,7 @@
     },
     "query": "DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as \"role: UserRole\", game_id, session"
   },
-  "df90a09abe398676c9540a8eeb361238b9f9ea625171eefac1c7df6150e0b214": {
+  "c636cd911212e02f23c45192fbaa8c6e238840ae49f28409342616258a0a2b4d": {
     "describe": {
       "columns": [
         {
@@ -960,22 +1094,34 @@
           "type_info": "Int4"
         },
         {
-          "name": "team_id",
+          "name": "game_trophy_id",
           "ordinal": 1,
           "type_info": "Int4"
         },
         {
-          "name": "data",
+          "name": "team_id",
           "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team_trophy_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "data",
+          "ordinal": 4,
           "type_info": "Text"
         },
         {
           "name": "point_value",
-          "ordinal": 3,
+          "ordinal": 5,
           "type_info": "Int4"
         }
       ],
       "nullable": [
+        false,
+        false,
         false,
         false,
         true,
@@ -983,11 +1129,13 @@
       ],
       "parameters": {
         "Left": [
+          "Text",
+          "Int4",
           "Int4"
         ]
       }
     },
-    "query": "SELECT game_id, team_id, data, point_value FROM game_team WHERE team_id = $1 ORDER BY game_id"
+    "query": "UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, game_trophy_id, team_id, team_trophy_id, data, point_value"
   },
   "e2c4cc1d14d662e61db5094c8a3bff3ace05592304034498019fa9f613534aec": {
     "describe": {
@@ -1231,79 +1379,5 @@
       }
     },
     "query": "INSERT INTO users (name, password, role, game_id) VALUES ($1, $2, $3, $4) RETURNING id, name, password, role as \"role: UserRole\", game_id, session"
-  },
-  "eee6ab2e82675d710b2d13c4248c913fcddbf5639284cc30e9003b8d99bbbf70": {
-    "describe": {
-      "columns": [
-        {
-          "name": "game_id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "team_id",
-          "ordinal": 1,
-          "type_info": "Int4"
-        },
-        {
-          "name": "data",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "point_value",
-          "ordinal": 3,
-          "type_info": "Int4"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "SELECT game_id, team_id, data, point_value FROM game_team ORDER BY game_id"
-  },
-  "f0464d4b97eb02f7043544ebf4be20d22f728b2d7c445e396244102695cd852e": {
-    "describe": {
-      "columns": [
-        {
-          "name": "game_id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "team_id",
-          "ordinal": 1,
-          "type_info": "Int4"
-        },
-        {
-          "name": "data",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "point_value",
-          "ordinal": 3,
-          "type_info": "Int4"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Int4"
-        ]
-      }
-    },
-    "query": "SELECT game_id, team_id, data, point_value FROM game_team WHERE game_id = $1 ORDER BY game_id"
   }
 }
