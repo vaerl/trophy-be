@@ -1,5 +1,6 @@
 # VSCode
 !.vscode/tasks.json
+.vscode/launch.json
 
 # Rust
 **/target
