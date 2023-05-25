@@ -5,7 +5,7 @@ use sqlx::{FromRow, PgPool};
 use crate::{ApiResult};
 use super::{Amount, Game, GameVec, Outcome, TypeInfo};
 
-#[derive(Serialize, Deserialize, sqlx::Type)]
+#[derive(Serialize, Deserialize, sqlx::Type, Clone)]
 #[sqlx(type_name = "team_gender")]
 #[sqlx(rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
@@ -23,7 +23,8 @@ impl fmt::Display for TeamGender {
     }
 }
 
-#[derive(Serialize, FromRow)]
+// TODO also maybe annotate Game?
+#[derive(Serialize, FromRow, Clone)]
 pub struct Team {
     pub id: i32,
     pub trophy_id: i32,

@@ -56,6 +56,7 @@ fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
     }
 
     let mut current_points = MAX_POINTS;
+    let mut current_gap = 1;
 
     match outcomes[0].value {
         Value::Time(_) => outcomes.sort_by(|a, b| a.value.cmp(&b.value)),
@@ -68,8 +69,14 @@ fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
         outcomes[i].point_value = Some(current_points);
 
         // decrement current_points if the next result is less
+        // NOTE using != is fine, since outcomes are already sorted
         if i + 1 < outcomes.len() && outcomes[i].value != outcomes[i + 1].value {
-            current_points -= 1;
+            current_points -= current_gap;
+            // if the gap was used, it has to be reset to one
+            current_gap = 1;
+        } else {
+            // if the current and next values match, the gap has to be increased by one
+            current_gap += 1;
         }
     }
 
@@ -112,7 +119,7 @@ async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> ApiResult<()>
     sheet.write_string(0, 1, "Punkte", Some(&heading))?;
 
     // sort teams by points for right order in xlsx-file
-    teams.sort_by(|a, b| a.points.cmp(&b.points));
+    teams.sort_by(|a, b| b.points.cmp(&a.points));
     let mut row = 1;
     for team in teams {
         sheet.write_string(row, 0, &team.name, Some(&values))?;
@@ -142,164 +149,102 @@ mod tests {
     use crate::model::TeamGender;
     use std::time::Duration;
 
+    fn get_teams(points: Vec<i32>) -> Vec<Team> {
+        let mut teams = Vec::<Team>::new();
+        for i in 0..points.len() {
+            teams.push(Team {
+                id: (i + 1) as i32,
+                trophy_id: (i + 1) as i32,
+                name: format!("A"),
+                gender: TeamGender::Female,
+                points: points[i],
+            })
+        }
+
+        teams
+    }
+
+    fn get_outcomes(game_id: i32, teams: Vec<Team>, points: Vec<Value>) -> Vec<ParsedOutcome> {
+        assert!(teams.len() == points.len());
+        let mut parsed_outcomes = Vec::<ParsedOutcome>::new();
+
+        for i in 0..teams.len() {
+            parsed_outcomes.push(ParsedOutcome {
+                game_id,
+                team: teams[i].clone(),
+                value: points[i].clone(),
+                point_value: None,
+            });
+        }
+
+        parsed_outcomes
+    }
+
     /// This test checks evaluate with point-values.
     #[test]
     fn test_evaluate_points() {
-        let a = Team {
-            id: 1,
-            trophy_id: 1,
-            name: format!("A"),
-            gender: TeamGender::Female,
-            points: 0,
-        };
-        let b = Team {
-            id: 2,
-            trophy_id: 2,
-            name: format!("B"),
-            gender: TeamGender::Female,
-            points: 0,
-        };
-        let c = Team {
-            id: 3,
-            trophy_id: 1,
-            name: format!("C"),
-            gender: TeamGender::Female,
-            points: 0,
-        };
-        let d = Team {
-            id: 4,
-            trophy_id: 1,
-            name: format!("D"),
-            gender: TeamGender::Female,
-            points: 0,
-        };
-
-        let game_id = 1;
-
-        let mut parsed_outcomes = Vec::<ParsedOutcome>::new();
-        parsed_outcomes.push(ParsedOutcome {
-            game_id,
-            team: a,
-            value: Value::Points(1),
-            point_value: None,
-        });
-        parsed_outcomes.push(ParsedOutcome {
-            game_id,
-            team: b,
-            value: Value::Points(10),
-            point_value: None,
-        });
-        parsed_outcomes.push(ParsedOutcome {
-            game_id,
-            team: c,
-            value: Value::Points(100),
-            point_value: None,
-        });
-        parsed_outcomes.push(ParsedOutcome {
-            game_id,
-            team: d,
-            value: Value::Points(5),
-            point_value: None,
-        });
+        let teams = get_teams(vec![0, 0, 0, 0]);
+        let parsed_outcomes = get_outcomes(
+            1,
+            teams,
+            vec![
+                Value::Points(1),
+                Value::Points(10),
+                Value::Points(100),
+                Value::Points(5),
+            ],
+        );
 
         let mut teams: Vec<Team> = evaluate(parsed_outcomes)
             .into_iter()
             .map(|e| e.team)
             .collect();
         teams.sort_by(|a, b| a.points.cmp(&b.points).reverse());
+        teams.iter().for_each(|t| println!("{}", t));
 
         assert!(
-            teams[0].name == format!("C"),
-            "C is the first after sorting."
+            teams[0].id == 3,
+            "Team 3 is not the first after sorting: {}",
+            teams[0].id
         );
         assert!(
             teams[0].points == MAX_POINTS,
-            "C is has the right number of points: {}",
+            "Team 3 is has the right number of points: {}",
             teams[0].points
         );
 
         assert!(
             teams[3].points == MAX_POINTS - 3,
-            "A is has the right number of points: {}",
+            "Team 4 is has the right number of points: {}",
             teams[3].points
         );
     }
 
+    // TODO figure out why this does not produce the list we made
+    // TODO maybe add more tests
     #[test]
     /// This test checks evaluate with time-values.
     fn test_evaluate_time() {
-        let a = Team {
-            id: 1,
-            trophy_id: 1,
-            name: format!("A"),
-            gender: TeamGender::Male,
-            points: 80,
-        };
-        let b = Team {
-            id: 2,
-            trophy_id: 2,
-            name: format!("B"),
-            gender: TeamGender::Male,
-            points: 20,
-        };
-        let c = Team {
-            id: 3,
-            trophy_id: 1,
-            name: format!("C"),
-            gender: TeamGender::Male,
-            points: 40,
-        };
-        let d = Team {
-            id: 4,
-            trophy_id: 1,
-            name: format!("D"),
-            gender: TeamGender::Male,
-            points: 10,
-        };
-
-        let game_id = 1;
-
-        let mut parsed_outcomes = Vec::<ParsedOutcome>::new();
-        parsed_outcomes.push(ParsedOutcome {
-            game_id,
-            team: a,
-            value: Value::Time(Duration::new(120, 0)),
-            point_value: None,
-        });
-        parsed_outcomes.push(ParsedOutcome {
-            game_id,
-            team: b,
-            value: Value::Time(Duration::new(60, 0)),
-            point_value: None,
-        });
-        parsed_outcomes.push(ParsedOutcome {
-            game_id,
-            team: c,
-            value: Value::Time(Duration::new(40, 0)),
-            point_value: None,
-        });
-        parsed_outcomes.push(ParsedOutcome {
-            game_id,
-            team: d,
-            value: Value::Time(Duration::new(80, 0)),
-            point_value: None,
-        });
+        let teams = get_teams(vec![80, 20, 40, 10]);
+        let parsed_outcomes = get_outcomes(
+            1,
+            teams,
+            vec![
+                Value::Time(Duration::new(120, 0)),
+                Value::Time(Duration::new(60, 0)),
+                Value::Time(Duration::new(40, 0)),
+                Value::Time(Duration::new(80, 0)),
+            ],
+        );
 
         let mut teams: Vec<Team> = evaluate(parsed_outcomes)
             .into_iter()
             .map(|e| e.team)
             .collect();
         teams.sort_by(|a, b| a.points.cmp(&b.points).reverse());
+        teams.iter().for_each(|t| println!("{}", t));
 
-        println!("{}", teams[0].name);
-        println!("{}", teams[0].points);
-        println!("{}", teams[3].name);
-        println!("{}", teams[3].points);
-
-        assert!(
-            teams[0].name == format!("A"),
-            "A is the first after sorting."
-        );
+        assert!(teams[0].id == 1, "A is the first after sorting.");
         assert!(
             teams[0].points == 80 + MAX_POINTS - 3,
             "A is has the right number of points: {}",

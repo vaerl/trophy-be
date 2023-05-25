@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use crate::ApiResult;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub enum Value {
     Time(Duration),
     Points(i32),
