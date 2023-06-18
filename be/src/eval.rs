@@ -92,7 +92,7 @@ pub async fn create_xlsx_file(pool: &PgPool) -> ApiResult<ResultFile> {
 
     // create file
     File::create(&path)?;
-    let workbook = Workbook::new(&path);
+    let workbook = Workbook::new(&path)?;
     let (female, male) = Team::find_all_by_gender(pool).await?;
 
     // only write teams if any exist
@@ -110,8 +110,11 @@ pub async fn create_xlsx_file(pool: &PgPool) -> ApiResult<ResultFile> {
 
 async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> ApiResult<()> {
     // create fonts
-    let heading = workbook.add_format().set_bold().set_font_size(20.0);
-    let values = workbook.add_format().set_font_size(12.0);
+    let mut heading = Format::new();
+    heading.set_bold().set_font_size(20.0);
+
+    let mut values = Format::new();
+    values.set_font_size(12.0);
 
     // :create initial structure
     let mut sheet = workbook.add_worksheet(Some(&teams[0].gender.to_string()))?;
