@@ -112,7 +112,7 @@ impl User {
         {
             let salt = SaltString::generate(&mut OsRng);
             let argon2 = Argon2::default();
-            let password_hash = argon2.hash_password(&create_user.password.as_bytes(), salt.as_ref()).unwrap().to_string();
+            let password_hash = argon2.hash_password(&create_user.password.as_bytes(), &salt).unwrap().to_string();
 
             let mut tx = pool.begin().await?;
             let user = sqlx::query_as!( User, 
@@ -132,7 +132,7 @@ impl User {
     pub async fn update(id: i32, altered_user: CreateUser, pool: &PgPool) -> ApiResult<User> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
-        let password_hash = argon2.hash_password(&altered_user.password.as_bytes(), salt.as_ref()).unwrap().to_string();
+        let password_hash = argon2.hash_password(&altered_user.password.as_bytes(), &salt).unwrap().to_string();
 
         
         let mut tx = pool.begin().await?;
