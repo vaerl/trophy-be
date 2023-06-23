@@ -42,16 +42,7 @@ async fn main() -> Result<(), CustomError> {
 
     let server = HttpServer::new(move || {
         // more here: https://docs.rs/actix-cors/0.5.4/actix_cors/
-        let cors = Cors::default()
-            .supports_credentials()
-            // explicitly allow localhost for development
-            // TODO roll this back once I've found the issue
-            //.allowed_origin("http://localhost:3000")
-            //.allowed_origin(origin.as_str())
-            .allow_any_origin()
-            .allow_any_method()
-            .allow_any_header()
-            .max_age(3600);
+        let cors = Cors::permissive();
 
         App::new()
             // pass database pool to application so we can access it inside handlers
