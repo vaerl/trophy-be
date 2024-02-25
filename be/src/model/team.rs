@@ -90,7 +90,7 @@ impl Team {
             r#"INSERT INTO teams (trophy_id, name, gender) VALUES ($1, $2, $3) RETURNING id, trophy_id, name, gender as "gender: TeamGender", points"#,
             create_team.trophy_id, create_team.name, create_team.gender as TeamGender
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?;
         tx.commit().await?;
 
@@ -108,7 +108,7 @@ impl Team {
             r#"UPDATE teams SET trophy_id = $1, name = $2, gender = $3 WHERE id = $4 RETURNING id, trophy_id, name, gender as "gender: TeamGender", points"#,
             altered_team.trophy_id, altered_team.name, altered_team.gender as TeamGender, id
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?;
 
         tx.commit().await?;
@@ -122,7 +122,7 @@ impl Team {
             r#"UPDATE teams SET points = $1 WHERE id = $2 RETURNING id, trophy_id, name, gender as "gender: TeamGender", points"#,
             self.points, self.id
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?;
 
         tx.commit().await?;
@@ -136,7 +136,7 @@ impl Team {
             r#"DELETE FROM teams WHERE id = $1 RETURNING id, trophy_id, name, gender as "gender: TeamGender", points"#,
             id
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?;
 
         tx.commit().await?;

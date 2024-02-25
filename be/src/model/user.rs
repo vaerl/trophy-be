@@ -119,7 +119,7 @@ impl User {
                 r#"INSERT INTO users (name, password, role, game_id) VALUES ($1, $2, $3, $4) RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
                 create_user.name, password_hash,  create_user.role as UserRole, create_user.game_id
             )
-            .fetch_one(&mut tx)
+            .fetch_one(&mut *tx)
             .await?;
             tx.commit().await?;
 
@@ -141,7 +141,7 @@ impl User {
             r#"UPDATE users SET name = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
             altered_user.name, password_hash, altered_user.role as UserRole, altered_user.game_id, id
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?;
 
         tx.commit().await?;
@@ -154,7 +154,7 @@ impl User {
             User, 
             r#"UPDATE users SET session = $1 WHERE id = $2"#,
             session, id
-        ).execute(&mut tx)
+        ).execute(&mut *tx)
         .await?;
         tx.commit().await?;
 
@@ -168,7 +168,7 @@ impl User {
             r#"DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
             id
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?;
 
         tx.commit().await?;

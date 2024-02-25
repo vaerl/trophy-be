@@ -37,7 +37,7 @@ impl History {
             History,
             r#"SELECT id, user_id, timestamp, log_level as "log_level: LogLevel", action FROM transaction_history ORDER BY id"#,
         )
-        .fetch_all(&mut tx)
+        .fetch_all(&mut *tx)
         .await?;
         tx.commit().await?;
         Ok(HistoryVec(transaction_history))
@@ -63,7 +63,7 @@ impl History {
             log_level as LogLevel,
             action,
         )
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
         tx.commit().await?;
         Ok(())

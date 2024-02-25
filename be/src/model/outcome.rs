@@ -12,7 +12,7 @@ use super::{Game, ParsedOutcome, TeamGender, TypeInfo, User};
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
 #[derive(Deserialize, Serialize, FromRow)]
-#[sqlx(rename = "game_team")]
+#[sqlx(type_name = "game_team")]
 #[sqlx(rename_all = "lowercase")]
 pub struct Outcome {
     pub game_id: i32,
@@ -72,7 +72,7 @@ impl Outcome {
             "INSERT INTO game_team (game_id, game_trophy_id, team_id, team_trophy_id) VALUES ($1, $2, $3, $4) RETURNING game_id, game_trophy_id, team_id, team_trophy_id, data, point_value", 
             game_id, game_trophy_id, team_id, team_trophy_id
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?;
 
         tx.commit().await?;
@@ -92,7 +92,7 @@ impl Outcome {
                         "UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, game_trophy_id, team_id, team_trophy_id, data, point_value",
                         data, self.game_id, self.team_id
                     )
-                    .fetch_one(&mut tx)
+                    .fetch_one(&mut *tx)
                     .await?;
                 tx.commit().await?;
                 
@@ -123,7 +123,7 @@ impl Outcome {
                 "UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, game_trophy_id, team_id, team_trophy_id, data, point_value",
                 parsed_outcome.point_value, parsed_outcome.game_id, parsed_outcome.team.id
             )
-            .fetch_one(&mut tx)
+            .fetch_one(&mut *tx)
             .await?;
         tx.commit().await?;
 

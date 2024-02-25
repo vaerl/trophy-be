@@ -74,7 +74,7 @@ impl Game {
             r#"INSERT INTO games (trophy_id, name, kind, locked) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as "kind: GameKind", locked"#,
             create_game.trophy_id, create_game.name, create_game.kind as GameKind, create_game.locked
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?;
         tx.commit().await?;
 
@@ -93,7 +93,7 @@ impl Game {
             r#"UPDATE games SET trophy_id = $1, name = $2, kind = $3, locked = $4 WHERE id = $5 RETURNING id, trophy_id, name, kind as "kind: GameKind", locked"#,
             altered_game.trophy_id, altered_game.name, altered_game.kind as GameKind, altered_game.locked, id
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?;
 
         tx.commit().await?;
@@ -108,7 +108,7 @@ impl Game {
             r#"DELETE FROM games WHERE id = $1 RETURNING id, trophy_id, name, kind as "kind: GameKind", locked"#,
             id
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?;
 
         tx.commit().await?;
