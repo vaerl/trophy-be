@@ -11,6 +11,11 @@ use std::{
 };
 use xlsxwriter::*;
 
+// TODO add all teams to the result-list
+// TODO check algorithm again - males was pretty good, females did not match
+// -> discrepancies are to be expected, because I deleted two teams completely
+// TODO save a copy of current data
+
 pub struct ResultFile(pub NamedFile);
 
 const MAX_POINTS: i32 = 50;

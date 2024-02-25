@@ -42,6 +42,8 @@ async fn main() -> Result<(), CustomError> {
 
     let server = HttpServer::new(move || {
         // more here: https://docs.rs/actix-cors/0.5.4/actix_cors/
+        // TODO fix this
+        // -> this never was a problem, I was just using the wrong URL - gojo.local works
         let cors = Cors::permissive();
 
         App::new()
