@@ -13,7 +13,7 @@ COPY . .
 
 RUN cargo install --path .
 
-FROM gcr.io/distroless/cc-debian12
+FROM gcr.io/distroless/cc-debian12:latest
 
 COPY --from=build /usr/local/cargo/bin/trophy-be /usr/local/bin/trophy-be
 
