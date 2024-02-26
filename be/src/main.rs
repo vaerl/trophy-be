@@ -41,10 +41,14 @@ async fn main() -> Result<(), CustomError> {
     let ws_server = Data::new(Lobby::default().start());
 
     let server = HttpServer::new(move || {
-        // more here: https://docs.rs/actix-cors/0.5.4/actix_cors/
-        // TODO fix this
-        // -> this never was a problem, I was just using the wrong URL - gojo.local works
-        let cors = Cors::permissive();
+        // more here: https://docs.rs/actix-cors/latest/actix_cors/index.html
+        let cors = Cors::default()
+            .allow_any_header()
+            .supports_credentials()
+            // NOTE this may need to change once we implement apps
+            .allowed_origin(&origin)
+            .allow_any_method()
+            .max_age(3600);
 
         App::new()
             // pass database pool to application so we can access it inside handlers
