@@ -1,6 +1,5 @@
 FROM rust:latest as build
 ENV PKG_CONFIG_ALLOW_CROSS=1
-ENV SQLX_OFFLINE=true
 
 WORKDIR /usr/src/trophy-be
 
@@ -10,11 +9,11 @@ RUN apt-get update && apt-get install clang -y
 # create the secret key
 RUN head -c16 /dev/urandom > secret.key
 
-COPY ./be .
+COPY . .
 
 RUN cargo install --path .
 
-FROM gcr.io/distroless/cc-debian10
+FROM gcr.io/distroless/cc-debian12
 
 COPY --from=build /usr/local/cargo/bin/trophy-be /usr/local/bin/trophy-be
 
