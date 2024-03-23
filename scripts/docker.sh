@@ -5,7 +5,7 @@ docker build -t trophy-be .
 docker build -t trophy-be . --no-cache
 
 # run the image with the applicable environment
-docker run --name trophy-be -p 4998:4998 -d --env-file ./.env trophy-be
+docker run --name trophy-be -p 4998:4998 -d --env-file ./.env --network=base trophy-be
 
 # run bash inside the container
 docker exec -it trophy-be bash
