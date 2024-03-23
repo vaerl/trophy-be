@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use crate::{ApiResult};
+use crate::ApiResult;
 use super::{Amount, Game, GameVec, Outcome, TypeInfo};
 
 #[derive(Serialize, Deserialize, sqlx::Type, Clone)]
