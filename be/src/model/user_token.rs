@@ -14,7 +14,6 @@ pub static KEY: [u8; 16] = *include_bytes!("../../secret.key");
 // values in seconds!
 static ONE_DAY: i64 = 60 * 60 * 24;
 static TWELVE_HOURS: i64 = 60 * 60 * 24;
-static TWO_HOURS: i64 = 60 * 2 * 24;
 
 #[derive(Serialize, Deserialize)]
 pub struct UserToken {
@@ -36,8 +35,7 @@ impl UserToken {
         let now = Utc::now().timestamp();
 
         let expiration = match user.role {
-            // TODO increase timeout, getting locked out sucks - this is a (security-)risk I'm willing to take
-            super::UserRole::Admin => now + TWO_HOURS,
+            super::UserRole::Admin => now + TWELVE_HOURS,
             super::UserRole::Referee => now + TWELVE_HOURS,
             super::UserRole::Visualizer => now + ONE_DAY,
         };
