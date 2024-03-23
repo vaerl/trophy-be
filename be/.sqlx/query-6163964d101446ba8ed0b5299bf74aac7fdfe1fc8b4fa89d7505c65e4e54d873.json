@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT game_id, game_trophy_id, team_id, team_trophy_id, data, point_value FROM game_team WHERE team_id = $1 ORDER BY game_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "game_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "game_trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "team_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "team_trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "data",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "point_value",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "6163964d101446ba8ed0b5299bf74aac7fdfe1fc8b4fa89d7505c65e4e54d873"
+}

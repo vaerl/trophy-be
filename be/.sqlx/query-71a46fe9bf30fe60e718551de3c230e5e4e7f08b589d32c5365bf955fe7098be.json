@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO game_team (game_id, game_trophy_id, team_id, team_trophy_id) VALUES ($1, $2, $3, $4) RETURNING game_id, game_trophy_id, team_id, team_trophy_id, data, point_value",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "game_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "game_trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "team_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "team_trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "data",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "point_value",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "71a46fe9bf30fe60e718551de3c230e5e4e7f08b589d32c5365bf955fe7098be"
+}

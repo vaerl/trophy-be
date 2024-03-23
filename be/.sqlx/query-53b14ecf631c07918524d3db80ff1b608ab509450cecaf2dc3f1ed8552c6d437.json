@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, game_trophy_id, team_id, team_trophy_id, data, point_value",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "game_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "game_trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "team_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "team_trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "data",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "point_value",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "53b14ecf631c07918524d3db80ff1b608ab509450cecaf2dc3f1ed8552c6d437"
+}

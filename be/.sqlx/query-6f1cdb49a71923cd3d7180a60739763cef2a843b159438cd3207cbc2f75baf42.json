@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE teams SET points = $1 WHERE id = $2 RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "gender: TeamGender",
+        "type_info": {
+          "Custom": {
+            "name": "team_gender",
+            "kind": {
+              "Enum": [
+                "female",
+                "male",
+                "mixed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "points",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "6f1cdb49a71923cd3d7180a60739763cef2a843b159438cd3207cbc2f75baf42"
+}

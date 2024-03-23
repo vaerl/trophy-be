@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO teams (trophy_id, name, gender) VALUES ($1, $2, $3) RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "gender: TeamGender",
+        "type_info": {
+          "Custom": {
+            "name": "team_gender",
+            "kind": {
+              "Enum": [
+                "female",
+                "male",
+                "mixed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "points",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar",
+        {
+          "Custom": {
+            "name": "team_gender",
+            "kind": {
+              "Enum": [
+                "female",
+                "male",
+                "mixed"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "79d851b1791b9d79df776e2ecbc3dec16380bf63cce05e601251484ac8a2f21f"
+}

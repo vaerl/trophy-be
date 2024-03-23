@@ -1,0 +1,69 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO games (trophy_id, name, kind, locked) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "kind: GameKind",
+        "type_info": {
+          "Custom": {
+            "name": "game_kind",
+            "kind": {
+              "Enum": [
+                "points",
+                "time"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "locked",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar",
+        {
+          "Custom": {
+            "name": "game_kind",
+            "kind": {
+              "Enum": [
+                "points",
+                "time"
+              ]
+            }
+          }
+        },
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "4ef46ca5824a2270433d15565e63c072c58a19f6703f128b7bd7bb3078b0362e"
+}
