@@ -1,1 +1,0 @@
-cat db/start.sql | docker exec -i dokku.postgres.trophy-db psql -U postgres -d trophy_db

@@ -1,1 +1,0 @@
-docker run -p 5432:5432 --name trophy-db -t trophy-db
