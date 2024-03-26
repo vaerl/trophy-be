@@ -3,8 +3,10 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"command": "docker start trophy-db && cargo run",
-			"problemMatcher": ["$rustc"],
+			"command": "cargo run",
+			"problemMatcher": [
+				"$rustc"
+			],
 			"group": {
 				"kind": "build",
 				"isDefault": true
