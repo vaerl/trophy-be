@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH updated as (UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)\n                        SELECT game_id, game_trophy_id, games.name as game_name, team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated\n                            LEFT JOIN games ON updated.game_id=games.id\n                            LEFT JOIN teams ON updated.team_id=teams.id",
+  "query": "SELECT game_id, game_trophy_id, games.name as game_name, games.kind as \"game_kind: GameKind\", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM game_team\n                LEFT JOIN games ON game_team.game_id=games.id\n                LEFT JOIN teams ON game_team.team_id=teams.id\n            WHERE team_id = $1 ORDER BY game_id",
   "describe": {
     "columns": [
       {
@@ -20,47 +20,61 @@
       },
       {
         "ordinal": 3,
+        "name": "game_kind: GameKind",
+        "type_info": {
+          "Custom": {
+            "name": "game_kind",
+            "kind": {
+              "Enum": [
+                "points",
+                "time"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
         "name": "team_id",
         "type_info": "Int4"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "team_trophy_id",
         "type_info": "Int4"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "team_name",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "data",
         "type_info": "Text"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "point_value",
         "type_info": "Int4"
       }
     ],
     "parameters": {
       "Left": [
-        "Text",
-        "Int4",
         "Int4"
       ]
     },
     "nullable": [
       false,
       false,
-      true,
       false,
       false,
-      true,
+      false,
+      false,
+      false,
       true,
       true
     ]
   },
-  "hash": "6ffe7d2a1030bb7b5bb7b5bd3e11c86d41bfc9b1bccaf1d9f94458ae06a26ca5"
+  "hash": "244d88177c9e7bc7cbf930e3c72d36a87f1e9a5e4b0aab13cc16ed7d51148ccb"
 }

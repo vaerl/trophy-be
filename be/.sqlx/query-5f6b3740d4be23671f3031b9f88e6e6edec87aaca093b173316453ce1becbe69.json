@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH updated as (UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)\n                SELECT game_id, game_trophy_id, games.name as game_name, games.kind as \"game_kind: GameKind\", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated\n                            LEFT JOIN games ON updated.game_id=games.id\n                            LEFT JOIN teams ON updated.team_id=teams.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "game_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "game_trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "game_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "game_kind: GameKind",
+        "type_info": {
+          "Custom": {
+            "name": "game_kind",
+            "kind": {
+              "Enum": [
+                "points",
+                "time"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "team_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "team_trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "team_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "data",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "point_value",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "5f6b3740d4be23671f3031b9f88e6e6edec87aaca093b173316453ce1becbe69"
+}
