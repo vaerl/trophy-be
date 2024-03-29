@@ -11,18 +11,20 @@ use super::{Game, ParsedOutcome, TeamGender, TypeInfo, User};
 
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
+/// NOTE that sqlx wants results of joins to be Optional<T> - which is the case for `game_name` and `team_name` here.
 #[derive(Deserialize, Serialize, FromRow)]
 #[sqlx(type_name = "game_team")]
 #[sqlx(rename_all = "lowercase")]
 pub struct Outcome {
     pub game_id: i32,
     pub game_trophy_id: i32,
+    pub game_name: Option<String>,
     pub team_id: i32,
     pub team_trophy_id: i32,
+    pub team_name: Option<String>,
     pub data: Option<String>,
     pub point_value: Option<i32>
 }
-
 #[derive(Serialize)]
 pub struct OutcomeVec(pub Vec<Outcome>);
 
@@ -30,7 +32,10 @@ impl Outcome {
     pub async fn find_all(pool: &PgPool) -> ApiResult<OutcomeVec> {
         let outcomes = sqlx::query_as!(
             Outcome,
-            r#"SELECT game_id, game_trophy_id, team_id, team_trophy_id, data, point_value FROM game_team ORDER BY game_id"#
+            r#"SELECT game_id, game_trophy_id, games.name as game_name, team_id, team_trophy_id, teams.name as team_name, data, point_value FROM game_team
+                LEFT JOIN games ON game_team.game_id=games.id
+                LEFT JOIN teams ON game_team.team_id=teams.id
+            ORDER BY game_id"#
         )
         .fetch_all(pool)
         .await?;
@@ -41,7 +46,10 @@ impl Outcome {
     pub async fn find_all_for_game(game_id: i32, pool: &PgPool) -> ApiResult<OutcomeVec> {
         let outcomes = sqlx::query_as!(
             Outcome,
-            "SELECT game_id, game_trophy_id, team_id, team_trophy_id, data, point_value FROM game_team WHERE game_id = $1 ORDER BY game_id",
+            r#"SELECT game_id, game_trophy_id, games.name as game_name, team_id, team_trophy_id, teams.name as team_name, data, point_value FROM game_team
+                LEFT JOIN games ON game_team.game_id=games.id
+                LEFT JOIN teams ON game_team.team_id=teams.id
+            WHERE game_id = $1 ORDER BY game_id"#,
             game_id
         )
         .fetch_all(pool)
@@ -53,7 +61,10 @@ impl Outcome {
     pub async fn find_all_for_team(team_id: i32, pool: &PgPool) -> ApiResult<OutcomeVec> {
         let outcomes = sqlx::query_as!(
             Outcome,
-            "SELECT game_id, game_trophy_id, team_id, team_trophy_id, data, point_value FROM game_team WHERE team_id = $1 ORDER BY game_id",
+            r#"SELECT game_id, game_trophy_id, games.name as game_name, team_id, team_trophy_id, teams.name as team_name, data, point_value FROM game_team
+                LEFT JOIN games ON game_team.game_id=games.id
+                LEFT JOIN teams ON game_team.team_id=teams.id
+            WHERE team_id = $1 ORDER BY game_id"#,
             team_id
         )
         .fetch_all(pool)
@@ -69,7 +80,10 @@ impl Outcome {
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
             Outcome, 
-            "INSERT INTO game_team (game_id, game_trophy_id, team_id, team_trophy_id) VALUES ($1, $2, $3, $4) RETURNING game_id, game_trophy_id, team_id, team_trophy_id, data, point_value", 
+            r#"WITH inserted as (INSERT INTO game_team (game_id, game_trophy_id, team_id, team_trophy_id) VALUES ($1, $2, $3, $4) RETURNING *)
+            SELECT game_id, game_trophy_id, games.name as game_name, team_id, team_trophy_id, teams.name as team_name, data, point_value FROM inserted
+                LEFT JOIN games ON inserted.game_id=games.id
+                LEFT JOIN teams ON inserted.team_id=teams.id"#, 
             game_id, game_trophy_id, team_id, team_trophy_id
         )
         .fetch_one(&mut *tx)
@@ -89,7 +103,10 @@ impl Outcome {
                 let mut tx = pool.begin().await?;
                 let outcome = sqlx::query_as!(
                         Outcome, 
-                        "UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, game_trophy_id, team_id, team_trophy_id, data, point_value",
+                        r#"WITH updated as (UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)
+                        SELECT game_id, game_trophy_id, games.name as game_name, team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated
+                            LEFT JOIN games ON updated.game_id=games.id
+                            LEFT JOIN teams ON updated.team_id=teams.id"#,
                         data, self.game_id, self.team_id
                     )
                     .fetch_one(&mut *tx)
@@ -120,7 +137,10 @@ impl Outcome {
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
                 Outcome, 
-                "UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, game_trophy_id, team_id, team_trophy_id, data, point_value",
+                r#"WITH updated as (UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)
+                SELECT game_id, game_trophy_id, games.name as game_name, team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated
+                            LEFT JOIN games ON updated.game_id=games.id
+                            LEFT JOIN teams ON updated.team_id=teams.id"#,
                 parsed_outcome.point_value, parsed_outcome.game_id, parsed_outcome.team.id
             )
             .fetch_one(&mut *tx)
