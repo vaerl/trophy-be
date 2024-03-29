@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT game_id, game_trophy_id, team_id, team_trophy_id, data, point_value FROM game_team WHERE team_id = $1 ORDER BY game_id",
+  "query": "SELECT game_id, game_trophy_id, games.name as game_name, team_id, team_trophy_id, teams.name as team_name, data, point_value FROM game_team\n                LEFT JOIN games ON game_team.game_id=games.id\n                LEFT JOIN teams ON game_team.team_id=teams.id\n            WHERE game_id = $1 ORDER BY game_id",
   "describe": {
     "columns": [
       {
@@ -15,21 +15,31 @@
       },
       {
         "ordinal": 2,
+        "name": "game_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
         "name": "team_id",
         "type_info": "Int4"
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "team_trophy_id",
         "type_info": "Int4"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
+        "name": "team_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
         "name": "data",
         "type_info": "Text"
       },
       {
-        "ordinal": 5,
+        "ordinal": 7,
         "name": "point_value",
         "type_info": "Int4"
       }
@@ -44,9 +54,11 @@
       false,
       false,
       false,
+      false,
+      false,
       true,
       true
     ]
   },
-  "hash": "6163964d101446ba8ed0b5299bf74aac7fdfe1fc8b4fa89d7505c65e4e54d873"
+  "hash": "0b7fe502e679bb0c7f61da9914d3b9e56b1385c962f8e6e69605518a5ae77821"
 }

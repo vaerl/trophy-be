@@ -1,0 +1,67 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH inserted as (INSERT INTO game_team (game_id, game_trophy_id, team_id, team_trophy_id) VALUES ($1, $2, $3, $4) RETURNING *)\n            SELECT game_id, game_trophy_id, games.name as game_name, team_id, team_trophy_id, teams.name as team_name, data, point_value FROM inserted\n                LEFT JOIN games ON inserted.game_id=games.id\n                LEFT JOIN teams ON inserted.team_id=teams.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "game_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "game_trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "game_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "team_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "team_trophy_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "team_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "data",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "point_value",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "b9f0586ed8ecffd191a2db35ac86c8349fbf1c9e187777541ec796bbadb8fccd"
+}

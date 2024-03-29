@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING game_id, game_trophy_id, team_id, team_trophy_id, data, point_value",
+  "query": "WITH updated as (UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)\n                        SELECT game_id, game_trophy_id, games.name as game_name, team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated\n                            LEFT JOIN games ON updated.game_id=games.id\n                            LEFT JOIN teams ON updated.team_id=teams.id",
   "describe": {
     "columns": [
       {
@@ -15,21 +15,31 @@
       },
       {
         "ordinal": 2,
+        "name": "game_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
         "name": "team_id",
         "type_info": "Int4"
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "team_trophy_id",
         "type_info": "Int4"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
+        "name": "team_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
         "name": "data",
         "type_info": "Text"
       },
       {
-        "ordinal": 5,
+        "ordinal": 7,
         "name": "point_value",
         "type_info": "Int4"
       }
@@ -44,11 +54,13 @@
     "nullable": [
       false,
       false,
+      true,
       false,
       false,
+      true,
       true,
       true
     ]
   },
-  "hash": "c636cd911212e02f23c45192fbaa8c6e238840ae49f28409342616258a0a2b4d"
+  "hash": "6ffe7d2a1030bb7b5bb7b5bd3e11c86d41bfc9b1bccaf1d9f94458ae06a26ca5"
 }
