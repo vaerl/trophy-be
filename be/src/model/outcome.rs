@@ -5,7 +5,7 @@ use futures::Future;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
-use crate::{ApiResult, model::{CreateGame, CustomError, Log}, ws::{lobby::Lobby, socket_refresh::SendRefresh}};
+use crate::{ApiResult, model::{CustomError, Log}, ws::{lobby::Lobby, socket_refresh::SendRefresh}};
 
 use super::{Game, GameKind, ParsedOutcome, TeamGender, TypeInfo, User};
 
@@ -118,12 +118,7 @@ impl Outcome {
 
                 // lock the game if there are no unset outcomes
                 if outcomes.0.into_iter().filter(|o| o.data.is_none()).collect::<Vec<Outcome>>().len() == 0 {
-                    Game::update(game.id, CreateGame {
-                        trophy_id: game.trophy_id,
-                        name: game.name,
-                        kind: game.kind,
-                        locked: true,
-                    }, &pool).await?
+                    Game::lock(game.id, &pool).await?
                     .log_update(user.id, pool).await?
                     .send_refresh(lobby)?;
                 }
