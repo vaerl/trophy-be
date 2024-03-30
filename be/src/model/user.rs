@@ -35,7 +35,7 @@ pub struct User {
     pub name: String,
     pub password: String,
     pub role: UserRole,
-    pub session: String,
+    pub session: Option<String>,
     pub game_id: Option<i32>,
     pub game_name: Option<String>
 }

@@ -93,7 +93,9 @@ impl UserToken {
                 if token.is_valid() {
                     let user = User::find(token.user_id, pool).await?;
                     // 2: check if user is logged with the supplied session; if a different session is given, deny access
-                    if !user.session.is_empty() && user.session.eq(&token.login_session) {
+                    if !user.session.is_some()
+                        && user.session.clone().unwrap().eq(&token.login_session)
+                    {
                         // 3: check if user is allowed to access the resource
                         if roles.contains(&user.role) {
                             Ok(user)
