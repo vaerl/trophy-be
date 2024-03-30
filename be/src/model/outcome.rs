@@ -81,7 +81,7 @@ impl Outcome {
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
             Outcome, 
-            r#"WITH inserted as (INSERT INTO game_team (game_id, game_trophy_id, team_id, team_trophy_id) VALUES ($1, $2, $3, $4) RETURNING *)
+            r#"WITH inserted AS (INSERT INTO game_team (game_id, game_trophy_id, team_id, team_trophy_id) VALUES ($1, $2, $3, $4) RETURNING *)
             SELECT game_id, game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM inserted
                 LEFT JOIN games ON inserted.game_id=games.id
                 LEFT JOIN teams ON inserted.team_id=teams.id"#, 
@@ -104,7 +104,7 @@ impl Outcome {
                 let mut tx = pool.begin().await?;
                 let outcome = sqlx::query_as!(
                         Outcome, 
-                        r#"WITH updated as (UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)
+                        r#"WITH updated AS (UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)
                         SELECT game_id, game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated
                             LEFT JOIN games ON updated.game_id=games.id
                             LEFT JOIN teams ON updated.team_id=teams.id"#,
@@ -133,7 +133,7 @@ impl Outcome {
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
                 Outcome, 
-                r#"WITH updated as (UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)
+                r#"WITH updated AS (UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)
                 SELECT game_id, game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated
                             LEFT JOIN games ON updated.game_id=games.id
                             LEFT JOIN teams ON updated.team_id=teams.id"#,
