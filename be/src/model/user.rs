@@ -9,7 +9,7 @@ use crate::{ApiResult, model::{Game, LogUserAction}};
 
 use super::{CreateToken, CustomError, TypeInfo, UserToken};
 
-#[derive(Serialize, Deserialize, sqlx::Type, PartialEq)]
+#[derive(Serialize, Deserialize, sqlx::Type, PartialEq, Debug)]
 #[sqlx(type_name = "user_role")]
 #[sqlx(rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
@@ -29,7 +29,7 @@ impl fmt::Display for UserRole {
     }
 }
 
-#[derive(Serialize, FromRow)]
+#[derive(Serialize, FromRow, Debug)]
 pub struct User {
     pub id: i32,
     pub name: String,
@@ -64,11 +64,15 @@ pub struct CreateLogin {
     pub password: String
 }
 
+
+/// NOTE `LEFT JOIN`s are correct here - we don't know if users.game_id is null or not.
+/// By using `field as "field?"` we make sqlx clear that it's potentially nullable - this solved an issue where sqlx would complain even though
+/// the receiving field was accepting an `Option` - more [here](https://github.com/launchbadge/sqlx/issues/1852).
 impl User {
     pub async fn find_all(pool: &PgPool) -> ApiResult<UserVec> {
         let users = sqlx::query_as!(
             User,
-            r#"SELECT users.id, users.name, password, role as "role: UserRole", game_id, games.name as game_name, session FROM users
+            r#"SELECT users.id, users.name, password, role as "role: UserRole", game_id, games.name as "game_name?", session FROM users
             LEFT JOIN games ON games.id=users.game_id
             ORDER BY id"#
         )
@@ -81,24 +85,27 @@ impl User {
     pub async fn find(id: i32, pool: &PgPool) -> ApiResult<User> {
         let user = sqlx::query_as!(
             User,
-            r#"SELECT users.id, users.name, password, role as "role: UserRole", game_id, games.name as game_name, session FROM users
+            r#"SELECT users.id, users.name, password, role as "role: UserRole", game_id, games.name as "game_name?", session FROM users
             LEFT JOIN games ON games.id=users.game_id
             WHERE users.id = $1"#, id
         )
-        .fetch_one(pool)
+        .fetch_optional(pool)
         .await?;
 
-        Ok(user)
+        user.ok_or(CustomError::NotFoundError { message: format!("User {} could not be found.", id) })
     }
 
     pub async fn find_by_name(name: &String, pool: &PgPool) -> ApiResult<User> {
-        let users = User::find_all(pool).await?.0;
-        for user in users {
-            if user.name.eq(name) {
-                return Ok(user);
-            }
-        }
-        Err(CustomError::NotFoundError {message: format!("User {} does not exist!", name)})
+        info!("{}", name);
+        let user = sqlx::query_as!(
+            User,
+            r#"SELECT users.id, users.name, users.password, users.role as "role: UserRole", game_id, games.name as "game_name?", users.session FROM users
+            LEFT JOIN games ON users.game_id=games.id
+            WHERE users.name = $1"#, name
+        ).fetch_optional(pool)
+        .await?;
+
+        user.ok_or(CustomError::NotFoundError { message: format!("User {} could not be found.", name) })
     }
 
     pub async fn find_game_for_ref(user_id: i32, pool: &PgPool) -> ApiResult<Game> {
@@ -115,6 +122,7 @@ impl User {
             .await
             .is_err()
         {
+            info!("Creating new user.");
             let salt = SaltString::generate(&mut OsRng);
             let argon2 = Argon2::default();
             let password_hash = argon2.hash_password(&create_user.password.as_bytes(), &salt).unwrap().to_string();
@@ -122,7 +130,7 @@ impl User {
             let mut tx = pool.begin().await?;
             let user = sqlx::query_as!( User, 
                 r#"WITH inserted AS (INSERT INTO users (name, password, role, game_id) VALUES ($1, $2, $3, $4) RETURNING id, name, password, role as "role: UserRole", game_id, session)
-                SELECT inserted.id, inserted.name, password, "role: UserRole", game_id, games.name as game_name, session FROM inserted
+                SELECT inserted.id, inserted.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM inserted
                     LEFT JOIN games ON games.id=inserted.game_id"#,
                 create_user.name, password_hash, create_user.role as UserRole, create_user.game_id
             )
@@ -146,8 +154,8 @@ impl User {
         let user = sqlx::query_as!(
             User, 
             r#"WITH updated AS (UPDATE users SET name = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, name, password, role as "role: UserRole", game_id, session)
-            SELECT updated.id, updated.name, password, "role: UserRole", game_id, games.name as game_name, session FROM updated
-                    LEFT JOIN games ON games.id=updated.game_id"#,
+            SELECT updated.id, updated.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM updated
+                    INNER JOIN games ON games.id=updated.game_id"#,
             altered_user.name, password_hash, altered_user.role as UserRole, altered_user.game_id, id
         )
         .fetch_one(&mut *tx)
@@ -175,8 +183,8 @@ impl User {
         let user = sqlx::query_as!(
             User,
             r#"WITH deleted AS (DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as "role: UserRole", game_id, session)
-            SELECT deleted.id, deleted.name, password, "role: UserRole", game_id, games.name as game_name, session FROM deleted
-                    LEFT JOIN games ON games.id=deleted.game_id"#,
+            SELECT deleted.id, deleted.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM deleted
+                    INNER JOIN games ON games.id=deleted.game_id"#,
             id
         )
         .fetch_one(&mut *tx)
