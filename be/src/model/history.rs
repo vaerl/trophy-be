@@ -22,6 +22,7 @@ pub enum LogLevel {
 pub struct History {
     pub id: i32,
     pub user_id: i32,
+    pub user_name: Option<String>,
     pub timestamp: DateTime<Utc>,
     pub log_level: LogLevel,
     pub action: String,
@@ -35,7 +36,9 @@ impl History {
         let mut tx = pool.begin().await?;
         let transaction_history = sqlx::query_as!(
             History,
-            r#"SELECT id, user_id, timestamp, log_level as "log_level: LogLevel", action FROM transaction_history ORDER BY id"#,
+            r#"SELECT transaction_history.id, user_id, users.name as user_name, timestamp, log_level as "log_level: LogLevel", action FROM transaction_history
+            LEFT JOIN users ON users.id=transaction_history.user_id
+            ORDER BY id"#,
         )
         .fetch_all(&mut *tx)
         .await?;
