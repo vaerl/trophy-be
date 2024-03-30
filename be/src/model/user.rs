@@ -36,7 +36,8 @@ pub struct User {
     pub password: String,
     pub role: UserRole,
     pub session: String,
-    pub game_id: Option<i32>
+    pub game_id: Option<i32>,
+    pub game_name: Option<String>
 }
 
 #[derive(Serialize)]
@@ -67,7 +68,9 @@ impl User {
     pub async fn find_all(pool: &PgPool) -> ApiResult<UserVec> {
         let users = sqlx::query_as!(
             User,
-            r#"SELECT id, name, password, role as "role: UserRole", game_id, session FROM users ORDER BY id"#
+            r#"SELECT users.id, users.name, password, role as "role: UserRole", game_id, games.name as game_name, session FROM users
+            LEFT JOIN games ON games.id=users.game_id
+            ORDER BY id"#
         )
         .fetch_all(pool)
         .await?;
@@ -78,7 +81,9 @@ impl User {
     pub async fn find(id: i32, pool: &PgPool) -> ApiResult<User> {
         let user = sqlx::query_as!(
             User,
-            r#"SELECT id, name, password, role as "role: UserRole", game_id, session FROM users WHERE id = $1"#, id
+            r#"SELECT users.id, users.name, password, role as "role: UserRole", game_id, games.name as game_name, session FROM users
+            LEFT JOIN games ON games.id=users.game_id
+            WHERE users.id = $1"#, id
         )
         .fetch_one(pool)
         .await?;
@@ -116,8 +121,10 @@ impl User {
 
             let mut tx = pool.begin().await?;
             let user = sqlx::query_as!( User, 
-                r#"INSERT INTO users (name, password, role, game_id) VALUES ($1, $2, $3, $4) RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
-                create_user.name, password_hash,  create_user.role as UserRole, create_user.game_id
+                r#"WITH inserted AS (INSERT INTO users (name, password, role, game_id) VALUES ($1, $2, $3, $4) RETURNING id, name, password, role as "role: UserRole", game_id, session)
+                SELECT inserted.id, inserted.name, password, "role: UserRole", game_id, games.name as game_name, session FROM inserted
+                    LEFT JOIN games ON games.id=inserted.game_id"#,
+                create_user.name, password_hash, create_user.role as UserRole, create_user.game_id
             )
             .fetch_one(&mut *tx)
             .await?;
@@ -138,7 +145,9 @@ impl User {
         let mut tx = pool.begin().await?;
         let user = sqlx::query_as!(
             User, 
-            r#"UPDATE users SET name = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
+            r#"WITH updated AS (UPDATE users SET name = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, name, password, role as "role: UserRole", game_id, session)
+            SELECT updated.id, updated.name, password, "role: UserRole", game_id, games.name as game_name, session FROM updated
+                    LEFT JOIN games ON games.id=updated.game_id"#,
             altered_user.name, password_hash, altered_user.role as UserRole, altered_user.game_id, id
         )
         .fetch_one(&mut *tx)
@@ -165,7 +174,9 @@ impl User {
         let mut tx = pool.begin().await?;
         let user = sqlx::query_as!(
             User,
-            r#"DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
+            r#"WITH deleted AS (DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as "role: UserRole", game_id, session)
+            SELECT deleted.id, deleted.name, password, "role: UserRole", game_id, games.name as game_name, session FROM deleted
+                    LEFT JOIN games ON games.id=deleted.game_id"#,
             id
         )
         .fetch_one(&mut *tx)
