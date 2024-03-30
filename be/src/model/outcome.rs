@@ -18,11 +18,11 @@ use super::{Game, GameKind, ParsedOutcome, TeamGender, TypeInfo, User};
 pub struct Outcome {
     pub game_id: i32,
     pub game_trophy_id: i32,
-    pub game_name: Option<String>,
-    pub game_kind: Option<GameKind>,
+    pub game_name: String,
+    pub game_kind: GameKind,
     pub team_id: i32,
     pub team_trophy_id: i32,
-    pub team_name: Option<String>,
+    pub team_name: String,
     pub data: Option<String>,
     pub point_value: Option<i32>
 }
@@ -34,8 +34,8 @@ impl Outcome {
         let outcomes = sqlx::query_as!(
             Outcome,
             r#"SELECT game_id, game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM game_team
-                LEFT JOIN games ON game_team.game_id=games.id
-                LEFT JOIN teams ON game_team.team_id=teams.id
+                INNER JOIN games ON game_team.game_id=games.id
+                INNER JOIN teams ON game_team.team_id=teams.id
             ORDER BY game_id"#
         )
         .fetch_all(pool)
@@ -48,8 +48,8 @@ impl Outcome {
         let outcomes = sqlx::query_as!(
             Outcome,
             r#"SELECT game_id, game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM game_team
-                LEFT JOIN games ON game_team.game_id=games.id
-                LEFT JOIN teams ON game_team.team_id=teams.id
+                INNER JOIN games ON game_team.game_id=games.id
+                INNER JOIN teams ON game_team.team_id=teams.id
             WHERE game_id = $1 ORDER BY game_id"#,
             game_id
         )
@@ -63,8 +63,8 @@ impl Outcome {
         let outcomes = sqlx::query_as!(
             Outcome,
             r#"SELECT game_id, game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM game_team
-                LEFT JOIN games ON game_team.game_id=games.id
-                LEFT JOIN teams ON game_team.team_id=teams.id
+                INNER JOIN games ON game_team.game_id=games.id
+                INNER JOIN teams ON game_team.team_id=teams.id
             WHERE team_id = $1 ORDER BY game_id"#,
             team_id
         )
@@ -83,8 +83,8 @@ impl Outcome {
             Outcome, 
             r#"WITH inserted AS (INSERT INTO game_team (game_id, game_trophy_id, team_id, team_trophy_id) VALUES ($1, $2, $3, $4) RETURNING *)
             SELECT game_id, game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM inserted
-                LEFT JOIN games ON inserted.game_id=games.id
-                LEFT JOIN teams ON inserted.team_id=teams.id"#, 
+                INNER JOIN games ON inserted.game_id=games.id
+                INNER JOIN teams ON inserted.team_id=teams.id"#, 
             game_id, game_trophy_id, team_id, team_trophy_id
         )
         .fetch_one(&mut *tx)
@@ -106,8 +106,8 @@ impl Outcome {
                         Outcome, 
                         r#"WITH updated AS (UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)
                         SELECT game_id, game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated
-                            LEFT JOIN games ON updated.game_id=games.id
-                            LEFT JOIN teams ON updated.team_id=teams.id"#,
+                            INNER JOIN games ON updated.game_id=games.id
+                            INNER JOIN teams ON updated.team_id=teams.id"#,
                         data, self.game_id, self.team_id
                     )
                     .fetch_one(&mut *tx)
@@ -135,8 +135,8 @@ impl Outcome {
                 Outcome, 
                 r#"WITH updated AS (UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)
                 SELECT game_id, game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated
-                            LEFT JOIN games ON updated.game_id=games.id
-                            LEFT JOIN teams ON updated.team_id=teams.id"#,
+                            INNER JOIN games ON updated.game_id=games.id
+                            INNER JOIN teams ON updated.team_id=teams.id"#,
                 parsed_outcome.point_value, parsed_outcome.game_id, parsed_outcome.team.id
             )
             .fetch_one(&mut *tx)
