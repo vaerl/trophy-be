@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as \"role: UserRole\", game_id, session",
+  "query": "WITH deleted AS (DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as \"role: UserRole\", game_id, session)\n            SELECT deleted.id, deleted.name, password, \"role: UserRole\", game_id, games.name as game_name, session FROM deleted\n                    LEFT JOIN games ON games.id=deleted.game_id",
   "describe": {
     "columns": [
       {
@@ -41,6 +41,11 @@
       },
       {
         "ordinal": 5,
+        "name": "game_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
         "name": "session",
         "type_info": "Varchar"
       }
@@ -56,8 +61,9 @@
       false,
       false,
       true,
+      true,
       false
     ]
   },
-  "hash": "c3de35361feaf28f86a23991bb53f78ae45645ca854143177757d543bca37964"
+  "hash": "51214b5cc4f88d2a269ee788fcbd93c123b2d62990088edac045994d77c1ba0c"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, user_id, timestamp, log_level as \"log_level: LogLevel\", action FROM transaction_history ORDER BY id",
+  "query": "SELECT transaction_history.id, user_id, users.name as user_name, timestamp, log_level as \"log_level: LogLevel\", action FROM transaction_history\n            LEFT JOIN users ON users.id=transaction_history.user_id\n            ORDER BY id",
   "describe": {
     "columns": [
       {
@@ -15,11 +15,16 @@
       },
       {
         "ordinal": 2,
+        "name": "user_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
         "name": "timestamp",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "log_level: LogLevel",
         "type_info": {
           "Custom": {
@@ -35,7 +40,7 @@
         }
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "action",
         "type_info": "Varchar"
       }
@@ -48,8 +53,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "e2c4cc1d14d662e61db5094c8a3bff3ace05592304034498019fa9f613534aec"
+  "hash": "0c0abd271459fe428a6bccdd27caa2406955dc503b485587a3d9cc866ee8c712"
 }
