@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 
 use crate::ApiResult;
-use super::{Amount, Game, GameVec, Outcome, TypeInfo};
+use super::{Amount, CustomError, Game, GameVec, Outcome, TypeInfo};
 
 #[derive(Serialize, Deserialize, sqlx::Type, Clone)]
 #[sqlx(type_name = "team_gender")]
@@ -72,15 +72,15 @@ impl Team {
     }
 
     pub async fn find(id: i32, pool: &PgPool) -> ApiResult<Team> {
-        let teams = sqlx::query_as!(
+        let team = sqlx::query_as!(
             Team,
             r#"SELECT id, trophy_id, name, gender as "gender: TeamGender", points FROM teams WHERE id = $1"#, 
             id
         )
-        .fetch_one(pool)
+        .fetch_optional(pool)
         .await?;
 
-        Ok(teams)
+        team.ok_or(CustomError::NotFoundError { message: format!("Team {} could not be found.", id) })
     }
 
     pub async fn create(create_team: CreateTeam, pool: &PgPool) -> ApiResult<Team> {

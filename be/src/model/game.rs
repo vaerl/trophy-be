@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 use crate::{ApiResult, TypeInfo};
-use super::{Amount, Outcome, Team, TeamVec};
+use super::{Amount, CustomError, Outcome, Team, TeamVec};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "game_kind")]
@@ -61,10 +61,10 @@ impl Game {
             Game,
             r#"SELECT id, trophy_id, name, kind as "kind: GameKind", locked FROM games WHERE id = $1"#, id
         )
-        .fetch_one(pool)
+        .fetch_optional(pool)
         .await?;
 
-        Ok(game)
+        game.ok_or(CustomError::NotFoundError { message: format!("Game {} could not be found.", id) })
     }
 
     pub async fn create(create_game: CreateGame, pool: &PgPool) -> ApiResult<Game> {
