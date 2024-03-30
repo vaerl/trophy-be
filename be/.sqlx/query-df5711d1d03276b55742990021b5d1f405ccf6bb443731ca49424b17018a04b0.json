@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE games SET trophy_id = $1, name = $2, kind = $3, locked = $4 WHERE id = $5 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked",
+  "query": "UPDATE games SET trophy_id = $1, name = $2, kind = $3 WHERE id = $4 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked",
   "describe": {
     "columns": [
       {
@@ -54,7 +54,6 @@
             }
           }
         },
-        "Bool",
         "Int4"
       ]
     },
@@ -66,5 +65,5 @@
       false
     ]
   },
-  "hash": "be150bd3fa9060710add260c65d9b4d2b9432fa95c87153f7d2636737fa06e51"
+  "hash": "df5711d1d03276b55742990021b5d1f405ccf6bb443731ca49424b17018a04b0"
 }

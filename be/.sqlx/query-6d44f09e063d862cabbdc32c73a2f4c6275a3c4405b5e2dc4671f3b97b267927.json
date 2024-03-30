@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO games (trophy_id, name, kind, locked) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked",
+  "query": "INSERT INTO games (trophy_id, name, kind) VALUES ($1, $2, $3) RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked",
   "describe": {
     "columns": [
       {
@@ -53,8 +53,7 @@
               ]
             }
           }
-        },
-        "Bool"
+        }
       ]
     },
     "nullable": [
@@ -65,5 +64,5 @@
       false
     ]
   },
-  "hash": "4ef46ca5824a2270433d15565e63c072c58a19f6703f128b7bd7bb3078b0362e"
+  "hash": "6d44f09e063d862cabbdc32c73a2f4c6275a3c4405b5e2dc4671f3b97b267927"
 }
