@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH inserted AS (INSERT INTO game_team (game_id, game_trophy_id, team_id, team_trophy_id) VALUES ($1, $2, $3, $4) RETURNING *)\n            SELECT game_id, game_trophy_id, games.name as game_name, games.kind as \"game_kind: GameKind\", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM inserted\n                LEFT JOIN games ON inserted.game_id=games.id\n                LEFT JOIN teams ON inserted.team_id=teams.id",
+  "query": "SELECT game_id, game_trophy_id, games.name as game_name, games.kind as \"game_kind: GameKind\", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM game_team\n                INNER JOIN games ON game_team.game_id=games.id\n                INNER JOIN teams ON game_team.team_id=teams.id\n            WHERE team_id = $1 ORDER BY game_id",
   "describe": {
     "columns": [
       {
@@ -61,23 +61,20 @@
     ],
     "parameters": {
       "Left": [
-        "Int4",
-        "Int4",
-        "Int4",
         "Int4"
       ]
     },
     "nullable": [
       false,
       false,
-      true,
-      true,
       false,
       false,
-      true,
+      false,
+      false,
+      false,
       true,
       true
     ]
   },
-  "hash": "709dea2c237163752c57b372883a74935466d317acda9731fac14c93fabbb962"
+  "hash": "608ccf7cd04a9d496a8fa77726cd18691d68834e6a053c15bffc73645b01992d"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT game_id, game_trophy_id, games.name as game_name, games.kind as \"game_kind: GameKind\", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM game_team\n                LEFT JOIN games ON game_team.game_id=games.id\n                LEFT JOIN teams ON game_team.team_id=teams.id\n            ORDER BY game_id",
+  "query": "SELECT game_id, game_trophy_id, games.name as game_name, games.kind as \"game_kind: GameKind\", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM game_team\n                INNER JOIN games ON game_team.game_id=games.id\n                INNER JOIN teams ON game_team.team_id=teams.id\n            WHERE game_id = $1 ORDER BY game_id",
   "describe": {
     "columns": [
       {
@@ -60,7 +60,9 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int4"
+      ]
     },
     "nullable": [
       false,
@@ -74,5 +76,5 @@
       true
     ]
   },
-  "hash": "5872453640eb0eb9315463b06bed78d00092012b5505c094450f6b2440768239"
+  "hash": "6d027e11b63dcefee83c451cb52b1c656269133c9c20b130aa7dfde51d227e38"
 }

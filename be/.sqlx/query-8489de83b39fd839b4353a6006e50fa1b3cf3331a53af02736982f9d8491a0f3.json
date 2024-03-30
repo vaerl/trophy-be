@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT users.id, users.name, password, role as \"role: UserRole\", game_id, games.name as game_name, session FROM users\n            LEFT JOIN games ON games.id=users.game_id\n            ORDER BY id",
+  "query": "SELECT users.id, users.name, password, role as \"role: UserRole\", game_id, games.name as \"game_name?\", session FROM users\n            LEFT JOIN games ON games.id=users.game_id\n            WHERE users.id = $1",
   "describe": {
     "columns": [
       {
@@ -41,7 +41,7 @@
       },
       {
         "ordinal": 5,
-        "name": "game_name",
+        "name": "game_name?",
         "type_info": "Varchar"
       },
       {
@@ -51,7 +51,9 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int4"
+      ]
     },
     "nullable": [
       false,
@@ -60,8 +62,8 @@
       false,
       true,
       false,
-      false
+      true
     ]
   },
-  "hash": "124be758e34790f1a41a10d504bed53d08dc65de32af6a0cb92b092de2774902"
+  "hash": "8489de83b39fd839b4353a6006e50fa1b3cf3331a53af02736982f9d8491a0f3"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH updated AS (UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)\n                SELECT game_id, game_trophy_id, games.name as game_name, games.kind as \"game_kind: GameKind\", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated\n                            LEFT JOIN games ON updated.game_id=games.id\n                            LEFT JOIN teams ON updated.team_id=teams.id",
+  "query": "WITH updated AS (UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)\n                        SELECT game_id, game_trophy_id, games.name as game_name, games.kind as \"game_kind: GameKind\", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated\n                            INNER JOIN games ON updated.game_id=games.id\n                            INNER JOIN teams ON updated.team_id=teams.id",
   "describe": {
     "columns": [
       {
@@ -61,7 +61,7 @@
     ],
     "parameters": {
       "Left": [
-        "Int4",
+        "Text",
         "Int4",
         "Int4"
       ]
@@ -69,14 +69,14 @@
     "nullable": [
       false,
       false,
-      true,
-      true,
       false,
       false,
-      true,
+      false,
+      false,
+      false,
       true,
       true
     ]
   },
-  "hash": "416237fd57162bb67fcbed186ea86ca3cd86afef5a20eaabca62d8f8fd7376a9"
+  "hash": "762f59563c9bda8f908636403ea6fa189e633e01bacc6e4d2fb66f475d85340c"
 }

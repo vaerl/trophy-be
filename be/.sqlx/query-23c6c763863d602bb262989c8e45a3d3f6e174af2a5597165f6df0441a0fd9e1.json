@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH updated AS (UPDATE users SET name = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, name, password, role as \"role: UserRole\", game_id, session)\n            SELECT updated.id, updated.name, password, \"role: UserRole\", game_id, games.name as game_name, session FROM updated\n                    LEFT JOIN games ON games.id=updated.game_id",
+  "query": "SELECT users.id, users.name, users.password, users.role as \"role: UserRole\", game_id, games.name as \"game_name?\", users.session FROM users\n            LEFT JOIN games ON users.game_id=games.id\n            WHERE users.name = $1",
   "describe": {
     "columns": [
       {
@@ -41,7 +41,7 @@
       },
       {
         "ordinal": 5,
-        "name": "game_name",
+        "name": "game_name?",
         "type_info": "Varchar"
       },
       {
@@ -52,22 +52,7 @@
     ],
     "parameters": {
       "Left": [
-        "Varchar",
-        "Varchar",
-        {
-          "Custom": {
-            "name": "user_role",
-            "kind": {
-              "Enum": [
-                "admin",
-                "referee",
-                "visualizer"
-              ]
-            }
-          }
-        },
-        "Int4",
-        "Int4"
+        "Text"
       ]
     },
     "nullable": [
@@ -76,9 +61,9 @@
       false,
       false,
       true,
-      true,
-      false
+      false,
+      true
     ]
   },
-  "hash": "604e651157a98808dfd4eb2d7f356a3bd6e185604f0cb327247afe1e05dbe572"
+  "hash": "23c6c763863d602bb262989c8e45a3d3f6e174af2a5597165f6df0441a0fd9e1"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT transaction_history.id, user_id, users.name as user_name, timestamp, log_level as \"log_level: LogLevel\", action FROM transaction_history\n            LEFT JOIN users ON users.id=transaction_history.user_id\n            ORDER BY id",
+  "query": "SELECT transaction_history.id, user_id, users.name as user_name, timestamp, log_level as \"log_level: LogLevel\", action FROM transaction_history\n            INNER JOIN users ON users.id=transaction_history.user_id\n            ORDER BY id",
   "describe": {
     "columns": [
       {
@@ -57,5 +57,5 @@
       false
     ]
   },
-  "hash": "0c0abd271459fe428a6bccdd27caa2406955dc503b485587a3d9cc866ee8c712"
+  "hash": "479892c0104b715ba6e4a6253b6836c2da1899198523078179b5b4476cf5d5fd"
 }
