@@ -21,10 +21,9 @@ async fn ping() -> ApiResult<impl Responder> {
 #[get("/status")]
 async fn status(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
     debug!("Received new request: check user-status.");
-    match UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await
-    {
+    match UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await {
         Ok(user) => {
-            user.log_action(format!("check user-status"), db_pool.get_ref())
+            user.log_action(format!("check user-status"), &db_pool)
                 .await?;
             Ok(web::Json(StatusResponse { status: true }))
         }
@@ -35,12 +34,12 @@ async fn status(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl 
 #[post("/reset/database")]
 async fn reset_database(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
     // this resets the database COMPLETELY - use with care!
-    let _user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref())
+    let _user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool)
         .await?
-        .log_action(format!("reset database"), db_pool.get_ref())
+        .log_action(format!("reset database"), &db_pool)
         .await?;
 
-    let mut tx = db_pool.get_ref().begin().await?;
+    let mut tx = (&db_pool).begin().await?;
     sqlx::query("DELETE FROM game_team")
         .execute(&mut *tx)
         .await?;

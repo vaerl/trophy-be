@@ -11,11 +11,10 @@ use std::env;
 
 #[get("/users")]
 async fn find_all_users(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
-    let user =
-        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
-    User::find_all(db_pool.get_ref())
+    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
+    User::find_all(&db_pool)
         .await?
-        .log_read(user.id, db_pool.get_ref())
+        .log_read(user.id, &db_pool)
         .await?
         .to_json()
 }
@@ -26,11 +25,10 @@ async fn find_user(
     req: HttpRequest,
     db_pool: web::Data<PgPool>,
 ) -> ApiResult<impl Responder> {
-    let user =
-        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
-    User::find(id.into_inner(), db_pool.get_ref())
+    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
+    User::find(id.into_inner(), &db_pool)
         .await?
-        .log_read(user.id, db_pool.get_ref())
+        .log_read(user.id, &db_pool)
         .await?
         .to_json()
 }
@@ -44,12 +42,12 @@ async fn find_game_for_ref(
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Referee],
-        db_pool.get_ref(),
+        &db_pool,
     )
     .await?;
-    User::find_game_for_ref(id.into_inner(), db_pool.get_ref())
+    User::find_game_for_ref(id.into_inner(), &db_pool)
         .await?
-        .log_read(user.id, db_pool.get_ref())
+        .log_read(user.id, &db_pool)
         .await?
         .to_json()
 }
@@ -60,11 +58,10 @@ async fn create_user(
     req: HttpRequest,
     db_pool: web::Data<PgPool>,
 ) -> ApiResult<impl Responder> {
-    let user =
-        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
-    User::create(create_user.into_inner(), db_pool.get_ref())
+    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
+    User::create(create_user.into_inner(), &db_pool)
         .await?
-        .log_create(user.id, db_pool.get_ref())
+        .log_create(user.id, &db_pool)
         .await?
         .to_json()
 }
@@ -76,17 +73,12 @@ async fn update_user(
     req: HttpRequest,
     db_pool: web::Data<PgPool>,
 ) -> ApiResult<impl Responder> {
-    let user =
-        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
-    User::update(
-        id.into_inner(),
-        altered_user.into_inner(),
-        db_pool.get_ref(),
-    )
-    .await?
-    .log_update(user.id, db_pool.get_ref())
-    .await?
-    .to_json()
+    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
+    User::update(id.into_inner(), altered_user.into_inner(), &db_pool)
+        .await?
+        .log_update(user.id, &db_pool)
+        .await?
+        .to_json()
 }
 
 #[delete("/users/{id}")]
@@ -95,11 +87,10 @@ async fn delete_user(
     req: HttpRequest,
     db_pool: web::Data<PgPool>,
 ) -> ApiResult<impl Responder> {
-    let user =
-        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
-    User::delete(id.into_inner(), db_pool.get_ref())
+    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
+    User::delete(id.into_inner(), &db_pool)
         .await?
-        .log_delete(user.id, db_pool.get_ref())
+        .log_delete(user.id, &db_pool)
         .await?
         .to_json()
 }
@@ -116,7 +107,7 @@ async fn login(login: web::Json<CreateLogin>, db_pool: web::Data<PgPool>) -> imp
     let secure = env::var("COOKIE_SECURE").expect("COOKIE_SECURE is not set in .env file!");
 
     // NOTE logging is done in ::login()!
-    match User::login(login.into_inner(), db_pool.get_ref()).await {
+    match User::login(login.into_inner(), &db_pool).await {
         Ok(token_string) => {
             let cookie = Cookie::build("session", token_string)
                 .path("/")
@@ -132,11 +123,11 @@ async fn login(login: web::Json<CreateLogin>, db_pool: web::Data<PgPool>) -> imp
 
 #[post("/logout")]
 async fn logout(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<HttpResponse> {
-    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref())
+    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool)
         .await?
-        .log_action(format!("logged out"), db_pool.get_ref())
+        .log_action(format!("logged out"), &db_pool)
         .await?;
-    match User::logout(user.id, db_pool.get_ref()).await {
+    match User::logout(user.id, &db_pool).await {
         Ok(_) => Ok(HttpResponse::Ok().finish()),
         Err(err) => Err(err),
     }

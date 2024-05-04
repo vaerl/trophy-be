@@ -25,10 +25,10 @@ pub async fn start_connection(
     let _user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Referee, UserRole::Visualizer],
-        db_pool.get_ref(),
+        &db_pool,
     )
     .await?
-    .log_action(format!("connected to socket."), db_pool.get_ref());
+    .log_action(format!("connected to socket."), &db_pool);
     let ws = WsConn::new(srv.get_ref().clone());
 
     let resp = ws::start(ws, &req, stream)?;

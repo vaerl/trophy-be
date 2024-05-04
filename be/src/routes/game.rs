@@ -17,12 +17,12 @@ async fn find_all_games(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResu
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
-        db_pool.get_ref(),
+        &db_pool,
     )
     .await?;
-    Game::find_all(db_pool.get_ref())
+    Game::find_all(&db_pool)
         .await?
-        .log_read(user.id, db_pool.get_ref())
+        .log_read(user.id, &db_pool)
         .await?
         .to_json()
 }
@@ -32,16 +32,12 @@ async fn games_amount(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
-        db_pool.get_ref(),
+        &db_pool,
     )
     .await?;
-    Game::amount(db_pool.get_ref())
+    Game::amount(&db_pool)
         .await?
-        .log_info(
-            user.id,
-            format!("get the amount of games"),
-            db_pool.get_ref(),
-        )
+        .log_info(user.id, format!("get the amount of games"), &db_pool)
         .await?
         .to_json()
 }
@@ -51,12 +47,12 @@ async fn games_pending(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResul
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
-        db_pool.get_ref(),
+        &db_pool,
     )
     .await?;
-    Game::pending(db_pool.get_ref())
+    Game::pending(&db_pool)
         .await?
-        .log_read(user.id, db_pool.get_ref())
+        .log_read(user.id, &db_pool)
         .await?
         .to_json()
 }
@@ -66,12 +62,12 @@ async fn games_finished(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResu
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
-        db_pool.get_ref(),
+        &db_pool,
     )
     .await?;
-    Game::finished(db_pool.get_ref())
+    Game::finished(&db_pool)
         .await?
-        .log_read(user.id, db_pool.get_ref())
+        .log_read(user.id, &db_pool)
         .await?
         .to_json()
 }
@@ -83,11 +79,10 @@ async fn create_game(
     db_pool: Data<PgPool>,
     lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
-    let user =
-        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
-    Game::create(create_game.into_inner(), db_pool.get_ref())
+    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
+    Game::create(create_game.into_inner(), &db_pool)
         .await?
-        .log_create(user.id, db_pool.get_ref())
+        .log_create(user.id, &db_pool)
         .await?
         .send_refresh(lobby_addr.get_ref())?
         .to_json()
@@ -102,12 +97,12 @@ async fn find_game(
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
-        db_pool.get_ref(),
+        &db_pool,
     )
     .await?;
-    Game::find(id.into_inner(), db_pool.get_ref())
+    Game::find(id.into_inner(), &db_pool)
         .await?
-        .log_read(user.id, db_pool.get_ref())
+        .log_read(user.id, &db_pool)
         .await?
         .to_json()
 }
@@ -120,11 +115,10 @@ async fn update_game(
     db_pool: web::Data<PgPool>,
     lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
-    let user =
-        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
-    Game::update(id.into_inner(), game.into_inner(), db_pool.get_ref())
+    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
+    Game::update(id.into_inner(), game.into_inner(), &db_pool)
         .await?
-        .log_update(user.id, db_pool.get_ref())
+        .log_update(user.id, &db_pool)
         .await?
         .send_refresh(lobby_addr.get_ref())?
         .to_json()
@@ -137,11 +131,10 @@ async fn delete_game(
     db_pool: web::Data<PgPool>,
     lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
-    let user =
-        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
-    Game::delete(id.into_inner(), db_pool.get_ref())
+    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
+    Game::delete(id.into_inner(), &db_pool)
         .await?
-        .log_delete(user.id, db_pool.get_ref())
+        .log_delete(user.id, &db_pool)
         .await?
         .send_refresh(lobby_addr.get_ref())?
         .to_json()
@@ -156,12 +149,12 @@ async fn pending_teams(
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
-        db_pool.get_ref(),
+        &db_pool,
     )
     .await?;
-    Game::pending_teams(id.into_inner(), db_pool.get_ref())
+    Game::pending_teams(id.into_inner(), &db_pool)
         .await?
-        .log_read(user.id, db_pool.get_ref())
+        .log_read(user.id, &db_pool)
         .await?
         .to_json()
 }
@@ -175,12 +168,12 @@ async fn pending_teams_amount(
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
-        db_pool.get_ref(),
+        &db_pool,
     )
     .await?;
-    Game::pending_teams_amount(id.into_inner(), db_pool.get_ref())
+    Game::pending_teams_amount(id.into_inner(), &db_pool)
         .await?
-        .log_read(user.id, db_pool.get_ref())
+        .log_read(user.id, &db_pool)
         .await?
         .to_json()
 }
@@ -194,12 +187,12 @@ async fn finished_teams(
     let user = UserToken::try_into_authorized_user(
         &req,
         vec![UserRole::Admin, UserRole::Visualizer],
-        db_pool.get_ref(),
+        &db_pool,
     )
     .await?;
-    Game::finished_teams(id.into_inner(), db_pool.get_ref())
+    Game::finished_teams(id.into_inner(), &db_pool)
         .await?
-        .log_read(user.id, db_pool.get_ref())
+        .log_read(user.id, &db_pool)
         .await?
         .to_json()
 }

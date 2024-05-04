@@ -10,8 +10,7 @@ use crate::{
 
 #[get("/eval")]
 async fn evaluate(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
-    let user =
-        UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], db_pool.get_ref()).await?;
+    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
     let action = format!("User {} executed: evaluate trophy", user.id);
     // NOTE rather than implementing Log for () (if even possible), I decided to just update history "manually"
     History::create(user.id, LogLevel::Info, action, &db_pool).await?;
