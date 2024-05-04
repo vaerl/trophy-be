@@ -19,6 +19,12 @@ pub struct ResultFile(pub NamedFile);
 
 const MAX_POINTS: i32 = 50;
 
+/// Checks whether all games have finished.
+pub async fn is_done(pool: &PgPool) -> ApiResult<bool> {
+    let total_games = Game::find_all(pool).await?.0;
+    let finished_games = Game::finished(pool).await?.0;
+    Ok(total_games.len() == finished_games.len())
+}
 
 /// Checks whether all teams have points assigned.
 pub async fn is_evaluated(pool: &PgPool) -> ApiResult<bool> {
@@ -38,6 +44,12 @@ pub async fn is_evaluated(pool: &PgPool) -> ApiResult<bool> {
 }
 
 pub async fn evaluate_trophy(pool: &PgPool) -> ApiResult<()> {
+    if !is_done(pool).await? {
+        return Err(CustomError::EarlyEvaluationError {
+            message: "Tried to evaluate while teams are still playing!".to_string(),
+        });
+    }
+
     // I cannot use locked here, as locked might be changed arbitrarily by admins(me)
     for game in Game::find_all(pool).await?.0 {
         evaluate_game(game, pool).await?;
@@ -46,29 +58,27 @@ pub async fn evaluate_trophy(pool: &PgPool) -> ApiResult<()> {
 }
 
 async fn evaluate_game(game: Game, pool: &PgPool) -> ApiResult<()> {
-    let pending_amount = Game::pending_teams_amount(game.id, pool).await?.0;
-    if pending_amount > 0 {
-        // Don't evaluate when teams are still playing - this should never happen!
-        Err(CustomError::EarlyEvaluationError {
+    if !is_done(pool).await? {
+        return Err(CustomError::EarlyEvaluationError {
             message: "Tried to evaluate while teams are still playing!".to_string(),
-        })
-    } else {
-        // get all Outcomes as ParsedOutcomes for game separated by gender
-        let (female, male) = Outcome::parse_by_gender_for_game(&game, pool).await?;
-
-        // using for-loops allows using await and ?
-        for outcome in evaluate(female) {
-            outcome.team.update_points(pool).await?;
-            Outcome::set_point_value(outcome, pool).await?;
-        }
-
-        for outcome in evaluate(male) {
-            outcome.team.update_points(pool).await?;
-            Outcome::set_point_value(outcome, pool).await?;
-        }
-
-        Ok(())
+        });
     }
+
+    // get all Outcomes as ParsedOutcomes for game separated by gender
+    let (female, male) = Outcome::parse_by_gender_for_game(&game, pool).await?;
+
+    // using for-loops allows using await and ?
+    for outcome in evaluate(female) {
+        outcome.team.update_points(pool).await?;
+        Outcome::set_point_value(outcome, pool).await?;
+    }
+
+    for outcome in evaluate(male) {
+        outcome.team.update_points(pool).await?;
+        Outcome::set_point_value(outcome, pool).await?;
+    }
+
+    Ok(())
 }
 
 /// Evaluate a game by its ParsedOutcomes.

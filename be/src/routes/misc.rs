@@ -1,10 +1,9 @@
-use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
-use serde::Serialize;
+use actix_web::{get, web, HttpRequest, Responder};
 use sqlx::PgPool;
 
 use crate::{
-    model::{LogUserAction, StatusResponse, UserRole, UserToken},
-    ApiResult,
+    model::{History, LogLevel, LogUserAction, StatusResponse, UserRole, UserToken},
+    ApiResult, ToJson,
 };
 
 #[get("/ping")]
@@ -13,6 +12,7 @@ async fn ping() -> ApiResult<impl Responder> {
     Ok(web::Json(StatusResponse { status: true }))
 }
 
+// TODO move this
 #[get("/status")]
 async fn status(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
     debug!("Received new request: check user-status.");
@@ -26,32 +26,20 @@ async fn status(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl 
     }
 }
 
-#[post("/reset/database")]
-async fn reset_database(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
-    // this resets the database COMPLETELY - use with care!
-    let _user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool)
-        .await?
-        .log_action(format!("reset database"), &db_pool)
-        .await?;
+#[get("/done")]
+async fn is_done(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
+    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
 
-    let mut tx = (&db_pool).begin().await?;
-    sqlx::query("DELETE FROM game_team")
-        .execute(&mut *tx)
-        .await?;
-    sqlx::query("DELETE FROM games").execute(&mut *tx).await?;
-    sqlx::query("DELETE FROM teams").execute(&mut *tx).await?;
-    sqlx::query("DELETE FROM transaction_history")
-        .execute(&mut *tx)
-        .await?;
-    // NOTE do not delete users per default
-    // sqlx::query("DELETE FROM users").execute(&mut *tx).await?;
-    tx.commit().await?;
+    let action = format!("User {} executed: check if trophy is done", user.id);
+    // NOTE rather than implementing Log for () (if even possible), I decided to just update history "manually"
+    History::create(user.id, LogLevel::Info, action, &db_pool).await?;
 
-    Ok(HttpResponse::Ok().finish())
+    let res = crate::eval::is_done(&db_pool).await?;
+    StatusResponse { status: res }.to_json()
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(ping);
     cfg.service(status);
-    cfg.service(reset_database);
+    cfg.service(is_done);
 }
