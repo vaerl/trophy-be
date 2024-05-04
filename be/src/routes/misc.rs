@@ -3,14 +3,9 @@ use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::{
-    model::{LogUserAction, UserRole, UserToken},
+    model::{LogUserAction, StatusResponse, UserRole, UserToken},
     ApiResult,
 };
-
-#[derive(Serialize)]
-pub struct StatusResponse {
-    status: bool,
-}
 
 #[get("/ping")]
 async fn ping() -> ApiResult<impl Responder> {

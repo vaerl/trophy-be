@@ -1,6 +1,7 @@
 mod error;
 mod game;
 mod history;
+mod misc;
 mod outcome;
 mod parsed_outcome;
 mod team;
@@ -10,6 +11,7 @@ mod user_token;
 pub use error::*;
 pub use game::*;
 pub use history::*;
+pub use misc::*;
 pub use outcome::*;
 pub use parsed_outcome::*;
 use serde::Serialize;

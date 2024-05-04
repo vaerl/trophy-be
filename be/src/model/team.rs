@@ -23,7 +23,6 @@ impl fmt::Display for TeamGender {
     }
 }
 
-// TODO also maybe annotate Game?
 #[derive(Serialize, FromRow, Clone)]
 pub struct Team {
     pub id: i32,
