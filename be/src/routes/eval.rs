@@ -4,8 +4,8 @@ use sqlx::PgPool;
 
 use crate::{
     eval::{create_xlsx_file, evaluate_trophy},
-    model::{History, Log, LogLevel, UserRole, UserToken},
-    ApiResult,
+    model::{History, Log, LogLevel, StatusResponse, UserRole, UserToken},
+    ApiResult, ToJson,
 };
 
 #[get("/eval")]
@@ -29,7 +29,20 @@ async fn download_sheet(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResu
     Ok(file)
 }
 
+#[get("/eval/done")]
+async fn is_evaluated(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
+    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
+
+    let action = format!("User {} executed: check if trophy is evaluated", user.id);
+    // NOTE rather than implementing Log for () (if even possible), I decided to just update history "manually"
+    History::create(user.id, LogLevel::Info, action, &db_pool).await?;
+
+    let status = crate::eval::is_evaluated(&db_pool).await?;
+    StatusResponse { status }.to_json()
+}
+
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(evaluate);
     cfg.service(download_sheet);
+    cfg.service(is_evaluated);
 }

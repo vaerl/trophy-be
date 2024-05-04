@@ -19,6 +19,24 @@ pub struct ResultFile(pub NamedFile);
 
 const MAX_POINTS: i32 = 50;
 
+
+/// Checks whether all teams have points assigned.
+pub async fn is_evaluated(pool: &PgPool) -> ApiResult<bool> {
+    // return early if we aren't finished yet
+    if !is_done(pool).await? {
+        return Ok(false);
+    }
+
+    let teams = Team::find_all(pool).await?.0;
+    for team in teams {
+        if team.points == 0 {
+            return Ok(false);
+        }
+    }
+
+    return Ok(true);
+}
+
 pub async fn evaluate_trophy(pool: &PgPool) -> ApiResult<()> {
     // I cannot use locked here, as locked might be changed arbitrarily by admins(me)
     for game in Game::find_all(pool).await?.0 {
