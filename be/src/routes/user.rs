@@ -1,5 +1,7 @@
 use crate::{
-    model::{CreateLogin, CreateUser, Log, LogUserAction, User, UserRole, UserToken},
+    model::{
+        CreateLogin, CreateUser, Log, LogUserAction, StatusResponse, User, UserRole, UserToken,
+    },
     ApiResult, ToJson,
 };
 use actix_web::{
@@ -8,6 +10,19 @@ use actix_web::{
 };
 use sqlx::PgPool;
 use std::env;
+
+#[get("/user/status")]
+async fn status(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
+    debug!("Received new request: check user-status.");
+    match UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await {
+        Ok(user) => {
+            user.log_action(format!("check user-status"), &db_pool)
+                .await?;
+            Ok(web::Json(StatusResponse { status: true }))
+        }
+        Err(_err) => Ok(web::Json(StatusResponse { status: false })),
+    }
+}
 
 #[get("/users")]
 async fn find_all_users(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
@@ -142,4 +157,5 @@ pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(delete_user);
     cfg.service(login);
     cfg.service(logout);
+    cfg.service(status);
 }
