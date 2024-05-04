@@ -24,6 +24,7 @@ mod model;
 mod routes;
 mod ws;
 
+// TODO try using middleware for auth and logging
 #[actix_web::main]
 async fn main() -> Result<(), CustomError> {
     dotenv().ok();
