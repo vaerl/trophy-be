@@ -1,4 +1,4 @@
-use actix_web::{FromRequest, HttpRequest};
+use actix_web::{dev::ServiceRequest, FromRequest, HttpRequest};
 use chrono::Utc;
 use futures::future::{err, ready, Ready};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
@@ -102,6 +102,44 @@ impl UserToken {
                         } else {
                             Err(CustomError::AccessDeniedError)
                         }
+                    } else {
+                        Err(CustomError::UnauthorizedError)
+                    }
+                } else {
+                    Err(CustomError::NoTokenError {
+                        message: "Token is expired!".to_string(),
+                    })
+                }
+            }
+            None => Err(CustomError::NoTokenError {
+                message: "No cookie provided!".to_string(),
+            }),
+        }
+    }
+
+    /// Loads the user specified in the token, if:
+    /// a) the token is not expired
+    /// b) the user is logged in
+    pub async fn try_into_user(req: &ServiceRequest, pool: &PgPool) -> ApiResult<User> {
+        match req.cookie("session") {
+            Some(cookie) => {
+                let token = cookie.value();
+                let token = jsonwebtoken::decode::<UserToken>(
+                    token,
+                    &DecodingKey::from_secret(&KEY),
+                    &Validation::default(),
+                )?
+                .claims;
+                // NOTE I've not found a way to get rid of the if-cascade - because I want specific errors!
+
+                // 1: check if token is valid
+                if token.is_valid() {
+                    let user = User::find(token.user_id, pool).await?;
+                    // 2: check if user is logged with the supplied session; if a different session is given, deny access
+                    if user.session.is_some()
+                        && user.session.clone().unwrap().eq(&token.login_session)
+                    {
+                        Ok(user)
                     } else {
                         Err(CustomError::UnauthorizedError)
                     }
