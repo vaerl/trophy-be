@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use log::Level;
 use serde::Serialize;
 use sqlx::{PgPool, Type};
 use std::fmt::Display;
@@ -8,14 +9,26 @@ use crate::{eval::ResultFile, ApiResult, TypeInfo};
 
 use super::User;
 
-#[derive(Serialize, Type)]
+#[derive(Serialize, Type, Clone)]
 #[sqlx(type_name = "log_level")]
 #[sqlx(rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum LogLevel {
     Debug,
     Info,
+    // TODO rename this to warn
     Important,
+}
+
+// I've chosen to do this rather than having some newtype-like construct
+impl Into<Level> for LogLevel {
+    fn into(self) -> Level {
+        match self {
+            LogLevel::Debug => Level::Debug,
+            LogLevel::Info => Level::Info,
+            LogLevel::Important => Level::Warn,
+        }
+    }
 }
 
 #[derive(Serialize)]
