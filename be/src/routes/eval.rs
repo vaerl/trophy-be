@@ -1,43 +1,35 @@
 use actix_files::NamedFile;
-use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{
+    get,
+    web::{self, Data},
+    HttpResponse, Responder,
+};
 use sqlx::PgPool;
 
 use crate::{
     eval::{create_xlsx_file, evaluate_trophy},
-    model::{History, Log, LogLevel, StatusResponse, UserRole, UserToken},
+    middleware::Authenticated,
+    model::{StatusResponse, UserRole},
     ApiResult, ToJson,
 };
 
 #[get("/eval")]
-async fn evaluate(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
-    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
-    let action = format!("User {} executed: evaluate trophy", user.id);
-    // NOTE rather than implementing Log for () (if even possible), I decided to just update history "manually"
-    History::create(user.id, LogLevel::Info, action, &db_pool).await?;
-    evaluate_trophy(&db_pool).await?;
+async fn evaluate(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+    auth.has_roles(vec![UserRole::Admin])?;
+    evaluate_trophy(&pool).await?;
     Ok(HttpResponse::Ok())
 }
 
 #[get("/eval/sheet")]
-async fn download_sheet(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<NamedFile> {
-    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
-    let file = create_xlsx_file(&db_pool)
-        .await?
-        .log_info(user.id, format!("download sheet"), &db_pool)
-        .await?
-        .0;
-    Ok(file)
+async fn download_sheet(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<NamedFile> {
+    auth.has_roles(vec![UserRole::Admin])?;
+    Ok(create_xlsx_file(&pool).await?.0)
 }
 
 #[get("/eval/done")]
-async fn is_evaluated(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
-    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
-
-    let action = format!("User {} executed: check if trophy is evaluated", user.id);
-    // NOTE rather than implementing Log for () (if even possible), I decided to just update history "manually"
-    History::create(user.id, LogLevel::Info, action, &db_pool).await?;
-
-    let status = crate::eval::is_evaluated(&db_pool).await?;
+async fn is_evaluated(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+    auth.has_roles(vec![UserRole::Admin])?;
+    let status = crate::eval::is_evaluated(&pool).await?;
     StatusResponse { status }.to_json()
 }
 

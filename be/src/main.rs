@@ -5,6 +5,7 @@ use actix::Actor;
 use actix_cors::Cors;
 use actix_web::{
     error::{self, InternalError, JsonPayloadError},
+    middleware::Logger,
     web::{self, Data},
     App, HttpResponse, HttpServer,
 };
@@ -15,11 +16,13 @@ use sqlx::{PgPool, Pool, Postgres};
 use std::env;
 
 use crate::{
+    middleware::{AuthMiddlewareFactory, LogMiddlewareFactory},
     model::{CreateUser, User},
     ws::lobby::Lobby,
 };
 
 mod eval;
+mod middleware;
 mod model;
 mod routes;
 mod ws;
@@ -52,8 +55,11 @@ async fn main() -> Result<(), CustomError> {
             .max_age(3600);
 
         App::new()
-            // pass database pool to application so we can access it inside handlers
             .wrap(cors)
+            // NOTE LogMiddlewareFactory must run after AuthMiddlewareFactory to access AuthInfo - this order seems to achieve that
+            .wrap(LogMiddlewareFactory::new(db_pool.clone()))
+            .wrap(AuthMiddlewareFactory::new(db_pool.clone()))
+            // pass database pool to application so we can access it inside handlers
             .app_data(db_pool.clone())
             .configure(routes::init)
             .configure(ws::init)
