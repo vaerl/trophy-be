@@ -1,40 +1,56 @@
 use actix::Addr;
 use actix_web::{
     delete, get, post, put,
-    web::{self, Data},
+    web::{self, Data, Query},
     Responder,
 };
 use sqlx::PgPool;
 
 use crate::{
     middleware::Authenticated,
-    model::{CreateTeam, Team, UserRole},
+    model::{CreateTeam, Team, UserRole, Year},
     ws::{lobby::Lobby, socket_refresh::SendRefresh},
     ApiResult, ToJson,
 };
 
 #[get("/teams")]
-async fn find_all_teams(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+async fn find_all_teams(
+    pool: Data<PgPool>,
+    auth: Authenticated,
+    year: Query<Year>,
+) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Team::find_all(&pool).await?.to_json()
+    Team::find_all(&pool, **year).await?.to_json()
 }
 
 #[get("/teams/amount")]
-async fn teams_amount(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+async fn teams_amount(
+    pool: Data<PgPool>,
+    auth: Authenticated,
+    year: Query<Year>,
+) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Team::amount(&pool).await?.to_json()
+    Team::amount(&pool, **year).await?.to_json()
 }
 
 #[get("/teams/pending")]
-async fn teams_pending(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+async fn teams_pending(
+    pool: Data<PgPool>,
+    auth: Authenticated,
+    year: Query<Year>,
+) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Team::pending(&pool).await?.to_json()
+    Team::pending(&pool, **year).await?.to_json()
 }
 
 #[get("/teams/finished")]
-async fn teams_finished(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+async fn teams_finished(
+    pool: Data<PgPool>,
+    auth: Authenticated,
+    year: Query<Year>,
+) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Team::finished(&pool).await?.to_json()
+    Team::finished(&pool, **year).await?.to_json()
 }
 
 #[post("/teams")]

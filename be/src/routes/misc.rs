@@ -1,11 +1,11 @@
 use crate::{
     middleware::Authenticated,
-    model::{StatusResponse, UserRole},
+    model::{StatusResponse, UserRole, Year},
     ApiResult, ToJson,
 };
 use actix_web::{
     get,
-    web::{self, Data},
+    web::{self, Data, Query},
     Responder,
 };
 use sqlx::PgPool;
@@ -16,10 +16,14 @@ async fn ping() -> ApiResult<impl Responder> {
 }
 
 #[get("/done")]
-async fn is_done(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+async fn is_done(
+    pool: Data<PgPool>,
+    auth: Authenticated,
+    year: Query<Year>,
+) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
     StatusResponse {
-        status: crate::eval::is_done(&pool).await?,
+        status: crate::eval::is_done(&pool, **year).await?,
     }
     .to_json()
 }

@@ -26,7 +26,6 @@ mod model;
 mod routes;
 mod ws;
 
-// TODO use middleware for year-param
 #[actix_web::main]
 async fn main() -> Result<(), CustomError> {
     dotenv().ok();

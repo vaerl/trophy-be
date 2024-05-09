@@ -23,7 +23,8 @@ CREATE TABLE games (
     trophy_id integer NOT NULL,
     name varchar (50) NOT NULL,
     kind game_kind NOT NULL,
-    locked boolean DEFAULT FALSE NOT NULL
+    locked boolean DEFAULT FALSE NOT NULL,
+    year integer NOT NULL
 );
 CREATE TABLE users (
     id serial PRIMARY KEY NOT NULL,
@@ -38,7 +39,8 @@ CREATE TABLE teams (
     trophy_id integer NOT NULL,
     name varchar (50) NOT NULL,
     gender team_gender NOT NULL,
-    points integer NOT NULL DEFAULT 0
+    points integer NOT NULL DEFAULT 0,
+    year integer NOT NULL
 );
 CREATE TABLE game_team (
     game_id int REFERENCES games (id) ON UPDATE CASCADE ON DELETE CASCADE,

@@ -20,20 +20,20 @@ pub struct ResultFile(pub NamedFile);
 const MAX_POINTS: i32 = 50;
 
 /// Checks whether all games have finished.
-pub async fn is_done(pool: &PgPool) -> ApiResult<bool> {
-    let total_games = Game::find_all(pool).await?.0;
-    let finished_games = Game::finished(pool).await?.0;
+pub async fn is_done(pool: &PgPool, year: i32) -> ApiResult<bool> {
+    let total_games = Game::find_all(pool, year).await?.0;
+    let finished_games = Game::finished(pool, year).await?.0;
     Ok(total_games.len() == finished_games.len())
 }
 
 /// Checks whether all teams have points assigned.
-pub async fn is_evaluated(pool: &PgPool) -> ApiResult<bool> {
+pub async fn is_evaluated(pool: &PgPool, year: i32) -> ApiResult<bool> {
     // return early if we aren't finished yet
-    if !is_done(pool).await? {
+    if !is_done(pool, year).await? {
         return Ok(false);
     }
 
-    let teams = Team::find_all(pool).await?.0;
+    let teams = Team::find_all(pool, year).await?.0;
     for team in teams {
         if team.points == 0 {
             return Ok(false);
@@ -43,22 +43,23 @@ pub async fn is_evaluated(pool: &PgPool) -> ApiResult<bool> {
     return Ok(true);
 }
 
-pub async fn evaluate_trophy(pool: &PgPool) -> ApiResult<()> {
-    if !is_done(pool).await? {
+pub async fn evaluate_trophy(pool: &PgPool, year: i32) -> ApiResult<()> {
+    if !is_done(pool, year).await? {
         return Err(CustomError::EarlyEvaluationError {
             message: "Tried to evaluate while teams are still playing!".to_string(),
         });
     }
 
     // I cannot use locked here, as locked might be changed arbitrarily by admins(me)
-    for game in Game::find_all(pool).await?.0 {
+    for game in Game::find_all(pool, year).await?.0 {
         evaluate_game(game, pool).await?;
     }
     Ok(())
 }
 
 async fn evaluate_game(game: Game, pool: &PgPool) -> ApiResult<()> {
-    if !is_done(pool).await? {
+    // TODO shouldn't this only check if game is done?
+    if !is_done(pool, game.year).await? {
         return Err(CustomError::EarlyEvaluationError {
             message: "Tried to evaluate while teams are still playing!".to_string(),
         });
@@ -115,7 +116,7 @@ fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
     outcomes
 }
 
-pub async fn create_xlsx_file(pool: &PgPool) -> ApiResult<ResultFile> {
+pub async fn create_xlsx_file(pool: &PgPool, year: i32) -> ApiResult<ResultFile> {
     // this path uses a timestamp to distinguish between versions
     let path = format!(
         "results-{}.xlsx",
@@ -125,7 +126,7 @@ pub async fn create_xlsx_file(pool: &PgPool) -> ApiResult<ResultFile> {
     // create file
     File::create(&path)?;
     let workbook = Workbook::new(&path)?;
-    let (female, male) = Team::find_all_by_gender(pool).await?;
+    let (female, male) = Team::find_all_by_gender(pool, year).await?;
 
     // only write teams if any exist
     if female.0.len() > 0 {
@@ -193,6 +194,7 @@ mod tests {
                 name: format!("A"),
                 gender: TeamGender::Female,
                 points: points[i],
+                year: 2024,
             })
         }
 

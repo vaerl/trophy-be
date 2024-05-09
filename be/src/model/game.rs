@@ -29,7 +29,8 @@ pub struct Game {
     pub trophy_id: i32,
     pub name: String,
     pub kind: GameKind,
-    pub locked: bool
+    pub locked: bool,
+    pub year: i32,
 }
 
 #[derive(Serialize)]
@@ -40,15 +41,16 @@ pub struct GameVec(pub Vec<Game>);
 pub struct CreateGame {
     pub trophy_id: i32,
     pub name: String,
-    pub kind: GameKind
+    pub kind: GameKind,
+    pub year: i32,
 }
 
 impl Game {
 
-    pub async fn find_all(pool: &PgPool) -> ApiResult<GameVec> {
+    pub async fn find_all(pool: &PgPool, year: i32) -> ApiResult<GameVec> {
         let games = sqlx::query_as!(
             Game,
-            r#"SELECT id, trophy_id, name, kind as "kind: GameKind", locked FROM games ORDER BY id"#
+            r#"SELECT id, trophy_id, name, kind as "kind: GameKind", locked, year FROM games WHERE year = $1 ORDER BY id"#, year
         )
         .fetch_all(pool)
         .await?;
@@ -59,7 +61,7 @@ impl Game {
     pub async fn find(id: i32, pool: &PgPool) -> ApiResult<Game> {
         let game = sqlx::query_as!(
             Game,
-            r#"SELECT id, trophy_id, name, kind as "kind: GameKind", locked FROM games WHERE id = $1"#, id
+            r#"SELECT id, trophy_id, name, kind as "kind: GameKind", locked, year FROM games WHERE id = $1"#, id
         )
         .fetch_optional(pool)
         .await?;
@@ -70,15 +72,15 @@ impl Game {
     pub async fn create(create_game: CreateGame, pool: &PgPool) -> ApiResult<Game> {
         let mut tx = pool.begin().await?;
         let game: Game = sqlx::query_as!(Game, 
-            r#"INSERT INTO games (trophy_id, name, kind) VALUES ($1, $2, $3) RETURNING id, trophy_id, name, kind as "kind: GameKind", locked"#,
-            create_game.trophy_id, create_game.name, create_game.kind as GameKind
+            r#"INSERT INTO games (trophy_id, name, kind, year) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as "kind: GameKind", locked, year"#,
+            create_game.trophy_id, create_game.name, create_game.kind as GameKind, create_game.year
         )
         .fetch_one(&mut *tx)
         .await?;
         tx.commit().await?;
 
         // create outcomes
-        for team in Team::find_all(pool).await?.0 {
+        for team in Team::find_all(pool, create_game.year).await?.0 {
             Outcome::create(game.id, game.trophy_id, team.id, team.trophy_id, pool).await?;
         }
 
@@ -86,10 +88,11 @@ impl Game {
     }
 
     pub async fn update(id: i32, altered_game: CreateGame, pool: &PgPool) -> ApiResult<Game> {
+        // NOTE I've decided against being able to change the year of already created games (for now)
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!(
             Game, 
-            r#"UPDATE games SET trophy_id = $1, name = $2, kind = $3 WHERE id = $4 RETURNING id, trophy_id, name, kind as "kind: GameKind", locked"#,
+            r#"UPDATE games SET trophy_id = $1, name = $2, kind = $3 WHERE id = $4 RETURNING id, trophy_id, name, kind as "kind: GameKind", locked, year"#,
             altered_game.trophy_id, altered_game.name, altered_game.kind as GameKind, id
         )
         .fetch_one(&mut *tx)
@@ -104,7 +107,7 @@ impl Game {
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!(
             Game, 
-            r#"UPDATE games SET locked = true WHERE id = $1 RETURNING id, trophy_id, name, kind as "kind: GameKind", locked"#,
+            r#"UPDATE games SET locked = true WHERE id = $1 RETURNING id, trophy_id, name, kind as "kind: GameKind", locked, year"#,
             id
         )
         .fetch_one(&mut *tx)
@@ -119,7 +122,7 @@ impl Game {
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!(
             Game,
-            r#"DELETE FROM games WHERE id = $1 RETURNING id, trophy_id, name, kind as "kind: GameKind", locked"#,
+            r#"DELETE FROM games WHERE id = $1 RETURNING id, trophy_id, name, kind as "kind: GameKind", locked, year"#,
             id
         )
         .fetch_one(&mut *tx)
@@ -160,17 +163,17 @@ impl Game {
     }
 
     /// get the amount of games
-    pub async fn amount(pool: &PgPool) -> ApiResult<Amount> {
+    pub async fn amount(pool: &PgPool, year: i32) -> ApiResult<Amount> {
         // This function currently calls find_all and uses its size.
         // If performance warrants a better implementation(f.e. caching the result in the db or memory), 
         // this capsules the functionality, meaning I will only need to change this method.
         
-        Ok(Amount(Game::find_all(pool).await?.0.len()))
+        Ok(Amount(Game::find_all(pool, year).await?.0.len()))
     }
 
-    pub async fn pending(pool: &PgPool) -> ApiResult<GameVec> {
+    pub async fn pending(pool: &PgPool, year: i32) -> ApiResult<GameVec> {
         let mut games= vec!();
-        for game in Game::find_all(pool).await?.0 {
+        for game in Game::find_all(pool, year).await?.0 {
             // I could also use pending_games_amount, but that could be removed later
             let pending_teams_of_game = Game::pending_teams(game.id, pool).await?.0;
             if pending_teams_of_game.len() > 0 {
@@ -180,9 +183,9 @@ impl Game {
         Ok(GameVec(games))
     }
 
-    pub async fn finished(pool: &PgPool) -> ApiResult<GameVec> {
+    pub async fn finished(pool: &PgPool, year: i32) -> ApiResult<GameVec> {
         let mut games= vec!();
-        for game in Game::find_all(pool).await?.0 {
+        for game in Game::find_all(pool, year).await?.0 {
             // I could also use pending_games_amount, but that could be removed later
             let pending_teams_of_game = Game::pending_teams(game.id, pool).await?.0;
             if pending_teams_of_game.len() ==0 {

@@ -1,39 +1,55 @@
 use crate::{
     middleware::Authenticated,
-    model::{CreateGame, Game, UserRole},
+    model::{CreateGame, Game, UserRole, Year},
     ws::{lobby::Lobby, socket_refresh::SendRefresh},
     ApiResult, ToJson,
 };
 use actix::Addr;
 use actix_web::{
     delete, get, post, put,
-    web::{self, Data, Json, Path},
+    web::{self, Data, Json, Path, Query},
     Responder,
 };
 use sqlx::PgPool;
 
 #[get("/games")]
-async fn find_all_games(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+async fn find_all_games(
+    pool: Data<PgPool>,
+    auth: Authenticated,
+    year: Query<Year>,
+) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Game::find_all(&pool).await?.to_json()
+    Game::find_all(&pool, **year).await?.to_json()
 }
 
 #[get("/games/amount")]
-async fn games_amount(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+async fn games_amount(
+    pool: Data<PgPool>,
+    auth: Authenticated,
+    year: Query<Year>,
+) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Game::amount(&pool).await?.to_json()
+    Game::amount(&pool, **year).await?.to_json()
 }
 
 #[get("/games/pending")]
-async fn games_pending(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+async fn games_pending(
+    pool: Data<PgPool>,
+    auth: Authenticated,
+    year: Query<Year>,
+) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Game::pending(&pool).await?.to_json()
+    Game::pending(&pool, **year).await?.to_json()
 }
 
 #[get("/games/finished")]
-async fn games_finished(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+async fn games_finished(
+    pool: Data<PgPool>,
+    auth: Authenticated,
+    year: Query<Year>,
+) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Game::finished(&pool).await?.to_json()
+    Game::finished(&pool, **year).await?.to_json()
 }
 
 #[post("/games")]
