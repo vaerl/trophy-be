@@ -6,6 +6,7 @@ use crate::{
     ApiResult, ToJson,
 };
 
+// TODO paginate
 #[get("/history")]
 async fn find_all_transactions(
     req: HttpRequest,
