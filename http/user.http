@@ -1,8 +1,10 @@
-@BASE = http://127.0.0.1:5000
+@BASE = http://127.0.0.1:4998
 @PROD_BASE = http://asdf.edith.mlel.dev
 @ID = 2
 
 # TODO check how I can assign to TOKEN
+// NOTE there might be no need for this, rest-client stores cookies apparently -> check with consecutive requests without token-header!?
+
 @TOKEN = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxMTAxMzMsImV4cCI6MTYyNDExMzAxMywidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6ImY0ZTczNmVkOGM4ZDQ3ZjFiOTkwY2IwZDQ3ZWMxNDhhIn0.yuXyWgsljzLsUubAbRNxVKK0EAhnjGBa2-zWL34HlII
 POST {{BASE}}/login
 Content-Type: application/json
