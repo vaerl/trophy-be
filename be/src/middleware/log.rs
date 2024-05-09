@@ -60,6 +60,7 @@ where
     }
 }
 
+// TODO add id if present and possible -> maybe split in two methods
 fn match_operation(method: &Method, path: &str) -> (String, LogLevel) {
     match path {
         "/eval" => (format!("evaluate trophy"), LogLevel::Important),
@@ -68,8 +69,7 @@ fn match_operation(method: &Method, path: &str) -> (String, LogLevel) {
         "/games" => match method {
             &Method::GET => (format!("get all games"), LogLevel::Debug),
             &Method::POST => (format!("create new game"), LogLevel::Info),
-            // TODO
-            _ => panic!("Unsupported method {} for /games.", method),
+            _ => panic!("Unsupported method {} for '/games'.", method),
         },
         "/games/amount" => (format!("get the amount games"), LogLevel::Debug),
         "/games/pending" => (format!("get all pending games"), LogLevel::Debug),
@@ -78,7 +78,7 @@ fn match_operation(method: &Method, path: &str) -> (String, LogLevel) {
             &Method::GET => (format!("get game with id"), LogLevel::Debug),
             &Method::PUT => (format!("update game with id"), LogLevel::Info),
             &Method::DELETE => (format!("delete game with id"), LogLevel::Info),
-            _ => panic!("Unsupported method {} for /games/id.", method),
+            _ => panic!("Unsupported method {} for '/games/id'.", method),
         },
         "/games/{id}/pending" => (format!("get pending teams for game"), LogLevel::Debug),
         "/games/{id}/pending/amount" => (
@@ -89,8 +89,15 @@ fn match_operation(method: &Method, path: &str) -> (String, LogLevel) {
         "/history" => (format!("find all transactions"), LogLevel::Debug),
         "/ping" => (format!("received new ping-request"), LogLevel::Debug),
         "/done" => (format!("check if trophy is done"), LogLevel::Debug),
+        "/outcomes" => match method {
+            &Method::GET => (format!("get all outcomes"), LogLevel::Debug),
+            &Method::PUT => (format!("update outcome with id"), LogLevel::Info),
+            _ => panic!("Unsupported method {} for '/outcomes'.", method),
+        },
+        "/outcomes/games/{id}" => (format!("get all outcomes for game"), LogLevel::Debug),
+        "/outcomes/teams/{id}" => (format!("get all outcomes for team"), LogLevel::Debug),
         "/login" => (format!("login"), LogLevel::Info),
-        _ => panic!("Unsupported path:  {}", path),
+        _ => panic!("Unsupported path: '{}'", path),
     }
 }
 

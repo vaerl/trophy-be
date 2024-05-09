@@ -2,64 +2,47 @@ use actix::Addr;
 use actix_web::{
     get, put,
     web::{self, Data},
-    HttpRequest, Responder,
+    Responder,
 };
 use sqlx::PgPool;
 
 use crate::{
-    model::{CustomError, Log, Outcome, User, UserRole, UserToken},
+    middleware::Authenticated,
+    model::{CustomError, Outcome, User, UserRole},
     ws::{lobby::Lobby, socket_refresh::SendRefresh},
     ApiResult, ToJson,
 };
 
 #[get("/outcomes")]
-async fn find_all_outcomes(
-    req: HttpRequest,
-    db_pool: web::Data<PgPool>,
-) -> ApiResult<impl Responder> {
-    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
-    Outcome::find_all(&db_pool)
-        .await?
-        .log_read(user.id, &db_pool)
-        .await?
-        .to_json()
+async fn find_all_outcomes(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+    auth.has_roles(vec![UserRole::Admin])?;
+    Outcome::find_all(&pool).await?.to_json()
 }
 
 /// Outcomes are automatically initialized , thus we only need an update-method().
 #[put("/outcomes")]
 async fn update_outcome(
-    req: HttpRequest,
+    pool: Data<PgPool>,
+    auth: Authenticated,
     outcome: web::Json<Outcome>,
-    db_pool: web::Data<PgPool>,
     lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
-    let user = UserToken::try_into_authorized_user(
-        &req,
-        vec![UserRole::Admin, UserRole::Referee],
-        &db_pool,
-    )
-    .await?;
-
-    match user.role {
+    match auth.role {
         UserRole::Admin => outcome
             .into_inner()
-            .set_data(&user, lobby_addr.get_ref(), &db_pool)
-            .await?
-            .log_update(user.id, &db_pool)
+            .set_data(auth.id, &lobby_addr, &pool)
             .await?
             .to_json(),
         UserRole::Referee => {
-            let game = User::find_game_for_ref(user.id, &db_pool).await?;
+            let game = User::find_game_for_ref(auth.id, &pool).await?;
 
             // check if the ref is accessing the correct game and only allow updating if it's not locked yet
             if outcome.game_id == game.id && !game.locked {
                 outcome
                     .into_inner()
-                    .set_data(&user, lobby_addr.get_ref(), &db_pool)
+                    .set_data(auth.id, &lobby_addr, &pool)
                     .await?
-                    .log_update(user.id, &db_pool)
-                    .await?
-                    .send_refresh(lobby_addr.get_ref())?
+                    .send_refresh(&lobby_addr)?
                     .to_json()
             } else {
                 Err(CustomError::AccessDeniedError)
@@ -71,47 +54,31 @@ async fn update_outcome(
 
 #[get("/outcomes/teams/{id}")]
 async fn find_all_outcomes_for_team(
-    req: HttpRequest,
+    pool: Data<PgPool>,
+    auth: Authenticated,
     team_id: web::Path<i32>,
-    db_pool: web::Data<PgPool>,
 ) -> ApiResult<impl Responder> {
     // only admins should be able to access this information
-    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
-    Outcome::find_all_for_team(team_id.into_inner(), &db_pool)
-        .await?
-        .log_read(user.id, &db_pool)
+    auth.has_roles(vec![UserRole::Admin])?;
+    Outcome::find_all_for_team(team_id.into_inner(), &pool)
         .await?
         .to_json()
 }
 
 #[get("/outcomes/games/{id}")]
 async fn find_all_outcomes_for_game(
-    req: HttpRequest,
+    pool: Data<PgPool>,
+    auth: Authenticated,
     game_id: web::Path<i32>,
-    db_pool: web::Data<PgPool>,
 ) -> ApiResult<impl Responder> {
-    let user = UserToken::try_into_authorized_user(
-        &req,
-        vec![UserRole::Admin, UserRole::Referee],
-        &db_pool,
-    )
-    .await?;
     let game_id = game_id.into_inner();
 
-    match user.role {
-        UserRole::Admin => Outcome::find_all_for_game(game_id, &db_pool)
-            .await?
-            .log_read(user.id, &db_pool)
-            .await?
-            .to_json(),
+    match auth.role {
+        UserRole::Admin => Outcome::find_all_for_game(game_id, &pool).await?.to_json(),
         UserRole::Referee => {
-            // if the user is a referee, check if he is accessing the correct game
-            if game_id == User::find_game_for_ref(user.id, &db_pool).await?.id {
-                Outcome::find_all_for_game(game_id, &db_pool)
-                    .await?
-                    .log_read(user.id, &db_pool)
-                    .await?
-                    .to_json()
+            // if the user is a referee, check if they are accessing the correct game
+            if game_id == User::find_game_for_ref(auth.id, &pool).await?.id {
+                Outcome::find_all_for_game(game_id, &pool).await?.to_json()
             } else {
                 Err(CustomError::AccessDeniedError)
             }
