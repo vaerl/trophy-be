@@ -1,5 +1,4 @@
-@BASE = http://127.0.0.1:8080
-@TOKEN = asdf
+@BASE = http://127.0.0.1:4998
 
 POST {{BASE}}/login
 Content-Type: application/json
@@ -10,5 +9,4 @@ Content-Type: application/json
 }
 
 ### evaluate trophy -> this creates an xlsx-file
-GET {{BASE}}/eval
-Authorization: bearer {{TOKEN}}
+GET {{BASE}}/eval?year=2024

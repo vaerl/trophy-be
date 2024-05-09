@@ -1,5 +1,4 @@
 @BASE = http://127.0.0.1:5000
-@TOKEN = asdf
 
 POST {{BASE}}/login
 Content-Type: application/json
@@ -11,12 +10,10 @@ Content-Type: application/json
 
 ### get all outcomes
 GET {{BASE}}/outcomes 
-Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjUxNTI4NDAsImV4cCI6MTYyNTE1NTcyMCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjgyN2ExNTIyYzRjMTQ1YmJhZjMyMTk5NzQ3ZjUzYTIwIn0.ArngkK-UMJAAukPo9VWRYytV32gyG0wHzI_BaHZKeb8
 
 ### update outcome
 PUT {{BASE}}/outcomes 
 Content-Type: application/json
-Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjUxNTI4NDAsImV4cCI6MTYyNTE1NTcyMCwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjgyN2ExNTIyYzRjMTQ1YmJhZjMyMTk5NzQ3ZjUzYTIwIn0.ArngkK-UMJAAukPo9VWRYytV32gyG0wHzI_BaHZKeb8
 
 {
     "game_id": 2,
@@ -26,8 +23,6 @@ Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjUxNTI4N
 
 ### get outcomes for team 1
 GET {{BASE}}/outcomes/teams/1 
-Authorization: bearer {{TOKEN}}
 
 ### get outcomes for game 1
 GET {{BASE}}/outcomes/games/1 
-Authorization: bearer {{TOKEN}}

@@ -1,5 +1,4 @@
 @BASE = http://127.0.0.1:4998
-@TOKEN = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjQxMDk2ODksImV4cCI6MTYyNDExMjU2OSwidXNlcl9pZCI6MSwibG9naW5fc2Vzc2lvbiI6IjJmODlhNTVjZWY1MjQ4N2Q4NjhhYzliMDc1NDczMzc3In0.aGpKX168LECPLSJnPpRJGH_wXrzYDwrLHNNf3_cjrzo
 
 POST {{BASE}}/login
 Content-Type: application/json
@@ -10,7 +9,7 @@ Content-Type: application/json
 }
 
 ### get all games
-GET {{BASE}}/games
+GET {{BASE}}/games?year=2024
 
 ### create a new game
 POST {{BASE}}/games
@@ -26,12 +25,10 @@ Content-Type: application/json
 
 ### get game with id 1
 GET {{BASE}}/games/1
-Authorization: bearer {{TOKEN}}
 
 ### update game with id 1
 PUT {{BASE}}/games/1
 Content-Type: application/json
-Authorization: bearer {{TOKEN}}
 
 {
     "trophy_id": 2,
@@ -41,4 +38,3 @@ Authorization: bearer {{TOKEN}}
 
 ### delete game with id 1
 DELETE {{BASE}}/games/6
-Authorization: bearer {{TOKEN}}
