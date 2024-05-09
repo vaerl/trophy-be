@@ -14,7 +14,7 @@
               "Enum": [
                 "debug",
                 "info",
-                "important"
+                "warn"
               ]
             }
           }

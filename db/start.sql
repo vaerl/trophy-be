@@ -16,7 +16,7 @@ DROP TYPE IF EXISTS log_level;
 CREATE TYPE game_kind AS ENUM ('points', 'time');
 CREATE TYPE team_gender AS ENUM ('female', 'male', 'mixed');
 CREATE TYPE user_role AS ENUM ('admin', 'referee', 'visualizer');
-CREATE TYPE log_level AS ENUM ('debug', 'info', 'important');
+CREATE TYPE log_level AS ENUM ('debug', 'info', 'warn');
 -- create model-tables
 CREATE TABLE games (
     id serial PRIMARY KEY NOT NULL,
