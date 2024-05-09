@@ -26,9 +26,7 @@ mod model;
 mod routes;
 mod ws;
 
-// TODO remove all get_ref()-calls
-// TODO use middleware for auth, logging and year-param
-// -> remove old log_info-stuff and use new role-check from eval
+// TODO use middleware for year-param
 #[actix_web::main]
 async fn main() -> Result<(), CustomError> {
     dotenv().ok();

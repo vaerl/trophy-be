@@ -1,12 +1,9 @@
 use std::fmt::{self, Display};
-
 use actix::Addr;
 use futures::Future;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
-
-use crate::{ApiResult, model::{CustomError, Log}, ws::{lobby::Lobby, socket_refresh::SendRefresh}};
-
+use crate::{ApiResult, model::CustomError, ws::{lobby::Lobby, socket_refresh::SendRefresh}};
 use super::{Game, GameKind, ParsedOutcome, TeamGender, TypeInfo};
 
 /// This module provides all routes concerning outcomes.
@@ -95,7 +92,7 @@ impl Outcome {
     }
 
     /// This method needs the calling user as it might modify a game's state.
-    pub async fn set_data(&self, user_id: i32, lobby: &Addr<Lobby>, pool: &PgPool) -> ApiResult<Outcome> {
+    pub async fn set_data(&self, lobby: &Addr<Lobby>, pool: &PgPool) -> ApiResult<Outcome> {
         match &self.data {
             Some(data) => {
                 let game = Game::find(self.game_id, &pool).await?;
@@ -119,7 +116,6 @@ impl Outcome {
                 // lock the game if there are no unset outcomes
                 if outcomes.0.into_iter().filter(|o| o.data.is_none()).collect::<Vec<Outcome>>().len() == 0 {
                     Game::lock(game.id, pool).await?
-                    .log_update(user_id, pool).await?
                     .send_refresh(lobby)?;
                 }
                 

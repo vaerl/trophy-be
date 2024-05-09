@@ -8,7 +8,7 @@ use actix_web_actors::ws;
 use sqlx::PgPool;
 
 use crate::{
-    model::{LogUserAction, UserRole, UserToken},
+    model::{UserRole, UserToken},
     ApiResult,
 };
 
@@ -27,8 +27,7 @@ pub async fn start_connection(
         vec![UserRole::Admin, UserRole::Referee, UserRole::Visualizer],
         &db_pool,
     )
-    .await?
-    .log_action(format!("connected to socket."), &db_pool);
+    .await?;
     let ws = WsConn::new(srv.get_ref().clone());
 
     let resp = ws::start(ws, &req, stream)?;

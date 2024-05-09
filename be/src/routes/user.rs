@@ -1,15 +1,13 @@
 use crate::{
     middleware::Authenticated,
-    model::{
-        CreateLogin, CreateUser, Log, LogUserAction, StatusResponse, User, UserRole, UserToken,
-    },
+    model::{CreateLogin, CreateUser, StatusResponse, User, UserRole},
     ApiResult, ToJson,
 };
 use actix_web::{
     cookie::{Cookie, SameSite},
     delete, get, post, put,
     web::{self, Data},
-    HttpRequest, HttpResponse, Responder, ResponseError,
+    HttpResponse, Responder, ResponseError,
 };
 use sqlx::PgPool;
 use std::env;

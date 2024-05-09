@@ -30,7 +30,7 @@ async fn update_outcome(
     match auth.role {
         UserRole::Admin => outcome
             .into_inner()
-            .set_data(auth.id, &lobby_addr, &pool)
+            .set_data(&lobby_addr, &pool)
             .await?
             .to_json(),
         UserRole::Referee => {
@@ -40,7 +40,7 @@ async fn update_outcome(
             if outcome.game_id == game.id && !game.locked {
                 outcome
                     .into_inner()
-                    .set_data(auth.id, &lobby_addr, &pool)
+                    .set_data(&lobby_addr, &pool)
                     .await?
                     .send_refresh(&lobby_addr)?
                     .to_json()

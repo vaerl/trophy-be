@@ -13,7 +13,6 @@ futures = "0.3.30"
 humantime = "2.1"
 xlsxwriter = "0.6"
 thiserror = "1.0.59"
-async-trait = "0.1.80"
 # logging
 env_logger = "0.11.3"
 log = "0.4.21"

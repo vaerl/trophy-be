@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
-use crate::{ApiResult, model::{Game, LogUserAction}};
+use crate::{ApiResult, model::Game};
 
 use super::{CreateToken, CustomError, TypeInfo, UserToken};
 
@@ -195,7 +195,7 @@ impl User {
     }
 
     pub async fn login(login: CreateLogin, pool: &PgPool) -> ApiResult<String> {
-        let mut user = User::find_by_name(&login.name, pool).await?;
+        let user = User::find_by_name(&login.name, pool).await?;
         let argon2 = Argon2::default();
         let password_hash = PasswordHash::new(&user.password)?;
         
@@ -204,9 +204,6 @@ impl User {
         } else {
             let session = User::generate_session();
             User::update_session(user.id, &session, &pool).await?;
-
-            user = user.log_action(format!("log-in"), pool).await?;
-
             return Ok(UserToken::generate_token(&CreateToken {user_id: user.id, session}, user));
         }
     }
