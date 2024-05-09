@@ -112,7 +112,21 @@ fn match_operation(method: &Method, path: &str) -> (String, LogLevel) {
         },
         "/teams/{id}/pending" => (format!("get pending games for team"), LogLevel::Debug),
         "/teams/{id}/finished" => (format!("get finished games for team"), LogLevel::Debug),
+        "/user/status" => (format!("check user-status"), LogLevel::Debug),
+        "/users" => match method {
+            &Method::GET => (format!("get all users"), LogLevel::Debug),
+            &Method::POST => (format!("create new user"), LogLevel::Info),
+            _ => panic!("Unsupported method {} for '/users'.", method),
+        },
+        "/users/{id}" => match method {
+            &Method::GET => (format!("get user with id"), LogLevel::Debug),
+            &Method::PUT => (format!("update user with id"), LogLevel::Info),
+            &Method::DELETE => (format!("delete user with id"), LogLevel::Info),
+            _ => panic!("Unsupported method {} for '/users/id'.", method),
+        },
+        "/users/{id}/game" => (format!("get game for user"), LogLevel::Debug),
         "/login" => (format!("login"), LogLevel::Info),
+        "/logout" => (format!("logout"), LogLevel::Info),
         _ => panic!("Unsupported path: '{}'", path),
     }
 }

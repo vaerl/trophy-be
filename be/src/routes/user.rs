@@ -1,4 +1,5 @@
 use crate::{
+    middleware::Authenticated,
     model::{
         CreateLogin, CreateUser, Log, LogUserAction, StatusResponse, User, UserRole, UserToken,
     },
@@ -6,63 +7,45 @@ use crate::{
 };
 use actix_web::{
     cookie::{Cookie, SameSite},
-    delete, get, post, put, web, HttpRequest, HttpResponse, Responder, ResponseError,
+    delete, get, post, put,
+    web::{self, Data},
+    HttpRequest, HttpResponse, Responder, ResponseError,
 };
 use sqlx::PgPool;
 use std::env;
 
 #[get("/user/status")]
-async fn status(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
-    debug!("Received new request: check user-status.");
-    match UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await {
-        Ok(user) => {
-            user.log_action(format!("check user-status"), &db_pool)
-                .await?;
-            Ok(web::Json(StatusResponse { status: true }))
-        }
-        Err(_err) => Ok(web::Json(StatusResponse { status: false })),
+async fn status(auth: Authenticated) -> ApiResult<impl Responder> {
+    match auth.has_roles(vec![UserRole::Admin]) {
+        Ok(_) => Ok(web::Json(StatusResponse { status: true })),
+        Err(_) => Ok(web::Json(StatusResponse { status: false })),
     }
 }
 
 #[get("/users")]
-async fn find_all_users(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<impl Responder> {
-    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
-    User::find_all(&db_pool)
-        .await?
-        .log_read(user.id, &db_pool)
-        .await?
-        .to_json()
+async fn find_all_users(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+    auth.has_roles(vec![UserRole::Admin])?;
+    User::find_all(&pool).await?.to_json()
 }
 
 #[get("/users/{id}")]
 async fn find_user(
     id: web::Path<i32>,
-    req: HttpRequest,
-    db_pool: web::Data<PgPool>,
+    pool: Data<PgPool>,
+    auth: Authenticated,
 ) -> ApiResult<impl Responder> {
-    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
-    User::find(id.into_inner(), &db_pool)
-        .await?
-        .log_read(user.id, &db_pool)
-        .await?
-        .to_json()
+    auth.has_roles(vec![UserRole::Admin])?;
+    User::find(id.into_inner(), &pool).await?.to_json()
 }
 
 #[get("/users/{id}/game")]
 async fn find_game_for_ref(
     id: web::Path<i32>,
-    req: HttpRequest,
-    db_pool: web::Data<PgPool>,
+    pool: Data<PgPool>,
+    auth: Authenticated,
 ) -> ApiResult<impl Responder> {
-    let user = UserToken::try_into_authorized_user(
-        &req,
-        vec![UserRole::Admin, UserRole::Referee],
-        &db_pool,
-    )
-    .await?;
-    User::find_game_for_ref(id.into_inner(), &db_pool)
-        .await?
-        .log_read(user.id, &db_pool)
+    auth.has_roles(vec![UserRole::Admin, UserRole::Referee])?;
+    User::find_game_for_ref(id.into_inner(), &pool)
         .await?
         .to_json()
 }
@@ -70,13 +53,11 @@ async fn find_game_for_ref(
 #[post("/users")]
 async fn create_user(
     create_user: web::Json<CreateUser>,
-    req: HttpRequest,
-    db_pool: web::Data<PgPool>,
+    pool: Data<PgPool>,
+    auth: Authenticated,
 ) -> ApiResult<impl Responder> {
-    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
-    User::create(create_user.into_inner(), &db_pool)
-        .await?
-        .log_create(user.id, &db_pool)
+    auth.has_roles(vec![UserRole::Admin])?;
+    User::create(create_user.into_inner(), &pool)
         .await?
         .to_json()
 }
@@ -85,13 +66,11 @@ async fn create_user(
 async fn update_user(
     id: web::Path<i32>,
     altered_user: web::Json<CreateUser>,
-    req: HttpRequest,
-    db_pool: web::Data<PgPool>,
+    pool: Data<PgPool>,
+    auth: Authenticated,
 ) -> ApiResult<impl Responder> {
-    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
-    User::update(id.into_inner(), altered_user.into_inner(), &db_pool)
-        .await?
-        .log_update(user.id, &db_pool)
+    auth.has_roles(vec![UserRole::Admin])?;
+    User::update(id.into_inner(), altered_user.into_inner(), &pool)
         .await?
         .to_json()
 }
@@ -99,15 +78,11 @@ async fn update_user(
 #[delete("/users/{id}")]
 async fn delete_user(
     id: web::Path<i32>,
-    req: HttpRequest,
-    db_pool: web::Data<PgPool>,
+    pool: Data<PgPool>,
+    auth: Authenticated,
 ) -> ApiResult<impl Responder> {
-    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool).await?;
-    User::delete(id.into_inner(), &db_pool)
-        .await?
-        .log_delete(user.id, &db_pool)
-        .await?
-        .to_json()
+    auth.has_roles(vec![UserRole::Admin])?;
+    User::delete(id.into_inner(), &pool).await?.to_json()
 }
 
 /// # Behavior when logging in twice:
@@ -137,12 +112,9 @@ async fn login(login: web::Json<CreateLogin>, db_pool: web::Data<PgPool>) -> imp
 }
 
 #[post("/logout")]
-async fn logout(req: HttpRequest, db_pool: web::Data<PgPool>) -> ApiResult<HttpResponse> {
-    let user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool)
-        .await?
-        .log_action(format!("logged out"), &db_pool)
-        .await?;
-    match User::logout(user.id, &db_pool).await {
+async fn logout(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<HttpResponse> {
+    // NOTE this should probably work for all user-types
+    match User::logout(auth.id, &pool).await {
         Ok(_) => Ok(HttpResponse::Ok().finish()),
         Err(err) => Err(err),
     }
