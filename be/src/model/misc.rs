@@ -6,12 +6,14 @@ pub struct StatusResponse {
 }
 
 #[derive(Deserialize)]
-pub struct Year(i32);
+pub struct Year {
+    year: i32,
+}
 
 impl std::ops::Deref for Year {
     type Target = i32;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.year
     }
 }
