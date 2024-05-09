@@ -39,7 +39,12 @@ where
         let pool = self.pool.clone();
         async move {
             let auth = req.extensions().get::<AuthInfo>().cloned();
-            let (action, level) = match_operation(req.method(), req.path());
+            // fall back to path if pattern doesn't return a value
+            let path = match req.match_pattern() {
+                Some(val) => val,
+                None => req.path().to_owned(),
+            };
+            let (action, level) = match_operation(req.method(), &path);
 
             match auth {
                 Some(val) => {
