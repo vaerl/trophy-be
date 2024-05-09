@@ -87,6 +87,8 @@ fn match_operation(method: &Method, path: &str) -> (String, LogLevel) {
         ),
         "/games/{id}/finished" => (format!("get finished teams for game"), LogLevel::Debug),
         "/history" => (format!("find all transactions"), LogLevel::Debug),
+        "/ping" => (format!("received new ping-request"), LogLevel::Debug),
+        "/done" => (format!("check if trophy is done"), LogLevel::Debug),
         "/login" => (format!("login"), LogLevel::Info),
         _ => panic!("Unsupported path:  {}", path),
     }
