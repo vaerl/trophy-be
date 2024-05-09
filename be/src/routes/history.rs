@@ -1,23 +1,23 @@
-use actix_web::{get, web, HttpRequest, Responder};
-use sqlx::PgPool;
-
 use crate::{
-    model::{History, LogUserAction, UserRole, UserToken},
+    middleware::Authenticated,
+    model::{History, UserRole},
     ApiResult, ToJson,
 };
+use actix_web::{
+    get,
+    web::{self, Data},
+    Responder,
+};
+use sqlx::PgPool;
 
 // TODO paginate
 #[get("/history")]
 async fn find_all_transactions(
-    req: HttpRequest,
-    db_pool: web::Data<PgPool>,
+    pool: Data<PgPool>,
+    auth: Authenticated,
 ) -> ApiResult<impl Responder> {
-    let _user = UserToken::try_into_authorized_user(&req, vec![UserRole::Admin], &db_pool)
-        .await?
-        .log_action(format!("find all transactions"), &db_pool)
-        .await?;
-
-    History::find_all(&db_pool).await?.to_json()
+    auth.has_roles(vec![UserRole::Admin])?;
+    History::find_all(&pool).await?.to_json()
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {

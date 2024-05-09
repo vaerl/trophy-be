@@ -86,6 +86,7 @@ fn match_operation(method: &Method, path: &str) -> (String, LogLevel) {
             LogLevel::Debug,
         ),
         "/games/{id}/finished" => (format!("get finished teams for game"), LogLevel::Debug),
+        "/history" => (format!("find all transactions"), LogLevel::Debug),
         "/login" => (format!("login"), LogLevel::Info),
         _ => panic!("Unsupported path:  {}", path),
     }
