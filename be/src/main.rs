@@ -5,7 +5,6 @@ use actix::Actor;
 use actix_cors::Cors;
 use actix_web::{
     error::{self, InternalError, JsonPayloadError},
-    middleware::Logger,
     web::{self, Data},
     App, HttpResponse, HttpServer,
 };
@@ -27,7 +26,8 @@ mod model;
 mod routes;
 mod ws;
 
-// TODO try using middleware for auth and logging
+// TODO use middleware for auth, logging and year-param
+// -> remove old log_info-stuff and use new role-check from eval
 #[actix_web::main]
 async fn main() -> Result<(), CustomError> {
     dotenv().ok();
