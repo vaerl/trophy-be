@@ -96,6 +96,22 @@ fn match_operation(method: &Method, path: &str) -> (String, LogLevel) {
         },
         "/outcomes/games/{id}" => (format!("get all outcomes for game"), LogLevel::Debug),
         "/outcomes/teams/{id}" => (format!("get all outcomes for team"), LogLevel::Debug),
+        "/teams" => match method {
+            &Method::GET => (format!("get all teams"), LogLevel::Debug),
+            &Method::POST => (format!("create new team"), LogLevel::Info),
+            _ => panic!("Unsupported method {} for '/teams'.", method),
+        },
+        "/teams/amount" => (format!("get the amount teams"), LogLevel::Debug),
+        "/teams/pending" => (format!("get all pending teams"), LogLevel::Debug),
+        "/teams/finished" => (format!("get all finished teams"), LogLevel::Debug),
+        "/teams/{id}" => match method {
+            &Method::GET => (format!("get team with id"), LogLevel::Debug),
+            &Method::PUT => (format!("update team with id"), LogLevel::Info),
+            &Method::DELETE => (format!("delete team with id"), LogLevel::Info),
+            _ => panic!("Unsupported method {} for '/teams/id'.", method),
+        },
+        "/teams/{id}/pending" => (format!("get pending games for team"), LogLevel::Debug),
+        "/teams/{id}/finished" => (format!("get finished games for team"), LogLevel::Debug),
         "/login" => (format!("login"), LogLevel::Info),
         _ => panic!("Unsupported path: '{}'", path),
     }
