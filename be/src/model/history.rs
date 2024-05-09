@@ -12,8 +12,7 @@ use crate::ApiResult;
 pub enum LogLevel {
     Debug,
     Info,
-    // TODO rename this to warn
-    Important,
+    Warn,
 }
 
 // I've chosen to do this rather than having some newtype-like construct
@@ -22,7 +21,7 @@ impl Into<Level> for LogLevel {
         match self {
             LogLevel::Debug => Level::Debug,
             LogLevel::Info => Level::Info,
-            LogLevel::Important => Level::Warn,
+            LogLevel::Warn => Level::Warn,
         }
     }
 }
@@ -64,7 +63,7 @@ impl History {
         match log_level {
             LogLevel::Debug => debug!("{}", action),
             LogLevel::Info => info!("{}", action),
-            LogLevel::Important => info!("{}", action),
+            LogLevel::Warn => info!("{}", action),
         }
 
         let mut tx = pool.begin().await?;

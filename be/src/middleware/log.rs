@@ -63,7 +63,7 @@ where
 // TODO add id if present and possible -> maybe split in two methods
 fn match_operation(method: &Method, path: &str) -> (String, LogLevel) {
     match path {
-        "/eval" => (format!("evaluate trophy"), LogLevel::Important),
+        "/eval" => (format!("evaluate trophy"), LogLevel::Warn),
         "/eval/sheet" => (format!("download sheet"), LogLevel::Debug),
         "/eval/done" => (format!("check if trophy is evaluated"), LogLevel::Debug),
         "/games" => match method {
