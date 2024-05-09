@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, trophy_id, name, gender as \"gender: TeamGender\", points FROM teams ORDER BY id",
+  "query": "UPDATE teams SET trophy_id = $1, name = $2, gender = $3 WHERE id = $4 RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points, year",
   "describe": {
     "columns": [
       {
@@ -38,12 +38,34 @@
         "ordinal": 4,
         "name": "points",
         "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "year",
+        "type_info": "Int4"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int4",
+        "Varchar",
+        {
+          "Custom": {
+            "name": "team_gender",
+            "kind": {
+              "Enum": [
+                "female",
+                "male",
+                "mixed"
+              ]
+            }
+          }
+        },
+        "Int4"
+      ]
     },
     "nullable": [
+      false,
       false,
       false,
       false,
@@ -51,5 +73,5 @@
       false
     ]
   },
-  "hash": "315e2dd82983da44c713279afb8d1b72cdfb1288e07feb774747544352d61fbe"
+  "hash": "35fc1e0c01e93dcce2033d1cbae718913ed50b60ca7432abfb02a8494741067a"
 }

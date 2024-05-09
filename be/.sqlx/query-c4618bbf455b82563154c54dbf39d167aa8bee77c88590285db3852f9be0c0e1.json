@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, trophy_id, name, kind as \"kind: GameKind\", locked FROM games WHERE id = $1",
+  "query": "SELECT id, trophy_id, name, gender as \"gender: TeamGender\", points, year FROM teams WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -20,14 +20,15 @@
       },
       {
         "ordinal": 3,
-        "name": "kind: GameKind",
+        "name": "gender: TeamGender",
         "type_info": {
           "Custom": {
-            "name": "game_kind",
+            "name": "team_gender",
             "kind": {
               "Enum": [
-                "points",
-                "time"
+                "female",
+                "male",
+                "mixed"
               ]
             }
           }
@@ -35,8 +36,13 @@
       },
       {
         "ordinal": 4,
-        "name": "locked",
-        "type_info": "Bool"
+        "name": "points",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "year",
+        "type_info": "Int4"
       }
     ],
     "parameters": {
@@ -49,8 +55,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "e9f6ac0d4329ce1e7a2222c86da5f2f64728b7e24039e7f196cfdca0b00fccda"
+  "hash": "c4618bbf455b82563154c54dbf39d167aa8bee77c88590285db3852f9be0c0e1"
 }

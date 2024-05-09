@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO games (trophy_id, name, kind) VALUES ($1, $2, $3) RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked",
+  "query": "UPDATE games SET trophy_id = $1, name = $2, kind = $3 WHERE id = $4 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked, year",
   "describe": {
     "columns": [
       {
@@ -37,6 +37,11 @@
         "ordinal": 4,
         "name": "locked",
         "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "year",
+        "type_info": "Int4"
       }
     ],
     "parameters": {
@@ -53,7 +58,8 @@
               ]
             }
           }
-        }
+        },
+        "Int4"
       ]
     },
     "nullable": [
@@ -61,8 +67,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "6d44f09e063d862cabbdc32c73a2f4c6275a3c4405b5e2dc4671f3b97b267927"
+  "hash": "df77b78f06062a90811680acfc0a166d9f56dc07f77f1fb061f2bc65097bd134"
 }

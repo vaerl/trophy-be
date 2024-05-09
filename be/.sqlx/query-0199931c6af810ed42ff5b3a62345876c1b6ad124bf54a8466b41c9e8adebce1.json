@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE teams SET trophy_id = $1, name = $2, gender = $3 WHERE id = $4 RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points",
+  "query": "DELETE FROM games WHERE id = $1 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked, year",
   "describe": {
     "columns": [
       {
@@ -20,15 +20,14 @@
       },
       {
         "ordinal": 3,
-        "name": "gender: TeamGender",
+        "name": "kind: GameKind",
         "type_info": {
           "Custom": {
-            "name": "team_gender",
+            "name": "game_kind",
             "kind": {
               "Enum": [
-                "female",
-                "male",
-                "mixed"
+                "points",
+                "time"
               ]
             }
           }
@@ -36,26 +35,17 @@
       },
       {
         "ordinal": 4,
-        "name": "points",
+        "name": "locked",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "year",
         "type_info": "Int4"
       }
     ],
     "parameters": {
       "Left": [
-        "Int4",
-        "Varchar",
-        {
-          "Custom": {
-            "name": "team_gender",
-            "kind": {
-              "Enum": [
-                "female",
-                "male",
-                "mixed"
-              ]
-            }
-          }
-        },
         "Int4"
       ]
     },
@@ -64,8 +54,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "75b596762e3b8eeaea9ab976c630ca4f46dfb83e5241e7fc761029ba0efee0a6"
+  "hash": "0199931c6af810ed42ff5b3a62345876c1b6ad124bf54a8466b41c9e8adebce1"
 }

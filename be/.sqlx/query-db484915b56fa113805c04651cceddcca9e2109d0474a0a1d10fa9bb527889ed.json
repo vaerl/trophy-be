@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, trophy_id, name, kind as \"kind: GameKind\", locked FROM games ORDER BY id",
+  "query": "INSERT INTO games (trophy_id, name, kind, year) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked, year",
   "describe": {
     "columns": [
       {
@@ -37,12 +37,33 @@
         "ordinal": 4,
         "name": "locked",
         "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "year",
+        "type_info": "Int4"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int4",
+        "Varchar",
+        {
+          "Custom": {
+            "name": "game_kind",
+            "kind": {
+              "Enum": [
+                "points",
+                "time"
+              ]
+            }
+          }
+        },
+        "Int4"
+      ]
     },
     "nullable": [
+      false,
       false,
       false,
       false,
@@ -50,5 +71,5 @@
       false
     ]
   },
-  "hash": "6dbcfc7eb5f77f6826fb434896a6534cdb79d2121d5c8f13145c842af4973e81"
+  "hash": "db484915b56fa113805c04651cceddcca9e2109d0474a0a1d10fa9bb527889ed"
 }
