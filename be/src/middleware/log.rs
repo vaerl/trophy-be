@@ -65,7 +65,29 @@ fn match_operation(method: &Method, path: &str) -> (String, LogLevel) {
         "/eval" => (format!("evaluate trophy"), LogLevel::Important),
         "/eval/sheet" => (format!("download sheet"), LogLevel::Debug),
         "/eval/done" => (format!("check if trophy is evaluated"), LogLevel::Debug),
-        _ => todo!(),
+        "/games" => match method {
+            &Method::GET => (format!("get all games"), LogLevel::Debug),
+            &Method::POST => (format!("create new game"), LogLevel::Info),
+            // TODO
+            _ => panic!("Unsupported method {} for /games.", method),
+        },
+        "/games/amount" => (format!("get the amount games"), LogLevel::Debug),
+        "/games/pending" => (format!("get all pending games"), LogLevel::Debug),
+        "/games/finished" => (format!("get all finished games"), LogLevel::Debug),
+        "/games/{id}" => match method {
+            &Method::GET => (format!("get game with id"), LogLevel::Debug),
+            &Method::PUT => (format!("update game with id"), LogLevel::Info),
+            &Method::DELETE => (format!("delete game with id"), LogLevel::Info),
+            _ => panic!("Unsupported method {} for /games/id.", method),
+        },
+        "/games/{id}/pending" => (format!("get pending teams for game"), LogLevel::Debug),
+        "/games/{id}/pending/amount" => (
+            format!("get the amount of pending teams for game"),
+            LogLevel::Debug,
+        ),
+        "/games/{id}/finished" => (format!("get finished teams for game"), LogLevel::Debug),
+        "/login" => (format!("login"), LogLevel::Info),
+        _ => panic!("Unsupported path:  {}", path),
     }
 }
 
