@@ -1,0 +1,83 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH updated AS (UPDATE users SET name = $1, role = $2, game_id = $3 WHERE id = $4 RETURNING id, name, password, role as \"role: UserRole\", game_id, session)\n                    SELECT updated.id, updated.name, password, \"role: UserRole\", game_id, games.name as \"game_name?\", session FROM updated\n                            LEFT JOIN games ON games.id=updated.game_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "password",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "role: UserRole",
+        "type_info": {
+          "Custom": {
+            "name": "user_role",
+            "kind": {
+              "Enum": [
+                "admin",
+                "referee",
+                "visualizer"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "game_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "game_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "session",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        {
+          "Custom": {
+            "name": "user_role",
+            "kind": {
+              "Enum": [
+                "admin",
+                "referee",
+                "visualizer"
+              ]
+            }
+          }
+        },
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "d2f3897d2030f2947d9e1bf1337a93fcb66c846b905cc37d96591dbe00925381"
+}

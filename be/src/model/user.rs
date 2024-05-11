@@ -52,6 +52,14 @@ pub struct CreateUser {
     pub game_id: Option<i32>
 }
 
+#[derive(Deserialize)]
+pub struct UpdateUser {
+    pub name: String,
+    pub role: UserRole,
+    pub password: Option<String>,
+    pub game_id: Option<i32>
+}
+
 impl fmt::Display for CreateUser {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "CreateUser(name: {}, password: {}, role: {})", self.name, self.password, self.role)
@@ -144,25 +152,44 @@ impl User {
         }
     }
 
-    pub async fn update(id: i32, altered_user: CreateUser, pool: &PgPool) -> ApiResult<User> {
-        let salt = SaltString::generate(&mut OsRng);
-        let argon2 = Argon2::default();
-        let password_hash = argon2.hash_password(&altered_user.password.as_bytes(), &salt).unwrap().to_string();
-
+    /// Passing a new password updates the password.
+    pub async fn update(id: i32, altered_user: UpdateUser, pool: &PgPool) -> ApiResult<User> {
+        match altered_user.password {
+            Some(password) => {
+                let salt = SaltString::generate(&mut OsRng);
+                let argon2 = Argon2::default();
+                let password_hash = argon2.hash_password(&password.as_bytes(), &salt).unwrap().to_string();
         
-        let mut tx = pool.begin().await?;
-        let user = sqlx::query_as!(
-            User, 
-            r#"WITH updated AS (UPDATE users SET name = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, name, password, role as "role: UserRole", game_id, session)
-            SELECT updated.id, updated.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM updated
-                    INNER JOIN games ON games.id=updated.game_id"#,
-            altered_user.name, password_hash, altered_user.role as UserRole, altered_user.game_id, id
-        )
-        .fetch_one(&mut *tx)
-        .await?;
-
-        tx.commit().await?;
-        Ok(user)
+                
+                let mut tx = pool.begin().await?;
+                let user = sqlx::query_as!(
+                    User, 
+                    r#"WITH updated AS (UPDATE users SET name = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, name, password, role as "role: UserRole", game_id, session)
+                    SELECT updated.id, updated.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM updated
+                            LEFT JOIN games ON games.id=updated.game_id"#,
+                    altered_user.name, password_hash, altered_user.role as UserRole, altered_user.game_id, id
+                )
+                .fetch_one(&mut *tx)
+                .await?;
+        
+                tx.commit().await?;
+                Ok(user)
+            },
+            None => {
+                let mut tx = pool.begin().await?;
+                let user = sqlx::query_as!(
+                    User, 
+                    r#"WITH updated AS (UPDATE users SET name = $1, role = $2, game_id = $3 WHERE id = $4 RETURNING id, name, password, role as "role: UserRole", game_id, session)
+                    SELECT updated.id, updated.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM updated
+                            LEFT JOIN games ON games.id=updated.game_id"#,
+                    altered_user.name, altered_user.role as UserRole, altered_user.game_id, id
+                )
+                .fetch_one(&mut *tx)
+                .await?;
+                tx.commit().await?;
+                Ok(user)
+            }
+        }
     }
 
     async fn update_session(id: i32, session: &String, pool: &PgPool) -> ApiResult<()> {

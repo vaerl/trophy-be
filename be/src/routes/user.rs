@@ -1,6 +1,6 @@
 use crate::{
     middleware::Authenticated,
-    model::{CreateLogin, CreateUser, StatusResponse, User, UserRole},
+    model::{CreateLogin, CreateUser, StatusResponse, UpdateUser, User, UserRole},
     ApiResult, ToJson,
 };
 use actix_web::{
@@ -63,7 +63,7 @@ async fn create_user(
 #[put("/users/{id}")]
 async fn update_user(
     id: web::Path<i32>,
-    altered_user: web::Json<CreateUser>,
+    altered_user: web::Json<UpdateUser>,
     pool: Data<PgPool>,
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
