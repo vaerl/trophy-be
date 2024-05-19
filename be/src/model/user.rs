@@ -211,7 +211,7 @@ impl User {
             User,
             r#"WITH deleted AS (DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as "role: UserRole", game_id, session)
             SELECT deleted.id, deleted.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM deleted
-                    INNER JOIN games ON games.id=deleted.game_id"#,
+                    LEFT JOIN games ON games.id=deleted.game_id"#,
             id
         )
         .fetch_one(&mut *tx)
