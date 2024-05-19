@@ -28,11 +28,6 @@ pub async fn is_done(pool: &PgPool, year: i32) -> ApiResult<bool> {
 
 /// Checks whether all teams have points assigned.
 pub async fn is_evaluated(pool: &PgPool, year: i32) -> ApiResult<bool> {
-    // return early if we aren't finished yet
-    if !is_done(pool, year).await? {
-        return Ok(false);
-    }
-
     let teams = Team::find_all(pool, year).await?.0;
     for team in teams {
         if team.points == 0 {
@@ -50,7 +45,7 @@ pub async fn evaluate_trophy(pool: &PgPool, year: i32) -> ApiResult<()> {
         });
     }
 
-    if !is_evaluated(pool, year).await? {
+    if is_evaluated(pool, year).await? {
         return Err(CustomError::EarlyEvaluationError {
             message: "Already evaluated.".to_string(),
         });
