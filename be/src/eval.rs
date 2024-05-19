@@ -50,6 +50,12 @@ pub async fn evaluate_trophy(pool: &PgPool, year: i32) -> ApiResult<()> {
         });
     }
 
+    if !is_evaluated(pool, year).await? {
+        return Err(CustomError::EarlyEvaluationError {
+            message: "Already evaluated.".to_string(),
+        });
+    }
+
     // I cannot use locked here, as locked might be changed arbitrarily by admins(me)
     for game in Game::find_all(pool, year).await?.0 {
         evaluate_game(game, pool).await?;
