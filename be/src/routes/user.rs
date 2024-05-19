@@ -33,7 +33,7 @@ async fn find_user(
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
-    User::find(id.into_inner(), &pool).await?.to_json()
+    User::find(*id, &pool).await?.to_json()
 }
 
 #[get("/users/{id}/game")]
@@ -43,9 +43,7 @@ async fn find_game_for_ref(
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Referee])?;
-    User::find_game_for_ref(id.into_inner(), &pool)
-        .await?
-        .to_json()
+    User::find_game_for_ref(*id, &pool).await?.to_json()
 }
 
 #[post("/users")]
@@ -68,7 +66,7 @@ async fn update_user(
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
-    User::update(id.into_inner(), altered_user.into_inner(), &pool)
+    User::update(*id, altered_user.into_inner(), &pool)
         .await?
         .to_json()
 }
@@ -80,7 +78,7 @@ async fn delete_user(
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
-    User::delete(id.into_inner(), &pool).await?.to_json()
+    User::delete(*id, &pool).await?.to_json()
 }
 
 /// # Behavior when logging in twice:

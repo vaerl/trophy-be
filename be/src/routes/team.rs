@@ -74,7 +74,7 @@ async fn find_team(
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Team::find(id.into_inner(), &pool).await?.to_json()
+    Team::find(*id, &pool).await?.to_json()
 }
 
 #[put("/teams/{id}")]
@@ -86,7 +86,7 @@ async fn update_team(
     lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
-    Team::update(id.into_inner(), team.into_inner(), &pool)
+    Team::update(*id, team.into_inner(), &pool)
         .await?
         .send_refresh(&lobby_addr)?
         .to_json()
@@ -100,7 +100,7 @@ async fn delete_team(
     lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
-    Team::delete(id.into_inner(), &pool)
+    Team::delete(*id, &pool)
         .await?
         .send_refresh(&lobby_addr)?
         .to_json()
@@ -113,7 +113,7 @@ async fn pending_games(
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Team::pending_games(id.into_inner(), &pool).await?.to_json()
+    Team::pending_games(*id, &pool).await?.to_json()
 }
 
 #[get("/teams/{id}/finished")]
@@ -123,9 +123,7 @@ async fn finished_games(
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Team::finished_games(id.into_inner(), &pool)
-        .await?
-        .to_json()
+    Team::finished_games(*id, &pool).await?.to_json()
 }
 
 // NOTE order matters!

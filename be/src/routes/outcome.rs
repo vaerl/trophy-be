@@ -60,9 +60,7 @@ async fn find_all_outcomes_for_team(
 ) -> ApiResult<impl Responder> {
     // only admins should be able to access this information
     auth.has_roles(vec![UserRole::Admin])?;
-    Outcome::find_all_for_team(team_id.into_inner(), &pool)
-        .await?
-        .to_json()
+    Outcome::find_all_for_team(*team_id, &pool).await?.to_json()
 }
 
 #[get("/outcomes/games/{id}")]
@@ -71,14 +69,12 @@ async fn find_all_outcomes_for_game(
     auth: Authenticated,
     game_id: web::Path<i32>,
 ) -> ApiResult<impl Responder> {
-    let game_id = game_id.into_inner();
-
     match auth.role {
-        UserRole::Admin => Outcome::find_all_for_game(game_id, &pool).await?.to_json(),
+        UserRole::Admin => Outcome::find_all_for_game(*game_id, &pool).await?.to_json(),
         UserRole::Referee => {
             // if the user is a referee, check if they are accessing the correct game
-            if game_id == User::find_game_for_ref(auth.id, &pool).await?.id {
-                Outcome::find_all_for_game(game_id, &pool).await?.to_json()
+            if *game_id == User::find_game_for_ref(auth.id, &pool).await?.id {
+                Outcome::find_all_for_game(*game_id, &pool).await?.to_json()
             } else {
                 Err(CustomError::AccessDeniedError)
             }
