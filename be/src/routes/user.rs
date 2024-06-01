@@ -13,10 +13,10 @@ use sqlx::PgPool;
 use std::env;
 
 #[get("/user/status")]
-async fn status(auth: Authenticated) -> ApiResult<impl Responder> {
-    match auth.has_roles(vec![UserRole::Admin]) {
-        Ok(_) => Ok(web::Json(StatusResponse { status: true })),
-        Err(_) => Ok(web::Json(StatusResponse { status: false })),
+async fn status(auth: Option<Authenticated>) -> ApiResult<impl Responder> {
+    match auth {
+        Some(_) => Ok(web::Json(StatusResponse { status: true })),
+        None => Ok(web::Json(StatusResponse { status: false })),
     }
 }
 
