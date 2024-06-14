@@ -3,7 +3,7 @@ use actix::Addr;
 use futures::Future;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
-use crate::{ApiResult, model::CustomError, ws::{lobby::Lobby, socket_refresh::SendRefresh}};
+use crate::{ApiResult, ws::{lobby::Lobby, socket_refresh::SendRefresh}};
 use super::{Game, GameKind, ParsedOutcome, TeamGender, TypeInfo};
 
 /// This module provides all routes concerning outcomes.
@@ -92,37 +92,33 @@ impl Outcome {
     }
 
     /// This method needs the calling user as it might modify a game's state.
+    /// NOTE this previously ignored [Outcome]s with `null` data, but doesn't anymore.
     pub async fn set_data(&self, lobby: &Addr<Lobby>, pool: &PgPool) -> ApiResult<Outcome> {
-        match &self.data {
-            Some(data) => {
-                let game = Game::find(self.game_id, &pool).await?;
+        let game = Game::find(self.game_id, &pool).await?;
                 
-                // update the outcome, so we find it later
-                let mut tx = pool.begin().await?;
-                let outcome = sqlx::query_as!(
-                        Outcome, 
-                        r#"WITH updated AS (UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)
-                        SELECT game_id, game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated
-                            INNER JOIN games ON updated.game_id=games.id
-                            INNER JOIN teams ON updated.team_id=teams.id"#,
-                        data, self.game_id, self.team_id
-                    )
-                    .fetch_one(&mut *tx)
-                    .await?;
-                tx.commit().await?;
-                
-                let outcomes = Outcome::find_all_for_game(outcome.game_id, &pool).await?;
+        // update the outcome, so we find it later
+        let mut tx = pool.begin().await?;
+        let outcome = sqlx::query_as!(
+                Outcome, 
+                r#"WITH updated AS (UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)
+                SELECT game_id, game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, team_trophy_id, teams.name as team_name, data, point_value FROM updated
+                    INNER JOIN games ON updated.game_id=games.id
+                    INNER JOIN teams ON updated.team_id=teams.id"#,
+                self.data, self.game_id, self.team_id
+            )
+            .fetch_one(&mut *tx)
+            .await?;
+        tx.commit().await?;
+        
+        let outcomes = Outcome::find_all_for_game(outcome.game_id, &pool).await?;
 
-                // lock the game if there are no unset outcomes
-                if outcomes.0.into_iter().filter(|o| o.data.is_none()).collect::<Vec<Outcome>>().len() == 0 {
-                    Game::lock(game.id, pool).await?
-                    .send_refresh(lobby)?;
-                }
-                
-                Ok(outcome)
-            },
-            None => Err(CustomError::NoDataSentError { message: format!("Outcome had no data!") }),
+        // lock the game if there are no unset outcomes
+        if outcomes.0.into_iter().filter(|o| o.data.is_none()).collect::<Vec<Outcome>>().len() == 0 {
+            Game::lock(game.id, pool).await?
+            .send_refresh(lobby)?;
         }
+
+        Ok(outcome)
     }
 
     pub async fn set_point_value(parsed_outcome: ParsedOutcome, pool: &PgPool) -> ApiResult<Outcome> {
