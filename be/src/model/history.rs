@@ -60,12 +60,6 @@ impl History {
         action: String,
         pool: &PgPool,
     ) -> ApiResult<()> {
-        match log_level {
-            LogLevel::Debug => debug!("{}", action),
-            LogLevel::Info => info!("{}", action),
-            LogLevel::Warn => info!("{}", action),
-        }
-
         let mut tx = pool.begin().await?;
         sqlx::query!(
             r#"INSERT INTO transaction_history (user_id, timestamp, log_level, action) VALUES ($1, $2, $3, $4)"#,
