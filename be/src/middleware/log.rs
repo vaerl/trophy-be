@@ -1,3 +1,8 @@
+use crate::{
+    middleware::AuthInfo,
+    model::{CustomError, History, LogLevel, SubjectType},
+    ApiResult,
+};
 use actix::fut::{ready, Ready};
 use actix_service::{Service, Transform};
 use actix_web::{
@@ -8,12 +13,7 @@ use actix_web::{
 };
 use futures::{future::LocalBoxFuture, FutureExt};
 use sqlx::PgPool;
-use std::rc::Rc;
-
-use crate::{
-    middleware::AuthInfo,
-    model::{History, LogLevel},
-};
+use std::{fmt::Display, rc::Rc};
 
 pub struct LogMiddleware<S> {
     pool: Rc<Data<PgPool>>,
@@ -40,19 +40,38 @@ where
         async move {
             let auth = req.extensions().get::<AuthInfo>().cloned();
             // fall back to path if pattern doesn't return a value
-            let path = match req.match_pattern() {
-                Some(val) => val,
-                None => req.path().to_owned(),
-            };
-            let (action, level) = match_operation(req.method(), &path);
 
-            match auth {
-                Some(val) => {
-                    History::create(val.id, level.clone(), action.clone(), &pool).await?;
-                    log::log!(level.into(), "{}", action);
-                }
-                None => info!("Executed '{}' without authentication.", action),
+            let (path, subject_id) = match req.match_pattern() {
+                Some(val) => (
+                    val,
+                    req.match_info()
+                        .get("id")
+                        .and_then(|s| s.parse::<i32>().ok()),
+                ),
+                None => (req.path().to_owned(), None),
             };
+
+            match match_operation(req.method(), &path) {
+                Err(err) => warn!("Could not extract operation-summary: {}", err),
+                Ok(summary) => {
+                    match auth {
+                        Some(val) => {
+                            let entry = History::create(
+                                val.id,
+                                summary.level.clone(),
+                                summary.operation.clone(),
+                                subject_id,
+                                summary.subject_type.clone(),
+                                &pool,
+                            )
+                            .await?;
+                            log::log!(summary.level.into(), "{}", entry);
+                        }
+                        None => info!("Executed '{}' without authentication.", summary),
+                    };
+                }
+            }
+
             let res = srv.call(req).await?;
             Ok(res)
         }
@@ -60,95 +79,238 @@ where
     }
 }
 
-// TODO add id if present and possible -> maybe split in two methods
-fn match_operation(method: &Method, path: &str) -> (String, LogLevel) {
+struct OperationSummary {
+    operation: String,
+    /// Because we rely on this value in the frontend, these values should be normed (i.e. we require an enum here).
+    subject_type: SubjectType,
+    level: LogLevel,
+}
+
+/// This implements some shorthands for easier usage.
+/// Groups by both [SubjectType] or [Operation], depending on similarities.
+///
+/// NOTE I don't yet know if these lines are worth the (hopefully) improved reading-
+/// experience in [match_operation].
+impl OperationSummary {
+    fn eval(operation: String, level: LogLevel) -> Self {
+        OperationSummary {
+            operation,
+            subject_type: SubjectType::Eval,
+            level,
+        }
+    }
+
+    fn create(subject_type: SubjectType) -> Self {
+        OperationSummary {
+            operation: format!("create"),
+            subject_type,
+            level: LogLevel::Info,
+        }
+    }
+
+    fn get(subject_type: SubjectType) -> Self {
+        OperationSummary {
+            operation: format!("get"),
+            subject_type,
+            level: LogLevel::Debug,
+        }
+    }
+
+    fn update(subject_type: SubjectType) -> Self {
+        OperationSummary {
+            operation: format!("update"),
+            subject_type,
+            level: LogLevel::Debug,
+        }
+    }
+
+    fn delete(subject_type: SubjectType) -> Self {
+        OperationSummary {
+            operation: format!("delete"),
+            subject_type,
+            level: LogLevel::Info,
+        }
+    }
+
+    fn get_all(subject_type: SubjectType) -> Self {
+        OperationSummary {
+            operation: format!("get all"),
+            subject_type,
+            level: LogLevel::Debug,
+        }
+    }
+
+    fn amount(subject_type: SubjectType) -> Self {
+        OperationSummary {
+            operation: format!("get amount"),
+            subject_type,
+            level: LogLevel::Debug,
+        }
+    }
+
+    fn pending(subject_type: SubjectType) -> Self {
+        OperationSummary {
+            operation: format!("get pending"),
+            subject_type,
+            level: LogLevel::Debug,
+        }
+    }
+
+    fn finished(subject_type: SubjectType) -> Self {
+        OperationSummary {
+            operation: format!("get finished"),
+            subject_type,
+            level: LogLevel::Debug,
+        }
+    }
+}
+
+impl Display for OperationSummary {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "OperationSummary(operation: {}, subject: {}, level: {})",
+            self.operation, self.subject_type, self.level
+        )
+    }
+}
+
+fn match_operation(method: &Method, path: &str) -> ApiResult<OperationSummary> {
     match path {
-        "/eval" => (format!("evaluate trophy"), LogLevel::Warn),
-        "/eval/sheet" => (format!("download sheet"), LogLevel::Debug),
-        "/eval/done" => (format!("check if trophy is evaluated"), LogLevel::Debug),
-        "/games" => match method {
-            &Method::GET => (format!("get all games"), LogLevel::Debug),
-            &Method::POST => (format!("create new game"), LogLevel::Info),
-            _ => (
-                format!("Unsupported method {} for '/games'.", method),
-                LogLevel::Warn,
-            ),
-        },
-        "/games/amount" => (format!("get the amount of games"), LogLevel::Debug),
-        "/games/pending" => (format!("get all pending games"), LogLevel::Debug),
-        "/games/finished" => (format!("get all finished games"), LogLevel::Debug),
-        "/games/{id}" => match method {
-            &Method::GET => (format!("get game with id"), LogLevel::Debug),
-            &Method::PUT => (format!("update game with id"), LogLevel::Info),
-            &Method::DELETE => (format!("delete game with id"), LogLevel::Info),
-            _ => (
-                format!("Unsupported method {} for '/games/id'.", method),
-                LogLevel::Warn,
-            ),
-        },
-        "/games/{id}/pending" => (format!("get pending teams for game"), LogLevel::Debug),
-        "/games/{id}/pending/amount" => (
-            format!("get the amount of pending teams for game"),
+        "/eval" => Ok(OperationSummary::eval(
+            format!("evaluate trophy"),
+            LogLevel::Warn,
+        )),
+        "/eval/sheet" => Ok(OperationSummary::eval(
+            format!("download sheet"),
             LogLevel::Debug,
-        ),
-        "/games/{id}/finished" => (format!("get finished teams for game"), LogLevel::Debug),
-        "/history" => (format!("find all transactions"), LogLevel::Debug),
-        "/ping" => (format!("received new ping-request"), LogLevel::Debug),
-        "/done" => (format!("check if trophy is done"), LogLevel::Debug),
+        )),
+        "/eval/done" => Ok(OperationSummary::eval(
+            format!("check if evaluation is done"),
+            LogLevel::Debug,
+        )),
+        "/games" => match method {
+            &Method::GET => Ok(OperationSummary::get_all(SubjectType::Game)),
+            &Method::POST => Ok(OperationSummary::create(SubjectType::Game)),
+            _ => Err(CustomError::UnsupportedMethod {
+                method: format!("{}", method),
+                path: format!("{}", path),
+            }),
+        },
+        "/games/amount" => Ok(OperationSummary::amount(SubjectType::Game)),
+        "/games/pending" => Ok(OperationSummary::pending(SubjectType::Game)),
+        "/games/finished" => Ok(OperationSummary::finished(SubjectType::Game)),
+        "/games/{id}" => match method {
+            &Method::GET => Ok(OperationSummary::get(SubjectType::Game)),
+            &Method::PUT => Ok(OperationSummary::update(SubjectType::Game)),
+            &Method::DELETE => Ok(OperationSummary::delete(SubjectType::Game)),
+            _ => Err(CustomError::UnsupportedMethod {
+                method: format!("{}", method),
+                path: format!("{}", path),
+            }),
+        },
+        "/games/{id}/pending" => Ok(OperationSummary {
+            operation: format!("get pending teams for game"),
+            subject_type: SubjectType::Game,
+            level: LogLevel::Debug,
+        }),
+        "/games/{id}/pending/amount" => Ok(OperationSummary {
+            operation: format!("get the amount of pending teams for game"),
+            subject_type: SubjectType::Game,
+            level: LogLevel::Debug,
+        }),
+        "/games/{id}/finished" => Ok(OperationSummary {
+            operation: format!("get finished teams for game"),
+            subject_type: SubjectType::Game,
+            level: LogLevel::Debug,
+        }),
+        "/history" => Ok(OperationSummary::get_all(SubjectType::History)),
+        "/ping" => Ok(OperationSummary {
+            operation: format!("ping"),
+            subject_type: SubjectType::General,
+            level: LogLevel::Debug,
+        }),
+        "/done" => Ok(OperationSummary {
+            operation: format!("check if trophy is done"),
+            subject_type: SubjectType::General,
+            level: LogLevel::Debug,
+        }),
         "/outcomes" => match method {
-            &Method::GET => (format!("get all outcomes"), LogLevel::Debug),
-            &Method::PUT => (format!("update outcome with id"), LogLevel::Info),
-            _ => (
-                format!("Unsupported method {} for '/outcomes'.", method),
-                LogLevel::Warn,
-            ),
+            &Method::GET => Ok(OperationSummary::get_all(SubjectType::Outcome)),
+            &Method::PUT => Ok(OperationSummary::update(SubjectType::Outcome)),
+            _ => Err(CustomError::UnsupportedMethod {
+                method: format!("{}", method),
+                path: format!("{}", path),
+            }),
         },
-        "/outcomes/games/{id}" => (format!("get all outcomes for game"), LogLevel::Debug),
-        "/outcomes/teams/{id}" => (format!("get all outcomes for team"), LogLevel::Debug),
+        "/outcomes/games/{id}" => Ok(OperationSummary::get_all(SubjectType::Outcome)),
+        "/outcomes/teams/{id}" => Ok(OperationSummary::get_all(SubjectType::Outcome)),
         "/teams" => match method {
-            &Method::GET => (format!("get all teams"), LogLevel::Debug),
-            &Method::POST => (format!("create new team"), LogLevel::Info),
-            _ => (
-                format!("Unsupported method {} for '/teams'.", method),
-                LogLevel::Warn,
-            ),
+            &Method::GET => Ok(OperationSummary::get_all(SubjectType::Team)),
+            &Method::POST => Ok(OperationSummary::create(SubjectType::Team)),
+            _ => Err(CustomError::UnsupportedMethod {
+                method: format!("{}", method),
+                path: format!("{}", path),
+            }),
         },
-        "/teams/amount" => (format!("get the amount of teams"), LogLevel::Debug),
-        "/teams/pending" => (format!("get all pending teams"), LogLevel::Debug),
-        "/teams/finished" => (format!("get all finished teams"), LogLevel::Debug),
+        "/teams/amount" => Ok(OperationSummary::amount(SubjectType::Team)),
+        "/teams/pending" => Ok(OperationSummary::pending(SubjectType::Team)),
+        "/teams/finished" => Ok(OperationSummary::finished(SubjectType::Team)),
         "/teams/{id}" => match method {
-            &Method::GET => (format!("get team with id"), LogLevel::Debug),
-            &Method::PUT => (format!("update team with id"), LogLevel::Info),
-            &Method::DELETE => (format!("delete team with id"), LogLevel::Info),
-            _ => (
-                format!("Unsupported method {} for '/teams/id'.", method),
-                LogLevel::Warn,
-            ),
+            &Method::GET => Ok(OperationSummary::get(SubjectType::Team)),
+            &Method::PUT => Ok(OperationSummary::update(SubjectType::Team)),
+            &Method::DELETE => Ok(OperationSummary::delete(SubjectType::Team)),
+            _ => Err(CustomError::UnsupportedMethod {
+                method: format!("{}", method),
+                path: format!("{}", path),
+            }),
         },
-        "/teams/{id}/pending" => (format!("get pending games for team"), LogLevel::Debug),
-        "/teams/{id}/finished" => (format!("get finished games for team"), LogLevel::Debug),
-        "/user/status" => (format!("check user-status"), LogLevel::Debug),
+        "/teams/{id}/pending" => Ok(OperationSummary {
+            operation: format!("get pending games for team"),
+            subject_type: SubjectType::Team,
+            level: LogLevel::Debug,
+        }),
+        "/teams/{id}/finished" => Ok(OperationSummary {
+            operation: format!("get pending games for team"),
+            subject_type: SubjectType::Team,
+            level: LogLevel::Debug,
+        }),
+        "/user/status" => Ok(OperationSummary {
+            operation: format!("check if user is logged in"),
+            subject_type: SubjectType::General,
+            level: LogLevel::Debug,
+        }),
         "/users" => match method {
-            &Method::GET => (format!("get all users"), LogLevel::Debug),
-            &Method::POST => (format!("create new user"), LogLevel::Info),
-            _ => (
-                format!("Unsupported method {} for '/users'.", method),
-                LogLevel::Warn,
-            ),
+            &Method::GET => Ok(OperationSummary::get_all(SubjectType::User)),
+            &Method::POST => Ok(OperationSummary::create(SubjectType::User)),
+            _ => Err(CustomError::UnsupportedMethod {
+                method: format!("{}", method),
+                path: format!("{}", path),
+            }),
         },
         "/users/{id}" => match method {
-            &Method::GET => (format!("get user with id"), LogLevel::Debug),
-            &Method::PUT => (format!("update user with id"), LogLevel::Info),
-            &Method::DELETE => (format!("delete user with id"), LogLevel::Info),
-            _ => (
-                format!("Unsupported method {} for '/users/id'.", method),
-                LogLevel::Warn,
-            ),
+            &Method::GET => Ok(OperationSummary::get(SubjectType::User)),
+            &Method::PUT => Ok(OperationSummary::update(SubjectType::User)),
+            &Method::DELETE => Ok(OperationSummary::delete(SubjectType::User)),
+            _ => Err(CustomError::UnsupportedMethod {
+                method: format!("{}", method),
+                path: format!("{}", path),
+            }),
         },
-        "/users/{id}/game" => (format!("get game for user"), LogLevel::Debug),
-        "/login" => (format!("login"), LogLevel::Info),
-        "/logout" => (format!("logout"), LogLevel::Info),
-        _ => (format!("unsupported path"), LogLevel::Warn),
+        "/users/{id}/game" => Ok(OperationSummary::get(SubjectType::Game)),
+        "/login" => Ok(OperationSummary {
+            operation: format!("login"),
+            subject_type: SubjectType::User,
+            level: LogLevel::Debug,
+        }),
+        "/logout" => Ok(OperationSummary {
+            operation: format!("logout"),
+            subject_type: SubjectType::User,
+            level: LogLevel::Debug,
+        }),
+        _ => Err(CustomError::UnsupportedPath {
+            path: format!("{}", path),
+        }),
     }
 }
 

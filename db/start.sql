@@ -9,6 +9,7 @@ DROP TYPE IF EXISTS game_kind;
 DROP TYPE IF EXISTS team_gender;
 DROP TYPE IF EXISTS user_role;
 DROP TYPE IF EXISTS log_level;
+DROP TYPE IF EXISTS subject_type;
 ---
 ---
 ---
@@ -17,6 +18,7 @@ CREATE TYPE game_kind AS ENUM ('points', 'time');
 CREATE TYPE team_gender AS ENUM ('female', 'male', 'mixed');
 CREATE TYPE user_role AS ENUM ('admin', 'referee', 'visualizer');
 CREATE TYPE log_level AS ENUM ('debug', 'info', 'warn');
+CREATE TYPE subject_type AS ENUM ('game', 'team', 'outcome', 'history', 'user', 'eval', 'general');
 -- create model-tables
 CREATE TABLE games (
     id serial PRIMARY KEY NOT NULL,
@@ -54,8 +56,10 @@ CREATE TABLE game_team (
 --- create meta-tables
 CREATE TABLE transaction_history (
     id serial PRIMARY KEY NOT NULL,
-    user_id int NOT NULL REFERENCES users (id),
+    user_id int REFERENCES users (id),
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
-    log_level log_level NOT NULL,
-    action varchar NOT NULL
+    level log_level NOT NULL,
+    operation varchar NOT NULL,
+    subject_id int,
+    subject_type subject_type NOT NULL
 );

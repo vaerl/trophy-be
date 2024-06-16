@@ -15,6 +15,8 @@ pub struct ErrorResponse {
     pub error: String,
 }
 
+// TODO check if there are unused variants
+
 /// This enables me to simply call err.error_response() on errors, so all errors
 /// have the correct status-codes.
 
@@ -57,6 +59,12 @@ pub enum CustomError {
     // websocket-errors
     #[error("Could not send the websocket-message: {message}")]
     SendError { message: String },
+
+    // log-errors
+    #[error("Unsupported path: {path}")]
+    UnsupportedPath { path: String },
+    #[error("Unsupported method '{method}' for path '{path}'.")]
+    UnsupportedMethod { method: String, path: String },
 }
 
 impl error::ResponseError for CustomError {
@@ -104,6 +112,10 @@ impl error::ResponseError for CustomError {
 
             // websocket-errors
             CustomError::SendError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+
+            // logs
+            CustomError::UnsupportedPath { .. } => StatusCode::BAD_REQUEST,
+            CustomError::UnsupportedMethod { .. } => StatusCode::BAD_REQUEST,
         }
     }
 }
