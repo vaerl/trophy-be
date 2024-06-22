@@ -28,7 +28,14 @@ async fn is_done(
     .to_json()
 }
 
+#[get("/years")]
+async fn years(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<impl Responder> {
+    auth.has_roles(vec![UserRole::Admin])?;
+    Year::find_all(&pool).await?.to_json()
+}
+
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(ping);
     cfg.service(is_done);
+    cfg.service(years);
 }
