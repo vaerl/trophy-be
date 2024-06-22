@@ -104,7 +104,6 @@ impl User {
     }
 
     pub async fn find_by_name(name: &String, pool: &PgPool) -> ApiResult<User> {
-        info!("{}", name);
         let user = sqlx::query_as!(
             User,
             r#"SELECT users.id, users.name, users.password, users.role as "role: UserRole", game_id, games.name as "game_name?", users.session FROM users
