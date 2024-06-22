@@ -6,7 +6,7 @@ use sqlx::{PgPool, Type};
 use std::fmt::Display;
 
 #[derive(Serialize, Type, Clone)]
-#[sqlx(type_name = "log_level")]
+#[sqlx(type_name = "subject_type")]
 #[sqlx(rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum SubjectType {
