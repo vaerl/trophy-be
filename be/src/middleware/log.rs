@@ -20,6 +20,37 @@ pub struct LogMiddleware<S> {
     service: Rc<S>,
 }
 
+pub struct LogMiddlewareFactory {
+    pool: Rc<Data<PgPool>>,
+}
+
+impl LogMiddlewareFactory {
+    pub fn new(pool: Data<PgPool>) -> Self {
+        Self {
+            pool: Rc::new(pool),
+        }
+    }
+}
+
+impl<S, B> Transform<S, ServiceRequest> for LogMiddlewareFactory
+where
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+    B: 'static,
+{
+    type Response = ServiceResponse<B>;
+    type Error = Error;
+    type Transform = LogMiddleware<S>;
+    type InitError = ();
+    type Future = Ready<Result<Self::Transform, Self::InitError>>;
+
+    fn new_transform(&self, service: S) -> Self::Future {
+        ready(Ok(LogMiddleware {
+            pool: Rc::clone(&self.pool),
+            service: Rc::new(service),
+        }))
+    }
+}
+
 // largely taken from https://imfeld.dev/writing/actix-web-middleware
 impl<S, B> Service<ServiceRequest> for LogMiddleware<S>
 where
@@ -39,19 +70,22 @@ where
         let pool = self.pool.clone();
         async move {
             let auth = req.extensions().get::<AuthInfo>().cloned();
-            // fall back to path if pattern doesn't return a value
+            // NOTE match_info works only after the request has been handled, see https://github.com/actix/actix-web/issues/1784
+            let res = srv.call(req).await?;
 
-            let (path, subject_id) = match req.match_pattern() {
+            // fall back to path if pattern doesn't return a value
+            let (path, subject_id) = match res.request().match_pattern() {
                 Some(val) => (
                     val,
-                    req.match_info()
+                    res.request()
+                        .match_info()
                         .get("id")
                         .and_then(|s| s.parse::<i32>().ok()),
                 ),
-                None => (req.path().to_owned(), None),
+                None => (res.request().path().to_owned(), None),
             };
 
-            match match_operation(req.method(), &path) {
+            match match_operation(res.request().method(), &path) {
                 Err(err) => warn!("Could not extract operation-summary: {}", err),
                 Ok(summary) => {
                     match auth {
@@ -71,8 +105,6 @@ where
                     };
                 }
             }
-
-            let res = srv.call(req).await?;
             Ok(res)
         }
         .boxed_local()
@@ -311,35 +343,5 @@ fn match_operation(method: &Method, path: &str) -> ApiResult<OperationSummary> {
         _ => Err(CustomError::UnsupportedPath {
             path: format!("{}", path),
         }),
-    }
-}
-
-pub struct LogMiddlewareFactory {
-    pool: Rc<Data<PgPool>>,
-}
-
-impl LogMiddlewareFactory {
-    pub fn new(pool: Data<PgPool>) -> Self {
-        LogMiddlewareFactory {
-            pool: Rc::new(pool),
-        }
-    }
-}
-
-impl<S, B> Transform<S, ServiceRequest> for LogMiddlewareFactory
-where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
-{
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type Transform = LogMiddleware<S>;
-    type InitError = ();
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
-
-    fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(LogMiddleware {
-            pool: self.pool.clone(),
-            service: Rc::new(service),
-        }))
     }
 }

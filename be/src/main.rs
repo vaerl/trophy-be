@@ -55,16 +55,20 @@ async fn main() -> Result<(), CustomError> {
         App::new()
             .wrap(cors)
             // NOTE LogMiddlewareFactory must run after AuthMiddlewareFactory to access AuthInfo - this order seems to achieve that
-            .wrap(LogMiddlewareFactory::new(db_pool.clone()))
             .wrap(AuthMiddlewareFactory::new(db_pool.clone()))
             // pass database pool to application so we can access it inside handlers
             .app_data(db_pool.clone())
-            .configure(routes::init)
             .configure(ws::init)
             // return JSON-parse-errors
             .app_data(
                 web::JsonConfig::default()
                     .error_handler(|err, _req| verbose_json_error(err).into()),
+            )
+            // make sure log-middleware runs after routing
+            .service(
+                web::scope("")
+                    .wrap(LogMiddlewareFactory::new(db_pool.clone()))
+                    .configure(routes::init),
             )
             .app_data(ws_server.clone())
     })
