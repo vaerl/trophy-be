@@ -1,7 +1,6 @@
+use crate::ApiResult;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-
-use crate::{model::team, ApiResult};
 
 #[derive(Serialize)]
 pub struct StatusResponse {
@@ -12,8 +11,6 @@ pub struct StatusResponse {
 pub struct Year {
     year: i32,
 }
-
-pub struct YearTest(i32);
 
 impl std::ops::Deref for Year {
     type Target = i32;
