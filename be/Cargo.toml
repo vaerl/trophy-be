@@ -8,35 +8,35 @@ edition = "2021"
 
 [dependencies]
 # basics
-dotenv = "0.15"
+dotenv = "0.15.0"
 futures = "0.3.30"
-humantime = "2.1"
-xlsxwriter = "0.6"
-thiserror = "1.0.59"
+humantime = "2.1.0"
+xlsxwriter = "0.6.1"
+thiserror = "1.0.63"
 # logging
-env_logger = "0.11.3"
-log = "0.4.21"
+env_logger = "0.11.5"
+log = "0.4.22"
 # runtime
-tokio = { version = "1.37.0", features = ["full"] }
+tokio = { version = "1.39.2", features = ["full"] }
 # database
-sqlx = { version = "0.7.4", features = [
+sqlx = { version = "0.8.0", features = [
     "runtime-tokio-rustls",
     "postgres",
     "chrono",
 ] }
 # http/rest
-actix-web = "4.5.1"
-actix-files = "0.6.5"
+actix-web = "4.8.0"
+actix-files = "0.6.6"
 actix-service = "2.0.2"
-actix-cors = "0.7"
-serde = "1.0.200"
-serde_json = "1.0.116"
+actix-cors = "0.7.0"
+serde = "1.0.204"
+serde_json = "1.0.121"
 # websockets
 actix-web-actors = "4.3"
-actix = "0.13.3"
+actix = "0.13.5"
 # auth
-jsonwebtoken = "9.3"
+jsonwebtoken = "9.3.0"
 argon2 = "0.5.3"
 rand_core = { version = "0.6.4", features = ["std"] }
 chrono = { version = "0.4.38", features = ["serde"] }
-uuid = { version = "1.8.0", features = ["v4", "serde"] }
+uuid = { version = "1.10.0", features = ["v4", "serde"] }
