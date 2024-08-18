@@ -1,10 +1,8 @@
 use crate::{
     middleware::Authenticated,
     model::{CreateGame, Game, UserRole, Year},
-    ws::{lobby::Lobby, socket_refresh::SendRefresh},
     ApiResult, ToJson,
 };
-use actix::Addr;
 use actix_web::{
     delete, get, post, put,
     web::{self, Data, Json, Path, Query},
@@ -57,12 +55,10 @@ async fn create_game(
     create_game: Json<CreateGame>,
     pool: Data<PgPool>,
     auth: Authenticated,
-    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
     Game::create(create_game.into_inner(), &pool)
         .await?
-        .send_refresh(&lobby_addr)?
         .to_json()
 }
 
@@ -82,13 +78,9 @@ async fn update_game(
     game: Json<CreateGame>,
     pool: Data<PgPool>,
     auth: Authenticated,
-    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
-    Game::update(*id, game.into_inner(), &pool)
-        .await?
-        .send_refresh(&lobby_addr)?
-        .to_json()
+    Game::update(*id, game.into_inner(), &pool).await?.to_json()
 }
 
 #[delete("/games/{id}")]
@@ -96,13 +88,9 @@ async fn delete_game(
     id: Path<i32>,
     pool: Data<PgPool>,
     auth: Authenticated,
-    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
-    Game::delete(*id, &pool)
-        .await?
-        .send_refresh(&lobby_addr)?
-        .to_json()
+    Game::delete(*id, &pool).await?.to_json()
 }
 
 #[get("/games/{id}/pending")]

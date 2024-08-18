@@ -8,8 +8,6 @@ use serde::Serialize;
 use thiserror::Error;
 use xlsxwriter::XlsxError;
 
-use crate::ws::messages::ClientActorMessage;
-
 #[derive(Serialize)]
 pub struct ErrorResponse {
     pub error: String,
@@ -194,14 +192,6 @@ impl From<jsonwebtoken::errors::Error> for CustomError {
 impl From<password_hash::Error> for CustomError {
     fn from(err: password_hash::Error) -> CustomError {
         CustomError::BadPasswordError {
-            message: err.to_string(),
-        }
-    }
-}
-
-impl From<actix::prelude::SendError<ClientActorMessage>> for CustomError {
-    fn from(err: actix::prelude::SendError<ClientActorMessage>) -> CustomError {
-        CustomError::SendError {
             message: err.to_string(),
         }
     }

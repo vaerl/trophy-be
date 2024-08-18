@@ -1,4 +1,3 @@
-use actix::Addr;
 use actix_web::{
     get, put,
     web::{self, Data},
@@ -9,7 +8,6 @@ use sqlx::PgPool;
 use crate::{
     middleware::Authenticated,
     model::{CustomError, Outcome, User, UserRole},
-    ws::{lobby::Lobby, socket_refresh::SendRefresh},
     ApiResult, ToJson,
 };
 
@@ -25,25 +23,15 @@ async fn update_outcome(
     pool: Data<PgPool>,
     auth: Authenticated,
     outcome: web::Json<Outcome>,
-    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
     match auth.role {
-        UserRole::Admin => outcome
-            .into_inner()
-            .set_data(&lobby_addr, &pool)
-            .await?
-            .to_json(),
+        UserRole::Admin => outcome.into_inner().set_data(&pool).await?.to_json(),
         UserRole::Referee => {
             let game = User::find_game_for_ref(auth.id, &pool).await?;
 
             // check if the ref is accessing the correct game and only allow updating if it's not locked yet
             if outcome.game_id == game.id && !game.locked {
-                outcome
-                    .into_inner()
-                    .set_data(&lobby_addr, &pool)
-                    .await?
-                    .send_refresh(&lobby_addr)?
-                    .to_json()
+                outcome.into_inner().set_data(&pool).await?.to_json()
             } else {
                 Err(CustomError::AccessDeniedError)
             }

@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate log;
 
-use actix::Actor;
 use actix_cors::Cors;
 use actix_web::{
     error::{self, InternalError, JsonPayloadError},
@@ -17,14 +16,12 @@ use std::env;
 use crate::{
     middleware::{AuthMiddlewareFactory, LogMiddlewareFactory},
     model::{CreateUser, User},
-    ws::lobby::Lobby,
 };
 
 mod eval;
 mod middleware;
 mod model;
 mod routes;
-mod ws;
 
 #[actix_web::main]
 async fn main() -> Result<(), CustomError> {
@@ -39,8 +36,6 @@ async fn main() -> Result<(), CustomError> {
     let host = env::var("HOST").expect("HOST is not set in .env file!");
     let port = env::var("PORT").expect("PORT is not set in .env file!");
     let origin = env::var("CORS_ORIGIN").expect("CORS_ORIGIN is not set in .env file!");
-
-    let ws_server = Data::new(Lobby::default().start());
 
     let server = HttpServer::new(move || {
         // more here: https://docs.rs/actix-cors/latest/actix_cors/index.html
@@ -58,7 +53,6 @@ async fn main() -> Result<(), CustomError> {
             .wrap(AuthMiddlewareFactory::new(db_pool.clone()))
             // pass database pool to application so we can access it inside handlers
             .app_data(db_pool.clone())
-            .configure(ws::init)
             // return JSON-parse-errors
             .app_data(
                 web::JsonConfig::default()
@@ -70,7 +64,6 @@ async fn main() -> Result<(), CustomError> {
                     .wrap(LogMiddlewareFactory::new(db_pool.clone()))
                     .configure(routes::init),
             )
-            .app_data(ws_server.clone())
     })
     .bind(format!("{}:{}", host, port))?;
 

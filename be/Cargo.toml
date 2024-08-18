@@ -1,6 +1,6 @@
 [package]
 name = "trophy-be"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["vaerl <me@lukas.run>"]
 edition = "2021"
 
@@ -17,7 +17,7 @@ thiserror = "1.0.63"
 env_logger = "0.11.5"
 log = "0.4.22"
 # runtime
-tokio = { version = "1.39.2", features = ["full"] }
+tokio = { version = "1.39.3", features = ["full"] }
 # database
 sqlx = { version = "0.8.0", features = [
     "runtime-tokio-rustls",
@@ -25,15 +25,13 @@ sqlx = { version = "0.8.0", features = [
     "chrono",
 ] }
 # http/rest
-actix-web = "4.8.0"
+actix = "0.13.5"
+actix-web = "4.9.0"
 actix-files = "0.6.6"
 actix-service = "2.0.2"
 actix-cors = "0.7.0"
-serde = "1.0.204"
-serde_json = "1.0.121"
-# websockets
-actix-web-actors = "4.3"
-actix = "0.13.5"
+serde = "1.0.208"
+serde_json = "1.0.125"
 # auth
 jsonwebtoken = "9.3.0"
 argon2 = "0.5.3"

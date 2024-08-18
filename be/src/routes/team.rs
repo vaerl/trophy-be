@@ -1,4 +1,3 @@
-use actix::Addr;
 use actix_web::{
     delete, get, post, put,
     web::{self, Data, Query},
@@ -9,7 +8,6 @@ use sqlx::PgPool;
 use crate::{
     middleware::Authenticated,
     model::{CreateTeam, Team, UserRole, Year},
-    ws::{lobby::Lobby, socket_refresh::SendRefresh},
     ApiResult, ToJson,
 };
 
@@ -58,12 +56,10 @@ async fn create_team(
     create_team: web::Json<CreateTeam>,
     pool: Data<PgPool>,
     auth: Authenticated,
-    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
     Team::create(create_team.into_inner(), &pool)
         .await?
-        .send_refresh(&lobby_addr)?
         .to_json()
 }
 
@@ -83,13 +79,9 @@ async fn update_team(
     team: web::Json<CreateTeam>,
     pool: Data<PgPool>,
     auth: Authenticated,
-    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
-    Team::update(*id, team.into_inner(), &pool)
-        .await?
-        .send_refresh(&lobby_addr)?
-        .to_json()
+    Team::update(*id, team.into_inner(), &pool).await?.to_json()
 }
 
 #[delete("/teams/{id}")]
@@ -97,13 +89,9 @@ async fn delete_team(
     id: web::Path<i32>,
     pool: Data<PgPool>,
     auth: Authenticated,
-    lobby_addr: Data<Addr<Lobby>>,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
-    Team::delete(*id, &pool)
-        .await?
-        .send_refresh(&lobby_addr)?
-        .to_json()
+    Team::delete(*id, &pool).await?.to_json()
 }
 
 #[get("/teams/{id}/pending")]
