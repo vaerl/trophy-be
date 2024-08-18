@@ -18,7 +18,6 @@ use crate::{
 #[derive(Debug)]
 pub struct Auth {
     pub id: i32,
-    pub name: String,
     pub role: UserRole,
 }
 
@@ -90,7 +89,6 @@ where
             if let Ok(user) = user {
                 let auth = Auth {
                     id: user.id,
-                    name: user.name,
                     role: user.role,
                 };
                 req.extensions_mut().insert::<AuthInfo>(Rc::new(auth));
