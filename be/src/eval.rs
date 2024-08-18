@@ -152,15 +152,17 @@ async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> ApiResult<()>
 
     // :create initial structure
     let mut sheet = workbook.add_worksheet(Some(&teams[0].gender.to_string()))?;
-    sheet.write_string(0, 0, "Team", Some(&heading))?;
-    sheet.write_string(0, 1, "Punkte", Some(&heading))?;
+    sheet.write_string(0, 0, "Platz", Some(&heading))?;
+    sheet.write_string(0, 1, "Team", Some(&heading))?;
+    sheet.write_string(0, 2, "Punkte", Some(&heading))?;
 
     // sort teams by points for right order in xlsx-file
     teams.sort_by(|a, b| b.points.cmp(&a.points));
     let mut row = 1;
-    for team in teams {
-        sheet.write_string(row, 0, &team.name, Some(&values))?;
-        sheet.write_string(row, 1, &team.points.to_string(), Some(&values))?;
+    for (id, team) in teams.iter().enumerate() {
+        sheet.write_string(row, 0, &format!("{}", id + 1), Some(&values))?;
+        sheet.write_string(row, 1, &team.name, Some(&values))?;
+        sheet.write_string(row, 2, &team.points.to_string(), Some(&values))?;
         row += 1;
     }
 
