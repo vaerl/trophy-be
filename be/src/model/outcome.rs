@@ -25,6 +25,11 @@ pub struct Outcome {
 #[derive(Serialize)]
 pub struct OutcomeVec(pub Vec<Outcome>);
 
+pub struct GenderOutcomes {
+    pub female_outcomes: Vec<ParsedOutcome>,
+    pub male_outcomes: Vec<ParsedOutcome>,
+}
+
 impl Outcome {
     pub async fn find_all(pool: &PgPool) -> ApiResult<OutcomeVec> {
         let outcomes = sqlx::query_as!(
@@ -150,7 +155,7 @@ impl Outcome {
     }
 
     /// Parse all outcomes for game and return as ParsedOutcome.
-    pub async fn parse_by_gender_for_game(game: &Game, pool: &PgPool) -> ApiResult<(Vec::<ParsedOutcome>, Vec::<ParsedOutcome>)> {
+    pub async fn parse_by_gender_for_game(game: &Game, pool: &PgPool) -> ApiResult<GenderOutcomes> {
         let mut female_outcomes = Vec::<ParsedOutcome>::new();
         let mut male_outcomes = Vec::<ParsedOutcome>::new();
         // sort outcomes by gender
@@ -162,7 +167,10 @@ impl Outcome {
             }
         }
 
-        Ok((female_outcomes, male_outcomes))
+        Ok(GenderOutcomes{
+            male_outcomes,
+            female_outcomes
+        })
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::{
-    model::{CustomError, Game, Outcome, ParsedOutcome, Team, Value},
+    model::{CustomError, Game, GenderOutcomes, Outcome, ParsedOutcome, Team, Value},
     ApiResult, TypeInfo,
 };
 use actix_files::NamedFile;
@@ -67,15 +67,19 @@ async fn evaluate_game(game: Game, pool: &PgPool) -> ApiResult<()> {
     }
 
     // get all Outcomes as ParsedOutcomes for game separated by gender
-    let (female, male) = Outcome::parse_by_gender_for_game(&game, pool).await?;
+    let GenderOutcomes {
+        male_outcomes,
+        female_outcomes,
+    } = Outcome::parse_by_gender_for_game(&game, pool).await?;
 
-    // using for-loops allows using await and ?
-    for outcome in evaluate(female) {
+    // persist all changes from evaluate()
+    // -> update_points and set_point_value write the current values of team and outcome (that have been assigned by evaluate) to the database
+    for outcome in evaluate(female_outcomes) {
         outcome.team.update_points(pool).await?;
         Outcome::set_point_value(outcome, pool).await?;
     }
 
-    for outcome in evaluate(male) {
+    for outcome in evaluate(male_outcomes) {
         outcome.team.update_points(pool).await?;
         Outcome::set_point_value(outcome, pool).await?;
     }
@@ -83,7 +87,7 @@ async fn evaluate_game(game: Game, pool: &PgPool) -> ApiResult<()> {
     Ok(())
 }
 
-/// Evaluate a game by its ParsedOutcomes.
+/// Evaluate a [Game] by its [ParsedOutcome]s.
 fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
     if outcomes.len() == 0 {
         return outcomes;
