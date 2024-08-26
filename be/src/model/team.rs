@@ -10,7 +10,12 @@ use crate::ApiResult;
 #[sqlx(rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum TeamGender {
+    #[serde(alias = "f")]
+    #[serde(alias = "w")]
     Female,
+
+    #[serde(alias = "m")]
+    #[serde(alias = "g")]
     Male,
 }
 
@@ -52,6 +57,9 @@ pub struct ImportTeam {
     #[serde(alias = "ID")]
     #[serde(alias = "Id")]
     #[serde(alias = "Nr.")]
+    #[serde(alias = "Nr")]
+    #[serde(alias = "NR")]
+    #[serde(alias = "NR.")]
     pub id: i32,
 
     #[serde(alias = "Name")]
