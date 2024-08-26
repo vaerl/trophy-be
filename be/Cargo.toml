@@ -38,3 +38,5 @@ argon2 = "0.5.3"
 rand_core = { version = "0.6.4", features = ["std"] }
 chrono = { version = "0.4.38", features = ["serde"] }
 uuid = { version = "1.10.0", features = ["v4", "serde"] }
+actix-multipart = "0.7.2"
+calamine = "0.25.0"
