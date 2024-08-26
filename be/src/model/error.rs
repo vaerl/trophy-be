@@ -41,7 +41,7 @@ pub enum CustomError {
     // eval-errors
     #[error("You tried to evaluate while teams are still playing: {message}")]
     EarlyEvaluationError { message: String },
-    #[error("An error occurred while interacting with an excel-file: {message}")]
+    #[error("An error occurred while writing an excel-file: {message}")]
     XlsxError { message: String },
 
     // auth-errors
@@ -63,6 +63,10 @@ pub enum CustomError {
     UnsupportedPath { path: String },
     #[error("Unsupported method '{method}' for path '{path}'.")]
     UnsupportedMethod { method: String, path: String },
+
+    // import-errors
+    #[error("An error occurred while reading an excel-file: {message}")]
+    CalmineError { message: String },
 }
 
 impl error::ResponseError for CustomError {
@@ -114,6 +118,9 @@ impl error::ResponseError for CustomError {
             // logs
             CustomError::UnsupportedPath { .. } => StatusCode::BAD_REQUEST,
             CustomError::UnsupportedMethod { .. } => StatusCode::BAD_REQUEST,
+
+            // import
+            CustomError::CalmineError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
@@ -191,6 +198,22 @@ impl From<jsonwebtoken::errors::Error> for CustomError {
 
 impl From<password_hash::Error> for CustomError {
     fn from(err: password_hash::Error) -> CustomError {
+        CustomError::BadPasswordError {
+            message: err.to_string(),
+        }
+    }
+}
+
+impl From<calamine::XlsxError> for CustomError {
+    fn from(err: calamine::XlsxError) -> CustomError {
+        CustomError::BadPasswordError {
+            message: err.to_string(),
+        }
+    }
+}
+
+impl From<calamine::DeError> for CustomError {
+    fn from(err: calamine::DeError) -> CustomError {
         CustomError::BadPasswordError {
             message: err.to_string(),
         }

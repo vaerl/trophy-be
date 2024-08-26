@@ -3,6 +3,7 @@ use actix_web::web;
 mod eval;
 mod game;
 mod history;
+mod import;
 mod misc;
 mod outcome;
 mod team;
@@ -16,4 +17,5 @@ pub fn init(cfg: &mut web::ServiceConfig) {
     eval::init(cfg);
     user::init(cfg);
     history::init(cfg);
+    import::init(cfg);
 }

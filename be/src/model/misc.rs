@@ -1,4 +1,5 @@
 use crate::ApiResult;
+use actix_multipart::form::{tempfile::TempFile, MultipartForm};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
@@ -45,4 +46,20 @@ impl Year {
         team_years.dedup();
         Ok(YearVec(team_years))
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ImportMetadata {
+    pub sheet_name: String,
+    pub trophy_id_header: String,
+    pub name_header: String,
+    pub gender_header: String,
+    pub year: i32,
+}
+
+#[derive(Debug, MultipartForm)]
+pub struct ImportUpload {
+    #[multipart(limit = "100MB")]
+    pub file: TempFile,
+    pub metadata: actix_multipart::form::json::Json<ImportMetadata>,
 }

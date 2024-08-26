@@ -1,0 +1,21 @@
+@BASE = http://127.0.0.1:4998
+
+POST {{BASE}}/import
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="teams.xlsx"
+
+< ./teams.xlsx
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="metadata"
+Content-Type: application/json
+
+{
+  "sheet_name": "teams",
+  "start_row": 2,
+  "trophy_id_col": 1,
+  "name_col": 2,
+  "gender_col": 3,
+}
+------WebKitFormBoundary7MA4YWxkTrZu0gW--

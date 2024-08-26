@@ -195,6 +195,14 @@ impl OperationSummary {
             level: LogLevel::Debug,
         }
     }
+
+    fn import(subject_type: SubjectType) -> Self {
+        OperationSummary {
+            operation: format!("import"),
+            subject_type,
+            level: LogLevel::Debug,
+        }
+    }
 }
 
 impl Display for OperationSummary {
@@ -257,6 +265,7 @@ fn match_operation(method: &Method, path: &str) -> ApiResult<OperationSummary> {
             level: LogLevel::Debug,
         }),
         "/history" => Ok(OperationSummary::get_all(SubjectType::History)),
+        "/import" => Ok(OperationSummary::import(SubjectType::Team)),
         "/ping" => Ok(OperationSummary {
             operation: format!("ping"),
             subject_type: SubjectType::General,
