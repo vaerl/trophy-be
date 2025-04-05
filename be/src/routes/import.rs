@@ -37,7 +37,7 @@ async fn read_sheet(form: ImportUpload, pool: &PgPool) -> ApiResult<()> {
 
     for result in iter_records {
         let team: ImportTeam = result?;
-        Team::create(team.with_year(form.metadata.year), &pool).await?;
+        Team::create(team.with_year(form.metadata.year), pool).await?;
     }
 
     Ok(())

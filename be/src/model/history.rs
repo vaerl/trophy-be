@@ -44,9 +44,9 @@ pub enum LogLevel {
 }
 
 // I've chosen to do this rather than having some newtype-like construct
-impl Into<Level> for LogLevel {
-    fn into(self) -> Level {
-        match self {
+impl From<LogLevel> for Level {
+    fn from(val: LogLevel) -> Self {
+        match val {
             LogLevel::Debug => Level::Debug,
             LogLevel::Info => Level::Info,
             LogLevel::Warn => Level::Warn,
@@ -133,7 +133,7 @@ impl Display for History {
         write!(
             f,
             "History(user: {}, timestamp: {}, operation: {}, subject_type: {}, level: {})",
-            self.user_name.clone().unwrap_or(format!("<no user>")),
+            self.user_name.clone().unwrap_or("<no user>".to_string()),
             self.timestamp,
             self.operation,
             self.subject_type,

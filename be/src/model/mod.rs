@@ -33,6 +33,6 @@ impl Display for Amount {
 
 impl TypeInfo for Amount {
     fn type_name(&self) -> String {
-        format!("Amount")
+        "Amount".to_string()
     }
 }

@@ -78,10 +78,8 @@ async fn main() -> Result<(), CustomError> {
 // doing this here is easier to read
 fn verbose_json_error(err: JsonPayloadError) -> InternalError<String> {
     error::InternalError::from_response(
-        "".to_string(),
-        HttpResponse::BadRequest()
-            .body(format!("Error while parsing: {}", err))
-            .into(),
+        "".to_string(), HttpResponse::BadRequest()
+            .body(format!("Error while parsing: {}", err)),
     )
 }
 

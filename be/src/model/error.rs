@@ -78,15 +78,13 @@ impl error::ResponseError for CustomError {
         match serde_json::to_string(&response) {
             Ok(json) => HttpResponseBuilder::new(self.status_code())
                 .content_type(ContentType::json())
-                .body(json)
-                .into(),
+                .body(json),
             Err(_) => HttpResponseBuilder::new(StatusCode::INTERNAL_SERVER_ERROR)
                 .content_type(ContentType::json())
                 .body(format!(
                     r#"{{error: "Error while serializing actual error: {}"}}"#,
-                    self.to_string()
-                ))
-                .into(),
+                    self
+                )),
         }
     }
 

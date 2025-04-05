@@ -132,7 +132,7 @@ impl User {
             info!("Creating new user.");
             let salt = SaltString::generate(&mut OsRng);
             let argon2 = Argon2::default();
-            let password_hash = argon2.hash_password(&create_user.password.as_bytes(), &salt).unwrap().to_string();
+            let password_hash = argon2.hash_password(create_user.password.as_bytes(), &salt).unwrap().to_string();
 
             let mut tx = pool.begin().await?;
             let user = sqlx::query_as!( User, 
@@ -157,7 +157,7 @@ impl User {
             Some(password) => {
                 let salt = SaltString::generate(&mut OsRng);
                 let argon2 = Argon2::default();
-                let password_hash = argon2.hash_password(&password.as_bytes(), &salt).unwrap().to_string();
+                let password_hash = argon2.hash_password(password.as_bytes(), &salt).unwrap().to_string();
         
                 
                 let mut tx = pool.begin().await?;
@@ -226,11 +226,11 @@ impl User {
         let password_hash = PasswordHash::new(&user.password)?;
         
         if user.password.is_empty() || argon2.verify_password(login.password.as_bytes(), &password_hash).is_err() {
-            return Err(CustomError::BadPasswordError {message: "Token is invalid!".to_string()});
+            Err(CustomError::BadPasswordError {message: "Token is invalid!".to_string()})
         } else {
             let session = User::generate_session();
-            User::update_session(user.id, &session, &pool).await?;
-            return Ok(UserToken::generate_token(&CreateToken {user_id: user.id, session}, user));
+            User::update_session(user.id, &session, pool).await?;
+            Ok(UserToken::generate_token(&CreateToken {user_id: user.id, session}, user))
         }
     }
 
@@ -251,7 +251,7 @@ impl Display for User {
 
 impl TypeInfo for User {
     fn type_name(&self) -> String {
-       format!("User")
+       "User".to_string()
     }
 }
 
@@ -263,6 +263,6 @@ impl Display for UserVec {
 
 impl TypeInfo for UserVec {
     fn type_name(&self) -> String {
-       format!("UserVec")
+       "UserVec".to_string()
     }
 }

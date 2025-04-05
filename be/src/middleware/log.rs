@@ -134,7 +134,7 @@ impl OperationSummary {
 
     fn create(subject_type: SubjectType) -> Self {
         OperationSummary {
-            operation: format!("create"),
+            operation: "create".to_string(),
             subject_type,
             level: LogLevel::Info,
         }
@@ -142,7 +142,7 @@ impl OperationSummary {
 
     fn get(subject_type: SubjectType) -> Self {
         OperationSummary {
-            operation: format!("get"),
+            operation: "get".to_string(),
             subject_type,
             level: LogLevel::Debug,
         }
@@ -150,7 +150,7 @@ impl OperationSummary {
 
     fn update(subject_type: SubjectType) -> Self {
         OperationSummary {
-            operation: format!("update"),
+            operation: "update".to_string(),
             subject_type,
             level: LogLevel::Debug,
         }
@@ -158,7 +158,7 @@ impl OperationSummary {
 
     fn delete(subject_type: SubjectType) -> Self {
         OperationSummary {
-            operation: format!("delete"),
+            operation: "delete".to_string(),
             subject_type,
             level: LogLevel::Info,
         }
@@ -166,7 +166,7 @@ impl OperationSummary {
 
     fn get_all(subject_type: SubjectType) -> Self {
         OperationSummary {
-            operation: format!("get all"),
+            operation: "get all".to_string(),
             subject_type,
             level: LogLevel::Debug,
         }
@@ -174,7 +174,7 @@ impl OperationSummary {
 
     fn amount(subject_type: SubjectType) -> Self {
         OperationSummary {
-            operation: format!("get amount"),
+            operation: "get amount".to_string(),
             subject_type,
             level: LogLevel::Debug,
         }
@@ -182,7 +182,7 @@ impl OperationSummary {
 
     fn pending(subject_type: SubjectType) -> Self {
         OperationSummary {
-            operation: format!("get pending"),
+            operation: "get pending".to_string(),
             subject_type,
             level: LogLevel::Debug,
         }
@@ -190,7 +190,7 @@ impl OperationSummary {
 
     fn finished(subject_type: SubjectType) -> Self {
         OperationSummary {
-            operation: format!("get finished"),
+            operation: "get finished".to_string(),
             subject_type,
             level: LogLevel::Debug,
         }
@@ -198,7 +198,7 @@ impl OperationSummary {
 
     fn import(subject_type: SubjectType) -> Self {
         OperationSummary {
-            operation: format!("import"),
+            operation: "import".to_string(),
             subject_type,
             level: LogLevel::Debug,
         }
@@ -218,139 +218,139 @@ impl Display for OperationSummary {
 fn match_operation(method: &Method, path: &str) -> ApiResult<OperationSummary> {
     match path {
         "/eval" => Ok(OperationSummary::eval(
-            format!("evaluate trophy"),
+            "evaluate trophy".to_string(),
             LogLevel::Warn,
         )),
         "/eval/sheet" => Ok(OperationSummary::eval(
-            format!("download sheet"),
+            "download sheet".to_string(),
             LogLevel::Debug,
         )),
         "/eval/done" => Ok(OperationSummary::eval(
-            format!("check if evaluation is done"),
+            "check if evaluation is done".to_string(),
             LogLevel::Debug,
         )),
-        "/games" => match method {
-            &Method::GET => Ok(OperationSummary::get_all(SubjectType::Game)),
-            &Method::POST => Ok(OperationSummary::create(SubjectType::Game)),
+        "/games" => match *method {
+            Method::GET => Ok(OperationSummary::get_all(SubjectType::Game)),
+            Method::POST => Ok(OperationSummary::create(SubjectType::Game)),
             _ => Err(CustomError::UnsupportedMethod {
-                method: format!("{}", method),
-                path: format!("{}", path),
+                method: method.to_string(),
+                path: path.to_string(),
             }),
         },
         "/games/amount" => Ok(OperationSummary::amount(SubjectType::Game)),
         "/games/pending" => Ok(OperationSummary::pending(SubjectType::Game)),
         "/games/finished" => Ok(OperationSummary::finished(SubjectType::Game)),
-        "/games/{id}" => match method {
-            &Method::GET => Ok(OperationSummary::get(SubjectType::Game)),
-            &Method::PUT => Ok(OperationSummary::update(SubjectType::Game)),
-            &Method::DELETE => Ok(OperationSummary::delete(SubjectType::Game)),
+        "/games/{id}" => match *method {
+            Method::GET => Ok(OperationSummary::get(SubjectType::Game)),
+            Method::PUT => Ok(OperationSummary::update(SubjectType::Game)),
+            Method::DELETE => Ok(OperationSummary::delete(SubjectType::Game)),
             _ => Err(CustomError::UnsupportedMethod {
-                method: format!("{}", method),
-                path: format!("{}", path),
+                method: method.to_string(),
+                path: path.to_string(),
             }),
         },
         "/games/{id}/pending" => Ok(OperationSummary {
-            operation: format!("get pending teams for game"),
+            operation: "get pending teams for game".to_string(),
             subject_type: SubjectType::Game,
             level: LogLevel::Debug,
         }),
         "/games/{id}/pending/amount" => Ok(OperationSummary {
-            operation: format!("get the amount of pending teams for game"),
+            operation: "get the amount of pending teams for game".to_string(),
             subject_type: SubjectType::Game,
             level: LogLevel::Debug,
         }),
         "/games/{id}/finished" => Ok(OperationSummary {
-            operation: format!("get finished teams for game"),
+            operation: "get finished teams for game".to_string(),
             subject_type: SubjectType::Game,
             level: LogLevel::Debug,
         }),
         "/history" => Ok(OperationSummary::get_all(SubjectType::History)),
         "/import" => Ok(OperationSummary::import(SubjectType::Team)),
         "/ping" => Ok(OperationSummary {
-            operation: format!("ping"),
+            operation: "ping".to_string(),
             subject_type: SubjectType::General,
             level: LogLevel::Debug,
         }),
         "/done" => Ok(OperationSummary {
-            operation: format!("check if trophy is done"),
+            operation: "check if trophy is done".to_string(),
             subject_type: SubjectType::General,
             level: LogLevel::Debug,
         }),
-        "/outcomes" => match method {
-            &Method::GET => Ok(OperationSummary::get_all(SubjectType::Outcome)),
-            &Method::PUT => Ok(OperationSummary::update(SubjectType::Outcome)),
+        "/outcomes" => match *method {
+            Method::GET => Ok(OperationSummary::get_all(SubjectType::Outcome)),
+            Method::PUT => Ok(OperationSummary::update(SubjectType::Outcome)),
             _ => Err(CustomError::UnsupportedMethod {
-                method: format!("{}", method),
-                path: format!("{}", path),
+                method: method.to_string(),
+                path: path.to_string(),
             }),
         },
         "/outcomes/games/{id}" => Ok(OperationSummary::get_all(SubjectType::Outcome)),
         "/outcomes/teams/{id}" => Ok(OperationSummary::get_all(SubjectType::Outcome)),
-        "/teams" => match method {
-            &Method::GET => Ok(OperationSummary::get_all(SubjectType::Team)),
-            &Method::POST => Ok(OperationSummary::create(SubjectType::Team)),
+        "/teams" => match *method {
+            Method::GET => Ok(OperationSummary::get_all(SubjectType::Team)),
+            Method::POST => Ok(OperationSummary::create(SubjectType::Team)),
             _ => Err(CustomError::UnsupportedMethod {
-                method: format!("{}", method),
-                path: format!("{}", path),
+                method: method.to_string(),
+                path: path.to_string(),
             }),
         },
         "/teams/amount" => Ok(OperationSummary::amount(SubjectType::Team)),
         "/teams/pending" => Ok(OperationSummary::pending(SubjectType::Team)),
         "/teams/finished" => Ok(OperationSummary::finished(SubjectType::Team)),
-        "/teams/{id}" => match method {
-            &Method::GET => Ok(OperationSummary::get(SubjectType::Team)),
-            &Method::PUT => Ok(OperationSummary::update(SubjectType::Team)),
-            &Method::DELETE => Ok(OperationSummary::delete(SubjectType::Team)),
+        "/teams/{id}" => match *method {
+            Method::GET => Ok(OperationSummary::get(SubjectType::Team)),
+            Method::PUT => Ok(OperationSummary::update(SubjectType::Team)),
+            Method::DELETE => Ok(OperationSummary::delete(SubjectType::Team)),
             _ => Err(CustomError::UnsupportedMethod {
-                method: format!("{}", method),
-                path: format!("{}", path),
+                method: method.to_string(),
+                path: path.to_string(),
             }),
         },
         "/teams/{id}/pending" => Ok(OperationSummary {
-            operation: format!("get pending games for team"),
+            operation: "get pending games for team".to_string(),
             subject_type: SubjectType::Team,
             level: LogLevel::Debug,
         }),
         "/teams/{id}/finished" => Ok(OperationSummary {
-            operation: format!("get pending games for team"),
+            operation: "get pending games for team".to_string(),
             subject_type: SubjectType::Team,
             level: LogLevel::Debug,
         }),
         "/user/status" => Ok(OperationSummary {
-            operation: format!("check if user is logged in"),
+            operation: "check if user is logged in".to_string(),
             subject_type: SubjectType::General,
             level: LogLevel::Debug,
         }),
-        "/users" => match method {
-            &Method::GET => Ok(OperationSummary::get_all(SubjectType::User)),
-            &Method::POST => Ok(OperationSummary::create(SubjectType::User)),
+        "/users" => match *method {
+            Method::GET => Ok(OperationSummary::get_all(SubjectType::User)),
+            Method::POST => Ok(OperationSummary::create(SubjectType::User)),
             _ => Err(CustomError::UnsupportedMethod {
-                method: format!("{}", method),
-                path: format!("{}", path),
+                method: method.to_string(),
+                path: path.to_string(),
             }),
         },
-        "/users/{id}" => match method {
-            &Method::GET => Ok(OperationSummary::get(SubjectType::User)),
-            &Method::PUT => Ok(OperationSummary::update(SubjectType::User)),
-            &Method::DELETE => Ok(OperationSummary::delete(SubjectType::User)),
+        "/users/{id}" => match *method {
+            Method::GET => Ok(OperationSummary::get(SubjectType::User)),
+            Method::PUT => Ok(OperationSummary::update(SubjectType::User)),
+            Method::DELETE => Ok(OperationSummary::delete(SubjectType::User)),
             _ => Err(CustomError::UnsupportedMethod {
-                method: format!("{}", method),
-                path: format!("{}", path),
+                method: method.to_string(),
+                path: path.to_string(),
             }),
         },
         "/users/{id}/game" => Ok(OperationSummary::get(SubjectType::Game)),
         "/login" => Ok(OperationSummary {
-            operation: format!("login"),
+            operation: "login".to_string(),
             subject_type: SubjectType::User,
             level: LogLevel::Debug,
         }),
         "/logout" => Ok(OperationSummary {
-            operation: format!("logout"),
+            operation: "logout".to_string(),
             subject_type: SubjectType::User,
             level: LogLevel::Debug,
         }),
         _ => Err(CustomError::UnsupportedPath {
-            path: format!("{}", path),
+            path: path.to_string(),
         }),
     }
 }

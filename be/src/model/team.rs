@@ -231,7 +231,7 @@ impl Team {
         for team in Team::find_all(pool, year).await?.0 {
             // I could also use pending_games_amount, but that could be removed later
             let pending_games_of_team = Team::pending_games(team.id, pool).await?.0;
-            if pending_games_of_team.len() > 0 {
+            if !pending_games_of_team.is_empty() {
                 teams.push(team)
             }
         }
@@ -243,7 +243,7 @@ impl Team {
         for team in Team::find_all(pool, year).await?.0 {
             let pending_games_of_team = Team::pending_games(team.id, pool).await?.0;
             // if there are no pending games, the team must be finished
-            if pending_games_of_team.len() == 0 {
+            if pending_games_of_team.is_empty() {
                 teams.push(team)
             }
         }
@@ -263,7 +263,7 @@ impl fmt::Display for Team {
 
 impl TypeInfo for Team {
     fn type_name(&self) -> String {
-        format!("Team")
+        "Team".to_string()
     }
 }
 
@@ -279,6 +279,6 @@ impl Display for TeamVec {
 
 impl TypeInfo for TeamVec {
     fn type_name(&self) -> String {
-        format!("TeamVec")
+        "TeamVec".to_string()
     }
 }

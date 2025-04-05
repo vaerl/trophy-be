@@ -35,7 +35,7 @@ pub async fn is_evaluated(pool: &PgPool, year: i32) -> ApiResult<bool> {
         }
     }
 
-    return Ok(true);
+    Ok(true)
 }
 
 pub async fn evaluate_trophy(pool: &PgPool, year: i32) -> ApiResult<()> {
@@ -89,7 +89,7 @@ async fn evaluate_game(game: Game, pool: &PgPool) -> ApiResult<()> {
 
 /// Evaluate a [Game] by its [ParsedOutcome]s.
 fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
-    if outcomes.len() == 0 {
+    if outcomes.is_empty() {
         return outcomes;
     }
 
@@ -136,10 +136,10 @@ pub async fn create_xlsx_file(pool: &PgPool, year: i32) -> ApiResult<ResultFile>
     let (female, male) = Team::find_all_by_gender(pool, year).await?;
 
     // only write teams if any exist
-    if female.0.len() > 0 {
+    if !female.0.is_empty() {
         write_teams(female.0, &workbook).await?;
     }
-    if male.0.len() > 0 {
+    if !male.0.is_empty() {
         write_teams(male.0, &workbook).await?;
     }
     workbook.close()?;
@@ -184,7 +184,7 @@ impl Display for ResultFile {
 
 impl TypeInfo for ResultFile {
     fn type_name(&self) -> String {
-        format!("ResultFile")
+        "ResultFile".to_string()
     }
 }
 
@@ -199,7 +199,7 @@ mod tests {
             Team {
                 id: 1,
                 trophy_id: 1,
-                name: format!("A"),
+                name: "A".to_string(),
                 gender: TeamGender::Female,
                 points: 0,
                 year: 2024,
@@ -207,7 +207,7 @@ mod tests {
             Team {
                 id: 2,
                 trophy_id: 2,
-                name: format!("B"),
+                name: "B".to_string(),
                 gender: TeamGender::Female,
                 points: 0,
                 year: 2024,
@@ -215,7 +215,7 @@ mod tests {
             Team {
                 id: 3,
                 trophy_id: 3,
-                name: format!("C"),
+                name: "C".to_string(),
                 gender: TeamGender::Female,
                 points: 0,
                 year: 2024,
@@ -223,7 +223,7 @@ mod tests {
             Team {
                 id: 4,
                 trophy_id: 4,
-                name: format!("D"),
+                name: "D".to_string(),
                 gender: TeamGender::Female,
                 points: 0,
                 year: 2024,
@@ -231,7 +231,7 @@ mod tests {
             Team {
                 id: 5,
                 trophy_id: 5,
-                name: format!("E"),
+                name: "E".to_string(),
                 gender: TeamGender::Female,
                 points: 0,
                 year: 2024,

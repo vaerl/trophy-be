@@ -176,7 +176,7 @@ impl Game {
         for game in Game::find_all(pool, year).await?.0 {
             // I could also use pending_games_amount, but that could be removed later
             let pending_teams_of_game = Game::pending_teams(game.id, pool).await?.0;
-            if pending_teams_of_game.len() > 0 {
+            if !pending_teams_of_game.is_empty() {
                 games.push(game)
             }
         }
@@ -188,7 +188,7 @@ impl Game {
         for game in Game::find_all(pool, year).await?.0 {
             // I could also use pending_games_amount, but that could be removed later
             let pending_teams_of_game = Game::pending_teams(game.id, pool).await?.0;
-            if pending_teams_of_game.len() ==0 {
+            if pending_teams_of_game.is_empty() {
                 games.push(game)
             }
         }
@@ -204,7 +204,7 @@ impl fmt::Display for Game {
 
 impl TypeInfo for Game {
     fn type_name(&self) -> String {
-       format!("Game")
+       "Game".to_string()
     }
 }
 
@@ -216,6 +216,6 @@ impl Display for GameVec {
 
 impl TypeInfo for GameVec {
     fn type_name(&self) -> String {
-       format!("GameVec")
+       "GameVec".to_string()
     }
 }

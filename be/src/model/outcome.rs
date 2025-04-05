@@ -97,7 +97,7 @@ impl Outcome {
 
     /// NOTE this previously ignored [Outcome]s with `null` data, but doesn't anymore.
     pub async fn set_data(&self, pool: &PgPool) -> ApiResult<Outcome> {
-        let game = Game::find(self.game_id, &pool).await?;
+        let game = Game::find(self.game_id, pool).await?;
                 
         // update the outcome, so we find it later
         let mut tx = pool.begin().await?;
@@ -113,10 +113,10 @@ impl Outcome {
             .await?;
         tx.commit().await?;
         
-        let outcomes = Outcome::find_all_for_game(outcome.game_id, &pool).await?;
+        let outcomes = Outcome::find_all_for_game(outcome.game_id, pool).await?;
 
         // lock the game if there are no unset outcomes
-        if outcomes.0.into_iter().filter(|o| o.data.is_none()).collect::<Vec<Outcome>>().len() == 0 {
+        if outcomes.0.into_iter().filter(|o| o.data.is_none()).collect::<Vec<Outcome>>().is_empty() {
             Game::lock(game.id, pool).await?;
         }
 
@@ -182,7 +182,7 @@ impl Display for Outcome {
 
 impl TypeInfo for Outcome {
     fn type_name(&self) -> String {
-       format!("Outcome")
+       "Outcome".to_string()
     }
 }
 
@@ -194,6 +194,6 @@ impl Display for OutcomeVec {
 
 impl TypeInfo for OutcomeVec {
     fn type_name(&self) -> String {
-       format!("OutcomeVec")
+       "OutcomeVec".to_string()
     }
 }
