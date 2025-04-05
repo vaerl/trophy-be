@@ -10,7 +10,6 @@ use actix_web::{
     HttpResponse, Responder, ResponseError,
 };
 use sqlx::PgPool;
-use std::env;
 
 #[get("/user/status")]
 async fn status(auth: Option<Authenticated>) -> ApiResult<impl Responder> {
@@ -90,14 +89,11 @@ async fn delete_user(
 /// If this bit is ever needed the [user](User) needs to support multiple sessions._
 #[post("/login")]
 async fn login(login: web::Json<CreateLogin>, db_pool: web::Data<PgPool>) -> impl Responder {
-    let secure = env::var("COOKIE_SECURE").expect("COOKIE_SECURE is not set in .env file!");
-
-    // NOTE logging is done in ::login()!
     match User::login(login.into_inner(), &db_pool).await {
         Ok(token_string) => {
             let cookie = Cookie::build("session", token_string)
                 .path("/")
-                .secure(secure.parse::<bool>().unwrap())
+                .secure(true)
                 .http_only(true)
                 .same_site(SameSite::None)
                 .finish();
