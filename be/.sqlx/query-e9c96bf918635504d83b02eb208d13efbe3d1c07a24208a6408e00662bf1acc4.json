@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH updated AS (UPDATE users SET name = $1, role = $2, game_id = $3 WHERE id = $4 RETURNING id, name, password, role as \"role: UserRole\", game_id, session)\n                    SELECT updated.id, updated.name, password, \"role: UserRole\", game_id, games.name as \"game_name?\", session FROM updated\n                            LEFT JOIN games ON games.id=updated.game_id",
+  "query": "WITH deleted AS (DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as \"role: UserRole\", game_id, session)\n            SELECT deleted.id, deleted.name, password, \"role: UserRole\", game_id, games.name as \"game_name?\", session FROM deleted\n                    INNER JOIN games ON games.id=deleted.game_id",
   "describe": {
     "columns": [
       {
@@ -52,20 +52,6 @@
     ],
     "parameters": {
       "Left": [
-        "Varchar",
-        {
-          "Custom": {
-            "name": "user_role",
-            "kind": {
-              "Enum": [
-                "admin",
-                "referee",
-                "visualizer"
-              ]
-            }
-          }
-        },
-        "Int4",
         "Int4"
       ]
     },
@@ -75,9 +61,9 @@
       false,
       false,
       true,
-      true,
+      false,
       true
     ]
   },
-  "hash": "d2f3897d2030f2947d9e1bf1337a93fcb66c846b905cc37d96591dbe00925381"
+  "hash": "e9c96bf918635504d83b02eb208d13efbe3d1c07a24208a6408e00662bf1acc4"
 }
