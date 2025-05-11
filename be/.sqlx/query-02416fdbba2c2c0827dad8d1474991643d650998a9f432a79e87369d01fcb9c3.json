@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE games SET locked = true WHERE id = $1 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", locked, year",
+  "query": "UPDATE games SET trophy_id = $1, name = $2, kind = $3 WHERE id = $4 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", year",
   "describe": {
     "columns": [
       {
@@ -35,17 +35,25 @@
       },
       {
         "ordinal": 4,
-        "name": "locked",
-        "type_info": "Bool"
-      },
-      {
-        "ordinal": 5,
         "name": "year",
         "type_info": "Int4"
       }
     ],
     "parameters": {
       "Left": [
+        "Int4",
+        "Varchar",
+        {
+          "Custom": {
+            "name": "game_kind",
+            "kind": {
+              "Enum": [
+                "points",
+                "time"
+              ]
+            }
+          }
+        },
         "Int4"
       ]
     },
@@ -54,9 +62,8 @@
       false,
       false,
       false,
-      false,
       false
     ]
   },
-  "hash": "ebd3b6420a67ad0343f1f297ce5f16b470946b8a976c42f0fc0b9421cbd7ced0"
+  "hash": "02416fdbba2c2c0827dad8d1474991643d650998a9f432a79e87369d01fcb9c3"
 }

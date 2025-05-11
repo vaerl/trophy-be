@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) FROM (\n                SELECT DISTINCT team_id FROM game_team\n                    INNER JOIN games ON game_team.game_id=games.id\n                    INNER JOIN teams ON game_team.team_id=teams.id\n                WHERE data IS NULL AND game_id = $1) AS temp",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "57bb6c2ef3ade00ac0fa3af0488ad13aa8535a7a21a6f487833617ce837173b3"
+}

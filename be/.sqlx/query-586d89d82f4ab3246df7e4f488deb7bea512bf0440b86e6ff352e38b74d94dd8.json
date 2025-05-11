@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, trophy_id, name, kind as \"kind: GameKind\", locked, year FROM games WHERE year = $1 ORDER BY id",
+  "query": "DELETE FROM games WHERE id = $1 RETURNING id, trophy_id, name, kind as \"kind: GameKind\", year",
   "describe": {
     "columns": [
       {
@@ -35,11 +35,6 @@
       },
       {
         "ordinal": 4,
-        "name": "locked",
-        "type_info": "Bool"
-      },
-      {
-        "ordinal": 5,
         "name": "year",
         "type_info": "Int4"
       }
@@ -54,9 +49,8 @@
       false,
       false,
       false,
-      false,
       false
     ]
   },
-  "hash": "3a373c55c54c0cb9b58df1f45149159ad40829cb9bbf19a53cb45ff4e7d0af2e"
+  "hash": "586d89d82f4ab3246df7e4f488deb7bea512bf0440b86e6ff352e38b74d94dd8"
 }
