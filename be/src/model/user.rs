@@ -124,31 +124,55 @@ impl User {
         }
     }
 
-    pub async fn create(create_user: CreateUser, pool: &PgPool) -> ApiResult<User> {
-        if User::find_by_name(&create_user.name, pool)
-            .await
-            .is_err()
-        {
-            info!("Creating new user.");
-            let salt = SaltString::generate(&mut OsRng);
-            let argon2 = Argon2::default();
-            let password_hash = argon2.hash_password(create_user.password.as_bytes(), &salt).unwrap().to_string();
+  pub async fn create(create_user: CreateUser, pool: &PgPool) -> ApiResult<User> {
+    if User::find_by_name(&create_user.name, pool).await.is_ok() {
+        return Err(CustomError::AlreadyExistsError {message: format!("User {} already exists!", create_user.name)});
+    }
 
-            let mut tx = pool.begin().await?;
-            let user: User = sqlx::query_as!( User, 
-                r#"WITH inserted AS (INSERT INTO users (name, password, role, game_id) VALUES ($1, $2, $3, $4) RETURNING id, name, password, role as "role: UserRole", game_id, session)
-                SELECT inserted.id, inserted.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM inserted
-                    INNER JOIN games ON games.id=inserted.game_id"#,
-                create_user.name, password_hash, create_user.role as UserRole, create_user.game_id
-            )
-            .fetch_one(&mut *tx)
-            .await?;
-            tx.commit().await?;
+    if create_user.game_id.is_some() && Game::find(create_user.game_id.unwrap(), pool).await.is_err() {
+        return Err(CustomError::NotFoundError  {message: format!("Game {} does not exist!", create_user.game_id.map(|id| id.to_string()).unwrap_or("<no id>".to_string()))});
+    }
 
-            Ok(user)
-        } else {
-            Err(CustomError::AlreadyExistsError {message: format!("User {} already exists!", create_user.name)})
-        }
+    info!("Creating new user.");
+    let salt = SaltString::generate(&mut OsRng);
+    let argon2 = Argon2::default();
+    let password_hash = argon2.hash_password(create_user.password.as_bytes(), &salt).unwrap().to_string();
+    let mut tx = pool.begin().await?;
+    
+    // insert the user - sqlx doesn't handle LEFT JOIN correctly as it infers fields of the non-joined part to also be optional
+    let inserted_user = sqlx::query!(
+        r#"INSERT INTO users (name, password, role, game_id) 
+            VALUES ($1, $2, $3, $4) 
+            RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
+        create_user.name, password_hash, create_user.role as UserRole, create_user.game_id
+    )
+    .fetch_one(&mut *tx)
+    .await?;
+    
+    // Then fetch the game name if there's a game_id
+    let game_name = if let Some(game_id) = inserted_user.game_id {
+        sqlx::query!("SELECT name FROM games WHERE id = $1", game_id)
+            .fetch_optional(&mut *tx)
+            .await?
+            .map(|row| row.name)
+    } else {
+        None
+    };
+    
+    tx.commit().await?;
+    
+    // construct the User struct manually
+    let user = User {
+        id: inserted_user.id,
+        name: inserted_user.name,
+        password: inserted_user.password,
+        role: inserted_user.role,
+        session: inserted_user.session,
+        game_id: inserted_user.game_id,
+        game_name
+    };
+    
+    Ok(user)
     }
 
     /// Passing a new password updates the password.

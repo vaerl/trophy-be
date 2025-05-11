@@ -67,7 +67,9 @@ async fn main() -> Result<(), CustomError> {
     })
     .bind(format!("{}:{}", host, port))?;
 
-    create_admin_user(db_pool_clone).await?;
+    create_admin_user(db_pool_clone)
+        .await
+        .expect("Could not create admin-user");
 
     info!("Starting server.");
     server.run().await?;
@@ -78,8 +80,8 @@ async fn main() -> Result<(), CustomError> {
 // doing this here is easier to read
 fn verbose_json_error(err: JsonPayloadError) -> InternalError<String> {
     error::InternalError::from_response(
-        "".to_string(), HttpResponse::BadRequest()
-            .body(format!("Error while parsing: {}", err)),
+        "".to_string(),
+        HttpResponse::BadRequest().body(format!("Error while parsing: {}", err)),
     )
 }
 
