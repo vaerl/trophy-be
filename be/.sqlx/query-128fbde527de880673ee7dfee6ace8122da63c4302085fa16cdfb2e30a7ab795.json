@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH inserted AS (INSERT INTO users (name, password, role, game_id) VALUES ($1, $2, $3, $4) RETURNING id, name, password, role as \"role: UserRole\", game_id, session)\n                SELECT inserted.id, inserted.name, password, \"role: UserRole\", game_id, games.name as \"game_name?\", session FROM inserted\n                    INNER JOIN games ON games.id=inserted.game_id",
+  "query": "INSERT INTO users (name, password, role, game_id) \n            VALUES ($1, $2, $3, $4) \n            RETURNING id, name, password, role as \"role: UserRole\", game_id, session",
   "describe": {
     "columns": [
       {
@@ -41,11 +41,6 @@
       },
       {
         "ordinal": 5,
-        "name": "game_name?",
-        "type_info": "Varchar"
-      },
-      {
-        "ordinal": 6,
         "name": "session",
         "type_info": "Varchar"
       }
@@ -75,9 +70,8 @@
       false,
       false,
       true,
-      false,
       true
     ]
   },
-  "hash": "68188c8d58f4ec6788498a862ad3a09e7b771a4e37e04a1c00d702ba3e08409a"
+  "hash": "128fbde527de880673ee7dfee6ace8122da63c4302085fa16cdfb2e30a7ab795"
 }
