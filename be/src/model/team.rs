@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 use std::fmt::{self, Display};
 
-use super::{Amount, CustomError, Game, GameVec, Outcome, TypeInfo};
+use super::{CustomError, Game, Outcome, TypeInfo};
 use crate::ApiResult;
 
 #[derive(Serialize, Deserialize, sqlx::Type, Clone)]
@@ -124,6 +124,7 @@ impl Team {
         })
     }
 
+    /// Create a new team.
     pub async fn create(create_team: CreateTeam, pool: &PgPool) -> ApiResult<Team> {
         let mut tx = pool.begin().await?;
         let team: Team = sqlx::query_as!(
@@ -142,6 +143,8 @@ impl Team {
         Ok(team)
     }
 
+    // TODO why?
+    /// Update the specified team. Does not set points.
     pub async fn update(id: i32, altered_team: CreateTeam, pool: &PgPool) -> ApiResult<Team> {
         // NOTE I've decided against being able to change the year of already created teams (for now)
         let mut tx = pool.begin().await?;
@@ -157,6 +160,7 @@ impl Team {
         Ok(team)
     }
 
+    /// Write the points of this team to the database.
     pub async fn update_points(&self, pool: &PgPool) -> ApiResult<Team> {
         let mut tx = pool.begin().await?;
         let team = sqlx::query_as!(
@@ -171,6 +175,7 @@ impl Team {
         Ok(team)
     }
 
+    /// Delete the specified team.
     pub async fn delete(id: i32, pool: &PgPool) -> ApiResult<Team> {
         let mut tx = pool.begin().await?;
         let team = sqlx::query_as!(
@@ -183,71 +188,6 @@ impl Team {
 
         tx.commit().await?;
         Ok(team)
-    }
-
-    pub async fn pending_games(id: i32, pool: &PgPool) -> ApiResult<GameVec> {
-        // outcome-list where no data is present
-        let outcomes = Outcome::filter_for(
-            Outcome::find_all_for_team,
-            Option::<String>::is_none,
-            id,
-            pool,
-        )
-        .await?
-        .0;
-        let mut games: Vec<Game> = Vec::new();
-        for game_id in outcomes.iter().map(|f| f.game_id) {
-            games.push(Game::find(game_id, pool).await?);
-        }
-        Ok(GameVec(games))
-    }
-
-    pub async fn finished_games(id: i32, pool: &PgPool) -> ApiResult<GameVec> {
-        // outcome-list where data is set
-        let outcomes = Outcome::filter_for(
-            Outcome::find_all_for_team,
-            Option::<String>::is_some,
-            id,
-            pool,
-        )
-        .await?
-        .0;
-        let mut games: Vec<Game> = Vec::new();
-        for game_id in outcomes.iter().map(|f| f.game_id) {
-            games.push(Game::find(game_id, pool).await?);
-        }
-        Ok(GameVec(games))
-    }
-
-    pub async fn amount(pool: &PgPool, year: i32) -> ApiResult<Amount> {
-        // This function currently calls find_all and uses its size.
-        // If performance warrants a better implementation(f.e. caching the result in the db or memory),
-        // this capsules the functionality, meaning I will only need to change this method.
-        Ok(Amount(Team::find_all(pool, year).await?.0.len()))
-    }
-
-    pub async fn pending(pool: &PgPool, year: i32) -> ApiResult<TeamVec> {
-        let mut teams = vec![];
-        for team in Team::find_all(pool, year).await?.0 {
-            // I could also use pending_games_amount, but that could be removed later
-            let pending_games_of_team = Team::pending_games(team.id, pool).await?.0;
-            if !pending_games_of_team.is_empty() {
-                teams.push(team)
-            }
-        }
-        Ok(TeamVec(teams))
-    }
-
-    pub async fn finished(pool: &PgPool, year: i32) -> ApiResult<TeamVec> {
-        let mut teams = vec![];
-        for team in Team::find_all(pool, year).await?.0 {
-            let pending_games_of_team = Team::pending_games(team.id, pool).await?.0;
-            // if there are no pending games, the team must be finished
-            if pending_games_of_team.is_empty() {
-                teams.push(team)
-            }
-        }
-        Ok(TeamVec(teams))
     }
 }
 

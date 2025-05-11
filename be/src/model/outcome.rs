@@ -1,9 +1,8 @@
 use std::fmt::{self, Display};
-use futures::Future;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 use crate::ApiResult;
-use super::{Game, GameKind, ParsedOutcome, TeamGender, TypeInfo};
+use super::{Amount, Game, GameKind, ParsedOutcome, TeamGender, TypeInfo};
 
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
@@ -20,7 +19,7 @@ pub struct Outcome {
     pub team_trophy_id: i32,
     pub team_name: String,
     pub data: Option<String>,
-    pub point_value: Option<i32>
+    pub point_value: Option<i32>,
 }
 #[derive(Serialize)]
 pub struct OutcomeVec(pub Vec<Outcome>);
@@ -43,6 +42,54 @@ impl Outcome {
         .await?;
 
         Ok(OutcomeVec(outcomes))
+    }
+
+    /// Find all pending games.
+    pub async fn find_all_pending_games(year: i32, pool: &PgPool) -> ApiResult<Amount> {
+        let amount = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) FROM (
+                SELECT DISTINCT game_id FROM game_team
+                    INNER JOIN games ON game_team.game_id=games.id
+                    INNER JOIN teams ON game_team.team_id=teams.id
+                WHERE data IS NULL AND games.year = $1) AS temp"#, year
+        )
+        .fetch_one(pool)
+        .await?
+        .unwrap_or(0);
+
+         Ok(Amount(amount))
+    }
+
+    /// Find all pending teams.
+    pub async fn find_all_pending_teams(year: i32, pool: &PgPool) -> ApiResult<Amount> {
+        let amount = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) FROM (
+                SELECT DISTINCT team_id FROM game_team
+                    INNER JOIN games ON game_team.game_id=games.id
+                    INNER JOIN teams ON game_team.team_id=teams.id
+                WHERE data IS NULL AND teams.year = $1) AS temp"#, year
+        )
+        .fetch_one(pool)
+        .await?
+        .unwrap_or(0);
+
+        Ok(Amount(amount))
+    }
+
+    /// Find all pending teams for the specified game.
+    pub async fn find_all_pending_teams_for_game(game_id: i32, pool: &PgPool) -> ApiResult<Amount> {
+        let amount = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) FROM (
+                SELECT DISTINCT team_id FROM game_team
+                    INNER JOIN games ON game_team.game_id=games.id
+                    INNER JOIN teams ON game_team.team_id=teams.id
+                WHERE data IS NULL AND game_id = $1) AS temp"#, game_id
+        )
+        .fetch_one(pool)
+        .await?
+        .unwrap_or(0);
+
+        Ok(Amount(amount))
     }
 
     pub async fn find_all_for_game(game_id: i32, pool: &PgPool) -> ApiResult<OutcomeVec> {
@@ -95,11 +142,8 @@ impl Outcome {
         Ok(outcome)
     }
 
-    /// NOTE this previously ignored [Outcome]s with `null` data, but doesn't anymore.
+    /// Set the data of this [Outcome].
     pub async fn set_data(&self, pool: &PgPool) -> ApiResult<Outcome> {
-        let game = Game::find(self.game_id, pool).await?;
-                
-        // update the outcome, so we find it later
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
                 Outcome, 
@@ -113,13 +157,6 @@ impl Outcome {
             .await?;
         tx.commit().await?;
         
-        let outcomes = Outcome::find_all_for_game(outcome.game_id, pool).await?;
-
-        // lock the game if there are no unset outcomes
-        if outcomes.0.into_iter().filter(|o| o.data.is_none()).collect::<Vec<Outcome>>().is_empty() {
-            Game::lock(game.id, pool).await?;
-        }
-
         Ok(outcome)
     }
 
@@ -138,20 +175,6 @@ impl Outcome {
         tx.commit().await?;
 
         Ok(outcome)
-    }
-
-    pub async fn filter_for<'r, Fut>(
-        find_for_all: impl Fn(i32, &'r PgPool) -> Fut,
-        filter: impl Fn(& Option<String>) -> bool,
-        id: i32, 
-        pool: &'r PgPool
-    ) -> ApiResult<OutcomeVec>
-    where Fut: Future<Output = ApiResult<OutcomeVec>> // won't work without where
-    {
-        // find every outcome using the supplied function
-        let outcomes = find_for_all(id, pool).await?.0;
-        // remove every item that does not evaluate to true with filter
-        Ok(OutcomeVec(outcomes.into_iter().filter(|f| filter(&f.data)).collect()))
     }
 
     /// Parse all outcomes for game and return as ParsedOutcome.

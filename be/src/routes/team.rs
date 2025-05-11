@@ -7,7 +7,7 @@ use sqlx::PgPool;
 
 use crate::{
     middleware::Authenticated,
-    model::{CreateTeam, Team, UserRole, Year},
+    model::{CreateTeam, Outcome, Team, UserRole, Year},
     ApiResult, ToJson,
 };
 
@@ -21,34 +21,16 @@ async fn find_all_teams(
     Team::find_all(&pool, **year).await?.to_json()
 }
 
-#[get("/teams/amount")]
-async fn teams_amount(
-    pool: Data<PgPool>,
-    auth: Authenticated,
-    year: Query<Year>,
-) -> ApiResult<impl Responder> {
-    auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Team::amount(&pool, **year).await?.to_json()
-}
-
-#[get("/teams/pending")]
+#[get("/teams/pending/amount")]
 async fn teams_pending(
     pool: Data<PgPool>,
     auth: Authenticated,
     year: Query<Year>,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Team::pending(&pool, **year).await?.to_json()
-}
-
-#[get("/teams/finished")]
-async fn teams_finished(
-    pool: Data<PgPool>,
-    auth: Authenticated,
-    year: Query<Year>,
-) -> ApiResult<impl Responder> {
-    auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Team::finished(&pool, **year).await?.to_json()
+    Outcome::find_all_pending_teams(**year, &pool)
+        .await?
+        .to_json()
 }
 
 #[post("/teams")]
@@ -94,36 +76,12 @@ async fn delete_team(
     Team::delete(*id, &pool).await?.to_json()
 }
 
-#[get("/teams/{id}/pending")]
-async fn pending_games(
-    id: web::Path<i32>,
-    pool: Data<PgPool>,
-    auth: Authenticated,
-) -> ApiResult<impl Responder> {
-    auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Team::pending_games(*id, &pool).await?.to_json()
-}
-
-#[get("/teams/{id}/finished")]
-async fn finished_games(
-    id: web::Path<i32>,
-    pool: Data<PgPool>,
-    auth: Authenticated,
-) -> ApiResult<impl Responder> {
-    auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Team::finished_games(*id, &pool).await?.to_json()
-}
-
 // NOTE order matters!
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(find_all_teams);
-    cfg.service(teams_amount);
     cfg.service(teams_pending);
-    cfg.service(teams_finished);
     cfg.service(create_team);
     cfg.service(find_team);
     cfg.service(update_team);
     cfg.service(delete_team);
-    cfg.service(pending_games);
-    cfg.service(finished_games);
 }

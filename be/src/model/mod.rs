@@ -23,7 +23,7 @@ pub use user_token::*;
 use crate::TypeInfo;
 
 #[derive(Serialize)]
-pub struct Amount(pub usize);
+pub struct Amount(pub i64);
 
 impl Display for Amount {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

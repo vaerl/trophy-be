@@ -21,9 +21,8 @@ const MAX_POINTS: i32 = 50;
 
 /// Checks whether all games have finished.
 pub async fn is_done(pool: &PgPool, year: i32) -> ApiResult<bool> {
-    let total_games = Game::find_all(pool, year).await?.0;
-    let finished_games = Game::finished(pool, year).await?.0;
-    Ok(total_games.len() == finished_games.len())
+    let pending_games = Outcome::find_all_pending_games(year, pool).await?.0;
+    Ok(pending_games == 0)
 }
 
 /// Checks whether all teams have points assigned.

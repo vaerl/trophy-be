@@ -1,6 +1,6 @@
 use crate::{
     middleware::Authenticated,
-    model::{CreateGame, Game, UserRole, Year},
+    model::{CreateGame, Game, Outcome, UserRole, Year},
     ApiResult, ToJson,
 };
 use actix_web::{
@@ -20,34 +20,16 @@ async fn find_all_games(
     Game::find_all(&pool, **year).await?.to_json()
 }
 
-#[get("/games/amount")]
-async fn games_amount(
-    pool: Data<PgPool>,
-    auth: Authenticated,
-    year: Query<Year>,
-) -> ApiResult<impl Responder> {
-    auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Game::amount(&pool, **year).await?.to_json()
-}
-
-#[get("/games/pending")]
+#[get("/games/pending/amount")]
 async fn games_pending(
     pool: Data<PgPool>,
     auth: Authenticated,
     year: Query<Year>,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Game::pending(&pool, **year).await?.to_json()
-}
-
-#[get("/games/finished")]
-async fn games_finished(
-    pool: Data<PgPool>,
-    auth: Authenticated,
-    year: Query<Year>,
-) -> ApiResult<impl Responder> {
-    auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Game::finished(&pool, **year).await?.to_json()
+    Outcome::find_all_pending_games(**year, &pool)
+        .await?
+        .to_json()
 }
 
 #[post("/games")]
@@ -93,16 +75,6 @@ async fn delete_game(
     Game::delete(*id, &pool).await?.to_json()
 }
 
-#[get("/games/{id}/pending")]
-async fn pending_teams(
-    id: Path<i32>,
-    pool: Data<PgPool>,
-    auth: Authenticated,
-) -> ApiResult<impl Responder> {
-    auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Game::pending_teams(*id, &pool).await?.to_json()
-}
-
 #[get("/games/{id}/pending/amount")]
 async fn pending_teams_amount(
     id: web::Path<i32>,
@@ -110,30 +82,18 @@ async fn pending_teams_amount(
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Game::pending_teams_amount(*id, &pool).await?.to_json()
-}
-
-#[get("/games/{id}/finished")]
-async fn finished_teams(
-    id: web::Path<i32>,
-    pool: Data<PgPool>,
-    auth: Authenticated,
-) -> ApiResult<impl Responder> {
-    auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Game::finished_teams(*id, &pool).await?.to_json()
+    Outcome::find_all_pending_teams_for_game(*id, &pool)
+        .await?
+        .to_json()
 }
 
 // NOTE order matters!
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(find_all_games);
-    cfg.service(games_amount);
     cfg.service(create_game);
     cfg.service(games_pending);
-    cfg.service(games_finished);
     cfg.service(find_game);
     cfg.service(update_game);
     cfg.service(delete_game);
-    cfg.service(pending_teams);
     cfg.service(pending_teams_amount);
-    cfg.service(finished_teams);
 }

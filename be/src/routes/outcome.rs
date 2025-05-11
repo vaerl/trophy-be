@@ -29,8 +29,7 @@ async fn update_outcome(
         UserRole::Referee => {
             let game = User::find_game_for_ref(auth.id, &pool).await?;
 
-            // check if the ref is accessing the correct game and only allow updating if it's not locked yet
-            if outcome.game_id == game.id && !game.locked {
+            if outcome.game_id == game.id {
                 outcome.into_inner().set_data(&pool).await?.to_json()
             } else {
                 Err(CustomError::AccessDeniedError)

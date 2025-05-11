@@ -172,14 +172,6 @@ impl OperationSummary {
         }
     }
 
-    fn amount(subject_type: SubjectType) -> Self {
-        OperationSummary {
-            operation: "get amount".to_string(),
-            subject_type,
-            level: LogLevel::Debug,
-        }
-    }
-
     fn pending(subject_type: SubjectType) -> Self {
         OperationSummary {
             operation: "get pending".to_string(),
@@ -237,8 +229,7 @@ fn match_operation(method: &Method, path: &str) -> ApiResult<OperationSummary> {
                 path: path.to_string(),
             }),
         },
-        "/games/amount" => Ok(OperationSummary::amount(SubjectType::Game)),
-        "/games/pending" => Ok(OperationSummary::pending(SubjectType::Game)),
+        "/games/pending/amount" => Ok(OperationSummary::pending(SubjectType::Game)),
         "/games/finished" => Ok(OperationSummary::finished(SubjectType::Game)),
         "/games/{id}" => match *method {
             Method::GET => Ok(OperationSummary::get(SubjectType::Game)),
@@ -249,18 +240,8 @@ fn match_operation(method: &Method, path: &str) -> ApiResult<OperationSummary> {
                 path: path.to_string(),
             }),
         },
-        "/games/{id}/pending" => Ok(OperationSummary {
-            operation: "get pending teams for game".to_string(),
-            subject_type: SubjectType::Game,
-            level: LogLevel::Debug,
-        }),
         "/games/{id}/pending/amount" => Ok(OperationSummary {
             operation: "get the amount of pending teams for game".to_string(),
-            subject_type: SubjectType::Game,
-            level: LogLevel::Debug,
-        }),
-        "/games/{id}/finished" => Ok(OperationSummary {
-            operation: "get finished teams for game".to_string(),
             subject_type: SubjectType::Game,
             level: LogLevel::Debug,
         }),
@@ -294,9 +275,7 @@ fn match_operation(method: &Method, path: &str) -> ApiResult<OperationSummary> {
                 path: path.to_string(),
             }),
         },
-        "/teams/amount" => Ok(OperationSummary::amount(SubjectType::Team)),
-        "/teams/pending" => Ok(OperationSummary::pending(SubjectType::Team)),
-        "/teams/finished" => Ok(OperationSummary::finished(SubjectType::Team)),
+        "/teams/pending/amount" => Ok(OperationSummary::pending(SubjectType::Team)),
         "/teams/{id}" => match *method {
             Method::GET => Ok(OperationSummary::get(SubjectType::Team)),
             Method::PUT => Ok(OperationSummary::update(SubjectType::Team)),
@@ -306,16 +285,6 @@ fn match_operation(method: &Method, path: &str) -> ApiResult<OperationSummary> {
                 path: path.to_string(),
             }),
         },
-        "/teams/{id}/pending" => Ok(OperationSummary {
-            operation: "get pending games for team".to_string(),
-            subject_type: SubjectType::Team,
-            level: LogLevel::Debug,
-        }),
-        "/teams/{id}/finished" => Ok(OperationSummary {
-            operation: "get pending games for team".to_string(),
-            subject_type: SubjectType::Team,
-            level: LogLevel::Debug,
-        }),
         "/user/status" => Ok(OperationSummary {
             operation: "check if user is logged in".to_string(),
             subject_type: SubjectType::General,
