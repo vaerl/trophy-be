@@ -25,7 +25,6 @@ CREATE TABLE games (
     trophy_id integer NOT NULL,
     name varchar (50) NOT NULL,
     kind game_kind NOT NULL,
-    locked boolean DEFAULT FALSE NOT NULL,
     year integer NOT NULL
 );
 CREATE TABLE users (
