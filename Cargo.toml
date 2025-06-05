@@ -17,9 +17,9 @@ thiserror = "2.0.12"
 env_logger = "0.11.8"
 log = "0.4.27"
 # runtime
-tokio = { version = "1.45.0", features = ["full"] }
+tokio = { version = "1.45.1", features = ["full"] }
 # database
-sqlx = { version = "0.8.5", features = [
+sqlx = { version = "0.8.6", features = [
   "runtime-tokio-rustls",
   "postgres",
   "chrono",
@@ -38,7 +38,7 @@ argon2 = "0.5.3"
 # NOTE 0.6.4 is required by several dependencies
 rand_core = { version = "0.6.4", features = ["std"] }
 chrono = { version = "0.4.41", features = ["serde"] }
-uuid = { version = "1.16.0", features = ["v4", "serde"] }
+uuid = { version = "1.17.0", features = ["v4", "serde"] }
 actix-multipart = "0.7.2"
 calamine = "0.27.0"
 
