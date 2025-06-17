@@ -92,6 +92,9 @@ fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
         return outcomes;
     }
 
+    // NOTE with this algorithm, we might assign negative points if there's ever more than 50 teams of a single gender.
+    // This could be circumvented by having MAX_POINTS be the number of teams - or simply not decreasing current_points below 1.
+    // Reaching this scenario is unlikely since the trophy is currently capped at 50 to 60 teams.
     let mut current_points = MAX_POINTS;
     let mut current_gap = 1;
 
