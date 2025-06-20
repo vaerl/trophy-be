@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH updated AS (UPDATE users SET name = $1, role = $2, game_id = $3 WHERE id = $4 RETURNING id, name, password, role as \"role: UserRole\", game_id, session)\n                    SELECT updated.id, updated.name, password, \"role: UserRole\", game_id, games.name as \"game_name?\", session FROM updated\n                            INNER JOIN games ON games.id=updated.game_id",
+  "query": "WITH updated AS (UPDATE users SET name = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, name, password, role as \"role: UserRole\", game_id, session)\n                    SELECT updated.id, updated.name, password, \"role: UserRole\", game_id, games.name as \"game_name?\", session FROM updated\n                            LEFT JOIN games ON games.id=updated.game_id",
   "describe": {
     "columns": [
       {
@@ -53,6 +53,7 @@
     "parameters": {
       "Left": [
         "Varchar",
+        "Varchar",
         {
           "Custom": {
             "name": "user_role",
@@ -75,9 +76,9 @@
       false,
       false,
       true,
-      false,
+      true,
       true
     ]
   },
-  "hash": "3e284f1965cf4d528dc0206b1177b47ebb68cc0580d2e2d500765d4c2c570b10"
+  "hash": "03e9e727f92bc026ff1eb4e1fefe1813e8886377a58fd01e9d6d11cdf67b30cc"
 }

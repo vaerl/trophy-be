@@ -189,7 +189,7 @@ impl User {
                     User, 
                     r#"WITH updated AS (UPDATE users SET name = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, name, password, role as "role: UserRole", game_id, session)
                     SELECT updated.id, updated.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM updated
-                            INNER JOIN games ON games.id=updated.game_id"#,
+                            LEFT JOIN games ON games.id=updated.game_id"#,
                     altered_user.name, password_hash, altered_user.role as UserRole, altered_user.game_id, id
                 )
                 .fetch_one(&mut *tx)
@@ -204,7 +204,7 @@ impl User {
                     User, 
                     r#"WITH updated AS (UPDATE users SET name = $1, role = $2, game_id = $3 WHERE id = $4 RETURNING id, name, password, role as "role: UserRole", game_id, session)
                     SELECT updated.id, updated.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM updated
-                            INNER JOIN games ON games.id=updated.game_id"#,
+                            LEFT JOIN games ON games.id=updated.game_id"#,
                     altered_user.name, altered_user.role as UserRole, altered_user.game_id, id
                 )
                 .fetch_one(&mut *tx)
@@ -234,7 +234,7 @@ impl User {
             User,
             r#"WITH deleted AS (DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as "role: UserRole", game_id, session)
             SELECT deleted.id, deleted.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM deleted
-                    INNER JOIN games ON games.id=deleted.game_id"#,
+                    LEFT JOIN games ON games.id=deleted.game_id"#,
             id
         )
         .fetch_one(&mut *tx)
