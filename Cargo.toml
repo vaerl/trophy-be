@@ -40,11 +40,4 @@ rand_core = { version = "0.6.4", features = ["std"] }
 chrono = { version = "0.4.41", features = ["serde"] }
 uuid = { version = "1.17.0", features = ["v4", "serde"] }
 actix-multipart = "0.7.2"
-calamine = "0.27.0"
-
-# necessary because the calamine-patch breaks things
-flate2 = "1.1.1"
-
-# necessary because calamine requires zip 2.5
-[patch.crates-io]
-calamine = { git = "https://github.com/prophittcorey/calamine", branch = "fix/zip-3.0" }
+calamine = "0.28.0"
