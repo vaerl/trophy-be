@@ -13,3 +13,4 @@ secret.key
 # Excel-Data
 *.xlsx
 !http/teams.xlsx
+TODO.md
