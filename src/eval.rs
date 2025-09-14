@@ -87,6 +87,7 @@ async fn evaluate_game(game: Game, pool: &PgPool) -> ApiResult<()> {
 }
 
 /// Evaluate a [Game] by its [ParsedOutcome]s.
+/// For examples of how this algorithm performs evaluation, see the tests or README.
 fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
     if outcomes.is_empty() {
         return outcomes;
