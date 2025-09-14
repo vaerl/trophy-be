@@ -1,5 +1,7 @@
 # eval-be
 
+Backend for evaluating the [Klostertrophy](https://klostertrophy.de/).
+
 - [Development-Information](./docs/development.md)
 
 ## Evaluation
