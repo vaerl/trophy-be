@@ -187,9 +187,17 @@ impl User {
                 let mut tx = pool.begin().await?;
                 let user = sqlx::query_as!(
                     User, 
-                    r#"WITH updated AS (UPDATE users SET name = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING id, name, password, role as "role: UserRole", game_id, session)
-                    SELECT updated.id, updated.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM updated
-                            LEFT JOIN games ON games.id=updated.game_id"#,
+                    r#"
+                    WITH updated AS (UPDATE users SET name = $1, password = $2, role = $3, game_id = $4 WHERE id = $5 RETURNING *)
+                    SELECT 
+                        updated.id as "id!", 
+                        updated.name as "name!", 
+                        password as "password!", 
+                        role as "role!: UserRole", 
+                        game_id,
+                        games.name as "game_name?", 
+                        session FROM updated
+                    RIGHT JOIN games ON games.id=updated.game_id"#,
                     altered_user.name, password_hash, altered_user.role as UserRole, altered_user.game_id, id
                 )
                 .fetch_one(&mut *tx)
@@ -202,9 +210,17 @@ impl User {
                 let mut tx = pool.begin().await?;
                 let user = sqlx::query_as!(
                     User, 
-                    r#"WITH updated AS (UPDATE users SET name = $1, role = $2, game_id = $3 WHERE id = $4 RETURNING id, name, password, role as "role: UserRole", game_id, session)
-                    SELECT updated.id, updated.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM updated
-                            LEFT JOIN games ON games.id=updated.game_id"#,
+                     r#"
+                    WITH updated AS (UPDATE users SET name = $1, role = $2, game_id = $3 WHERE id = $4 RETURNING *)
+                    SELECT 
+                        updated.id as "id!", 
+                        updated.name as "name!", 
+                        password as "password!", 
+                        role as "role!: UserRole", 
+                        game_id, 
+                        games.name as "game_name?", 
+                        session FROM updated
+                    LEFT JOIN games ON games.id=updated.game_id"#,
                     altered_user.name, altered_user.role as UserRole, altered_user.game_id, id
                 )
                 .fetch_one(&mut *tx)
@@ -230,11 +246,26 @@ impl User {
 
     pub async fn delete(id: i32, pool: &PgPool) -> ApiResult<User> {
         let mut tx = pool.begin().await?;
+
+        // NOTE since I'm using LEFT JOIN, I have to assert that the fields are actually present
         let user = sqlx::query_as!(
             User,
-            r#"WITH deleted AS (DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as "role: UserRole", game_id, session)
-            SELECT deleted.id, deleted.name, password, "role: UserRole", game_id, games.name as "game_name?", session FROM deleted
-                    LEFT JOIN games ON games.id=deleted.game_id"#,
+            r#"
+            WITH deleted AS (
+                DELETE FROM users WHERE id = $1
+                RETURNING *
+            )
+            SELECT
+                deleted.id as "id!",
+                deleted.name as "name!",
+                deleted.password as "password!",
+                deleted.role as "role!: UserRole",
+                deleted.game_id,
+                games.name as "game_name?",
+                deleted.session
+            FROM deleted
+            LEFT JOIN games ON deleted.game_id = games.id
+            "#,
             id
         )
         .fetch_one(&mut *tx)
