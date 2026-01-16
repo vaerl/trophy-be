@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH updated AS (UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)\n                SELECT game_id, games.trophy_id as game_trophy_id, games.name as game_name, games.kind as \"game_kind: GameKind\", team_id, teams.trophy_id as team_trophy_id, teams.name as team_name, data, point_value FROM updated\n                    INNER JOIN games ON updated.game_id=games.id\n                    INNER JOIN teams ON updated.team_id=teams.id",
+  "query": "WITH inserted AS (INSERT INTO game_team (game_id, team_id) VALUES ($1, $2) RETURNING *)\n            SELECT game_id, games.trophy_id as game_trophy_id, games.name as game_name, games.kind as \"game_kind: GameKind\", team_id, teams.trophy_id as team_trophy_id, teams.name as team_name, teams.gender as \"team_gender: TeamGender\", data, point_value FROM inserted\n                INNER JOIN games ON inserted.game_id=games.id\n                INNER JOIN teams ON inserted.team_id=teams.id",
   "describe": {
     "columns": [
       {
@@ -50,18 +50,33 @@
       },
       {
         "ordinal": 7,
+        "name": "team_gender: TeamGender",
+        "type_info": {
+          "Custom": {
+            "name": "team_gender",
+            "kind": {
+              "Enum": [
+                "female",
+                "male",
+                "mixed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 8,
         "name": "data",
         "type_info": "Text"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "point_value",
         "type_info": "Int4"
       }
     ],
     "parameters": {
       "Left": [
-        "Text",
         "Int4",
         "Int4"
       ]
@@ -74,9 +89,10 @@
       false,
       false,
       false,
+      false,
       true,
       true
     ]
   },
-  "hash": "a16516f758ef60bd5e0de227437920f7ac25f7337667e178b852083f700ae234"
+  "hash": "02fe98ec92b23d917fd6d35963b00e3fd4e26ccc02aab39240d321a6f2e61e5f"
 }

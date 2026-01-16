@@ -1,26 +1,26 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH updated AS (UPDATE users SET name = $1, role = $2, game_id = $3 WHERE id = $4 RETURNING id, name, password, role as \"role: UserRole\", game_id, session)\n                    SELECT updated.id, updated.name, password, \"role: UserRole\", game_id, games.name as \"game_name?\", session FROM updated\n                            LEFT JOIN games ON games.id=updated.game_id",
+  "query": "\n                    WITH updated AS (UPDATE users SET name = $1, role = $2, game_id = $3 WHERE id = $4 RETURNING *)\n                    SELECT \n                        updated.id as \"id!\", \n                        updated.name as \"name!\", \n                        password as \"password!\", \n                        role as \"role!: UserRole\", \n                        game_id, \n                        games.name as \"game_name?\", \n                        session FROM updated\n                    LEFT JOIN games ON games.id=updated.game_id",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "id",
+        "name": "id!",
         "type_info": "Int4"
       },
       {
         "ordinal": 1,
-        "name": "name",
+        "name": "name!",
         "type_info": "Varchar"
       },
       {
         "ordinal": 2,
-        "name": "password",
+        "name": "password!",
         "type_info": "Varchar"
       },
       {
         "ordinal": 3,
-        "name": "role: UserRole",
+        "name": "role!: UserRole",
         "type_info": {
           "Custom": {
             "name": "user_role",
@@ -70,14 +70,14 @@
       ]
     },
     "nullable": [
-      false,
-      false,
-      false,
-      false,
       true,
       true,
+      true,
+      true,
+      true,
+      false,
       true
     ]
   },
-  "hash": "d2f3897d2030f2947d9e1bf1337a93fcb66c846b905cc37d96591dbe00925381"
+  "hash": "839d6c3326694f0916aa4a10692e877749e7dbee786251014aefd0d3f6a55158"
 }

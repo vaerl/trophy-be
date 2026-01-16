@@ -1,26 +1,26 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH deleted AS (DELETE FROM users WHERE id = $1 RETURNING id, name, password, role as \"role: UserRole\", game_id, session)\n            SELECT deleted.id, deleted.name, password, \"role: UserRole\", game_id, games.name as \"game_name?\", session FROM deleted\n                    LEFT JOIN games ON games.id=deleted.game_id",
+  "query": "\n            WITH deleted AS (\n                DELETE FROM users WHERE id = $1\n                RETURNING *\n            )\n            SELECT\n                deleted.id as \"id!\",\n                deleted.name as \"name!\",\n                deleted.password as \"password!\",\n                deleted.role as \"role!: UserRole\",\n                deleted.game_id,\n                games.name as \"game_name?\",\n                deleted.session\n            FROM deleted\n            LEFT JOIN games ON deleted.game_id = games.id\n            ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "id",
+        "name": "id!",
         "type_info": "Int4"
       },
       {
         "ordinal": 1,
-        "name": "name",
+        "name": "name!",
         "type_info": "Varchar"
       },
       {
         "ordinal": 2,
-        "name": "password",
+        "name": "password!",
         "type_info": "Varchar"
       },
       {
         "ordinal": 3,
-        "name": "role: UserRole",
+        "name": "role!: UserRole",
         "type_info": {
           "Custom": {
             "name": "user_role",
@@ -56,14 +56,14 @@
       ]
     },
     "nullable": [
-      false,
-      false,
-      false,
-      false,
       true,
       true,
+      true,
+      true,
+      true,
+      false,
       true
     ]
   },
-  "hash": "7b0adc06a145730417afcc47a540eff7d4b24d4bda54e5d6f039c9afd84d1d42"
+  "hash": "aacaf90ce79783eb89629dca3fb4839b3b0a538600a0221c20b590eec4eab051"
 }

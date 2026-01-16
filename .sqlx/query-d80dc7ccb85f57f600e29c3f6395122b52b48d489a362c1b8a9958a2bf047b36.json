@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT game_id, games.trophy_id as game_trophy_id, games.name as game_name, games.kind as \"game_kind: GameKind\", team_id, teams.trophy_id as team_trophy_id, teams.name as team_name, data, point_value FROM game_team\n                INNER JOIN games ON game_team.game_id=games.id\n                INNER JOIN teams ON game_team.team_id=teams.id\n            WHERE team_id = $1 ORDER BY game_id",
+  "query": "SELECT game_id, games.trophy_id as game_trophy_id, games.name as game_name, games.kind as \"game_kind: GameKind\", team_id, teams.trophy_id as team_trophy_id, teams.name as team_name, teams.gender as \"team_gender: TeamGender\", data, point_value FROM game_team\n                INNER JOIN games ON game_team.game_id=games.id\n                INNER JOIN teams ON game_team.team_id=teams.id\n            ORDER BY game_id",
   "describe": {
     "columns": [
       {
@@ -50,21 +50,36 @@
       },
       {
         "ordinal": 7,
+        "name": "team_gender: TeamGender",
+        "type_info": {
+          "Custom": {
+            "name": "team_gender",
+            "kind": {
+              "Enum": [
+                "female",
+                "male",
+                "mixed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 8,
         "name": "data",
         "type_info": "Text"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "point_value",
         "type_info": "Int4"
       }
     ],
     "parameters": {
-      "Left": [
-        "Int4"
-      ]
+      "Left": []
     },
     "nullable": [
+      false,
       false,
       false,
       false,
@@ -76,5 +91,5 @@
       true
     ]
   },
-  "hash": "79a40a34fbdf268215b1947f57f4e32ea6861ed772f1ef9119652c39725e940d"
+  "hash": "d80dc7ccb85f57f600e29c3f6395122b52b48d489a362c1b8a9958a2bf047b36"
 }
