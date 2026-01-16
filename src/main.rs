@@ -3,9 +3,9 @@ extern crate log;
 
 use actix_cors::Cors;
 use actix_web::{
+    App, HttpResponse, HttpServer,
     error::{self, InternalError, JsonPayloadError},
     web::{self, Data},
-    App, HttpResponse, HttpServer,
 };
 use dotenv::dotenv;
 use model::CustomError;
@@ -26,7 +26,6 @@ mod routes;
 #[actix_web::main]
 async fn main() -> Result<(), CustomError> {
     dotenv().ok();
-    std::env::set_var("RUST_LOG", "DEBUG");
     env_logger::init();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file!");
