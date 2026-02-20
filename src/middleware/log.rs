@@ -1,17 +1,17 @@
 use crate::{
+    ApiResult,
     middleware::AuthInfo,
     model::{CustomError, History, LogLevel, SubjectType},
-    ApiResult,
 };
-use actix::fut::{ready, Ready};
+use actix::fut::{Ready, ready};
 use actix_service::{Service, Transform};
 use actix_web::{
+    Error, HttpMessage,
     dev::{ServiceRequest, ServiceResponse},
     http::Method,
     web::Data,
-    Error, HttpMessage,
 };
-use futures::{future::LocalBoxFuture, FutureExt};
+use futures::{FutureExt, future::LocalBoxFuture};
 use sqlx::PgPool;
 use std::{fmt::Display, rc::Rc};
 

@@ -1,12 +1,11 @@
 use crate::{
+    ApiResult, ToJson,
     middleware::Authenticated,
     model::{StatusResponse, UserRole, Year},
-    ApiResult, ToJson,
 };
 use actix_web::{
-    get,
+    Responder, get,
     web::{self, Data, Query},
-    Responder,
 };
 use sqlx::PgPool;
 

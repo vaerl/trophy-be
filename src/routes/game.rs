@@ -1,12 +1,11 @@
 use crate::{
+    ApiResult, ToJson,
     middleware::Authenticated,
     model::{CreateGame, Game, Outcome, UserRole, Year},
-    ApiResult, ToJson,
 };
 use actix_web::{
-    delete, get, post, put,
+    Responder, delete, get, post, put,
     web::{self, Data, Json, Path, Query},
-    Responder,
 };
 use sqlx::PgPool;
 

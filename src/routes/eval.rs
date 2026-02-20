@@ -1,16 +1,15 @@
 use actix_files::NamedFile;
 use actix_web::{
-    get,
+    HttpResponse, Responder, get,
     web::{self, Data, Query},
-    HttpResponse, Responder,
 };
 use sqlx::PgPool;
 
 use crate::{
+    ApiResult, ToJson,
     eval::{create_xlsx_file, evaluate_trophy},
     middleware::Authenticated,
     model::{StatusResponse, UserRole, Year},
-    ApiResult, ToJson,
 };
 
 #[get("/eval")]

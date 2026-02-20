@@ -1,5 +1,5 @@
 use crate::ApiResult;
-use actix_multipart::form::{tempfile::TempFile, MultipartForm};
+use actix_multipart::form::{MultipartForm, tempfile::TempFile};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 

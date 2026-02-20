@@ -1,8 +1,8 @@
-use std::fmt::{self, Display};
+use super::{Amount, Game, GameKind, ParsedOutcome, TeamGender, TypeInfo};
+use crate::ApiResult;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
-use crate::ApiResult;
-use super::{Amount, Game, GameKind, ParsedOutcome, TeamGender, TypeInfo};
+use std::fmt::{self, Display};
 
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
@@ -52,13 +52,14 @@ impl Outcome {
                 SELECT DISTINCT game_id FROM game_team
                     INNER JOIN games ON game_team.game_id=games.id
                     INNER JOIN teams ON game_team.team_id=teams.id
-                WHERE data IS NULL AND games.year = $1) AS temp"#, year
+                WHERE data IS NULL AND games.year = $1) AS temp"#,
+            year
         )
         .fetch_one(pool)
         .await?
         .unwrap_or(0);
 
-         Ok(Amount(amount))
+        Ok(Amount(amount))
     }
 
     /// Find all pending teams.
@@ -68,7 +69,8 @@ impl Outcome {
                 SELECT DISTINCT team_id FROM game_team
                     INNER JOIN games ON game_team.game_id=games.id
                     INNER JOIN teams ON game_team.team_id=teams.id
-                WHERE data IS NULL AND teams.year = $1) AS temp"#, year
+                WHERE data IS NULL AND teams.year = $1) AS temp"#,
+            year
         )
         .fetch_one(pool)
         .await?
@@ -84,7 +86,8 @@ impl Outcome {
                 SELECT DISTINCT team_id FROM game_team
                     INNER JOIN games ON game_team.game_id=games.id
                     INNER JOIN teams ON game_team.team_id=teams.id
-                WHERE data IS NULL AND game_id = $1) AS temp"#, game_id
+                WHERE data IS NULL AND game_id = $1) AS temp"#,
+            game_id
         )
         .fetch_one(pool)
         .await?
@@ -124,12 +127,12 @@ impl Outcome {
     }
 
     pub async fn create(game_id: i32, team_id: i32, pool: &PgPool) -> ApiResult<Outcome> {
-        // there is no need to check if the ids are valid here - because this is called while iterating over existing entities 
+        // there is no need to check if the ids are valid here - because this is called while iterating over existing entities
         // NOTE all needed entities are created, because if a Team or Game is created,
-        // the missing outcomes are created, but not any more! 
+        // the missing outcomes are created, but not any more!
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
-            Outcome, 
+            Outcome,
             r#"WITH inserted AS (INSERT INTO game_team (game_id, team_id) VALUES ($1, $2) RETURNING *)
             SELECT game_id, games.trophy_id as game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, teams.trophy_id as team_trophy_id, teams.name as team_name, teams.gender as "team_gender: TeamGender", data, point_value FROM inserted
                 INNER JOIN games ON inserted.game_id=games.id
@@ -147,7 +150,7 @@ impl Outcome {
     pub async fn set_data(&self, pool: &PgPool) -> ApiResult<Outcome> {
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
-                Outcome, 
+                Outcome,
                 r#"WITH updated AS (UPDATE game_team SET data = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)
                 SELECT game_id, games.trophy_id as game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, teams.trophy_id as team_trophy_id, teams.name as team_name, teams.gender as "team_gender: TeamGender", data, point_value FROM updated
                     INNER JOIN games ON updated.game_id=games.id
@@ -157,14 +160,17 @@ impl Outcome {
             .fetch_one(&mut *tx)
             .await?;
         tx.commit().await?;
-        
+
         Ok(outcome)
     }
 
-    pub async fn set_point_value(parsed_outcome: ParsedOutcome, pool: &PgPool) -> ApiResult<Outcome> {
+    pub async fn set_point_value(
+        parsed_outcome: ParsedOutcome,
+        pool: &PgPool,
+    ) -> ApiResult<Outcome> {
         let mut tx = pool.begin().await?;
         let outcome = sqlx::query_as!(
-                Outcome, 
+                Outcome,
                 r#"WITH updated AS (UPDATE game_team SET point_value = $1 WHERE game_id = $2 AND team_id = $3 RETURNING *)
                 SELECT game_id, games.trophy_id as game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, teams.trophy_id as team_trophy_id, teams.name as team_name, teams.gender as "team_gender: TeamGender", data, point_value FROM updated
                             INNER JOIN games ON updated.game_id=games.id
@@ -191,33 +197,41 @@ impl Outcome {
             }
         }
 
-        Ok(GenderOutcomes{
+        Ok(GenderOutcomes {
             male_outcomes,
-            female_outcomes
+            female_outcomes,
         })
     }
 }
 
 impl Display for Outcome {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Outcome(game_id: {}, team_id: {}, data: {:?})", self.game_id, self.team_id, self.data)
+        write!(
+            f,
+            "Outcome(game_id: {}, team_id: {}, data: {:?})",
+            self.game_id, self.team_id, self.data
+        )
     }
 }
 
 impl TypeInfo for Outcome {
     fn type_name(&self) -> String {
-       "Outcome".to_string()
+        "Outcome".to_string()
     }
 }
 
 impl Display for OutcomeVec {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "OutcomeVec[{}]", self.0.iter().map(|g| g.to_string()).collect::<String>())
+        write!(
+            f,
+            "OutcomeVec[{}]",
+            self.0.iter().map(|g| g.to_string()).collect::<String>()
+        )
     }
 }
 
 impl TypeInfo for OutcomeVec {
     fn type_name(&self) -> String {
-       "OutcomeVec".to_string()
+        "OutcomeVec".to_string()
     }
 }

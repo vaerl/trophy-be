@@ -1,15 +1,14 @@
 use crate::{
+    ApiResult,
     middleware::Authenticated,
     model::{ImportTeam, ImportUpload, Team, UserRole},
-    ApiResult,
 };
 use actix_multipart::form::MultipartForm;
 use actix_web::{
-    post,
+    HttpResponse, Responder, post,
     web::{self, Data},
-    HttpResponse, Responder,
 };
-use calamine::{open_workbook, RangeDeserializerBuilder, Reader, Xlsx};
+use calamine::{RangeDeserializerBuilder, Reader, Xlsx, open_workbook};
 use sqlx::PgPool;
 
 #[post("/import")]

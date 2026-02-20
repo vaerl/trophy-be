@@ -1,7 +1,6 @@
 use actix_web::{
-    error,
-    http::{header::ContentType, StatusCode},
-    HttpResponse, HttpResponseBuilder,
+    HttpResponse, HttpResponseBuilder, error,
+    http::{StatusCode, header::ContentType},
 };
 use argon2::password_hash;
 use serde::Serialize;

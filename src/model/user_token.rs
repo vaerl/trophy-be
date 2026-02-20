@@ -1,6 +1,6 @@
-use actix_web::{dev::ServiceRequest, FromRequest, HttpRequest};
+use actix_web::{FromRequest, HttpRequest, dev::ServiceRequest};
 use chrono::Utc;
-use futures::future::{err, ready, Ready};
+use futures::future::{Ready, err, ready};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;

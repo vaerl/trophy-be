@@ -1,8 +1,8 @@
-use std::fmt::{self, Display};
+use super::{CustomError, Outcome, Team};
+use crate::{ApiResult, TypeInfo};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
-use crate::{ApiResult, TypeInfo};
-use super::{ CustomError, Outcome, Team};
+use std::fmt::{self, Display};
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "game_kind")]
@@ -45,7 +45,6 @@ pub struct CreateGame {
 }
 
 impl Game {
-
     pub async fn find_all(pool: &PgPool, year: i32) -> ApiResult<GameVec> {
         let games = sqlx::query_as!(
             Game,
@@ -65,13 +64,15 @@ impl Game {
         .fetch_optional(pool)
         .await?;
 
-        game.ok_or(CustomError::NotFoundError { message: format!("Game {} could not be found.", id) })
+        game.ok_or(CustomError::NotFoundError {
+            message: format!("Game {} could not be found.", id),
+        })
     }
 
     /// Create a new game.
     pub async fn create(create_game: CreateGame, pool: &PgPool) -> ApiResult<Game> {
         let mut tx = pool.begin().await?;
-        let game: Game = sqlx::query_as!(Game, 
+        let game: Game = sqlx::query_as!(Game,
             r#"INSERT INTO games (trophy_id, name, kind, year) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as "kind: GameKind", year"#,
             create_game.trophy_id, create_game.name, create_game.kind as GameKind, create_game.year
         )
@@ -92,7 +93,7 @@ impl Game {
         // NOTE I've decided against being able to change the year of already created games (for now)
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!(
-            Game, 
+            Game,
             r#"UPDATE games SET trophy_id = $1, name = $2, kind = $3 WHERE id = $4 RETURNING id, trophy_id, name, kind as "kind: GameKind", year"#,
             altered_game.trophy_id, altered_game.name, altered_game.kind as GameKind, id
         )
@@ -122,24 +123,32 @@ impl Game {
 
 impl fmt::Display for Game {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Game(id: {}, trophy_id: {}, name: {}, kind: {})",self.id, self.trophy_id, self.name, self.kind)
+        write!(
+            f,
+            "Game(id: {}, trophy_id: {}, name: {}, kind: {})",
+            self.id, self.trophy_id, self.name, self.kind
+        )
     }
 }
 
 impl TypeInfo for Game {
     fn type_name(&self) -> String {
-       "Game".to_string()
+        "Game".to_string()
     }
 }
 
 impl Display for GameVec {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "GameVec[{}]", self.0.iter().map(|g| g.to_string()).collect::<String>())
+        write!(
+            f,
+            "GameVec[{}]",
+            self.0.iter().map(|g| g.to_string()).collect::<String>()
+        )
     }
 }
 
 impl TypeInfo for GameVec {
     fn type_name(&self) -> String {
-       "GameVec".to_string()
+        "GameVec".to_string()
     }
 }

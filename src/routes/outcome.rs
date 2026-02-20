@@ -1,14 +1,13 @@
 use actix_web::{
-    get, put,
+    Responder, get, put,
     web::{self, Data},
-    Responder,
 };
 use sqlx::PgPool;
 
 use crate::{
+    ApiResult, ToJson,
     middleware::Authenticated,
     model::{CustomError, Outcome, User, UserRole},
-    ApiResult, ToJson,
 };
 
 #[get("/outcomes")]

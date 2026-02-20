@@ -1,18 +1,18 @@
 use std::rc::Rc;
 
-use actix::fut::{ready, Ready};
+use actix::fut::{Ready, ready};
 use actix_service::{Service, Transform};
 use actix_web::{
+    Error, FromRequest, HttpMessage,
     dev::{ServiceRequest, ServiceResponse},
     web::Data,
-    Error, FromRequest, HttpMessage,
 };
-use futures::{future::LocalBoxFuture, FutureExt};
+use futures::{FutureExt, future::LocalBoxFuture};
 use sqlx::PgPool;
 
 use crate::{
-    model::{CustomError, UserRole, UserToken},
     ApiResult,
+    model::{CustomError, UserRole, UserToken},
 };
 
 #[derive(Debug)]

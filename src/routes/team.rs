@@ -1,14 +1,13 @@
 use actix_web::{
-    delete, get, post, put,
+    Responder, delete, get, post, put,
     web::{self, Data, Query},
-    Responder,
 };
 use sqlx::PgPool;
 
 use crate::{
+    ApiResult, ToJson,
     middleware::Authenticated,
     model::{CreateTeam, Outcome, Team, UserRole, Year},
-    ApiResult, ToJson,
 };
 
 #[get("/teams")]

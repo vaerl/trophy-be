@@ -1,13 +1,13 @@
 use crate::{
+    ApiResult, ToJson,
     middleware::Authenticated,
     model::{CreateLogin, CreateUser, StatusResponse, UpdateUser, User, UserRole},
-    ApiResult, ToJson,
 };
 use actix_web::{
+    HttpResponse, Responder, ResponseError,
     cookie::{Cookie, SameSite},
     delete, get, post, put,
     web::{self, Data},
-    HttpResponse, Responder, ResponseError,
 };
 use sqlx::PgPool;
 
