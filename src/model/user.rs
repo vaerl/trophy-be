@@ -160,19 +160,22 @@ impl User {
 
         info!("Creating new user.");
 
-    info!("Creating new user.");
-    let argon2 = Argon2::default();
-    let password_hash = argon2.hash_password(create_user.password.as_bytes(), &salt).unwrap().to_string();
-    let mut tx = pool.begin().await?;
-    
-    // insert the user - sqlx doesn't handle LEFT JOIN correctly as it infers fields of the non-joined part to also be optional
-    let inserted_user = sqlx::query!(
-        r#"INSERT INTO users (name, password, role, game_id) 
-            VALUES ($1, $2, $3, $4) 
         // taken from https://github.com/launchbadge/sqlx/pull/3931#discussion_r2214203657
         let salt: [u8; Salt::RECOMMENDED_LENGTH] = rand::random();
         let salt = SaltString::encode_b64(&salt)
             .expect("Should not fail since we generated a salt of recommended length.");
+
+        let argon2 = Argon2::default();
+        let password_hash = argon2
+            .hash_password(create_user.password.as_bytes(), &salt)
+            .unwrap()
+            .to_string();
+        let mut tx = pool.begin().await?;
+
+        // insert the user - sqlx doesn't handle LEFT JOIN correctly as it infers fields of the non-joined part to also be optional
+        let inserted_user = sqlx::query!(
+            r#"INSERT INTO users (name, password, role, game_id)
+            VALUES ($1, $2, $3, $4)
             RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
             create_user.name,
             password_hash,
