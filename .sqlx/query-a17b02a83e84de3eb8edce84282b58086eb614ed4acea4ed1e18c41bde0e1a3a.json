@@ -1,12 +1,12 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO users (name, password, role, game_id) \n            VALUES ($1, $2, $3, $4) \n            RETURNING id, name, password, role as \"role: UserRole\", game_id, session",
+  "query": "INSERT INTO users (id, name, password, role, game_id)\n            VALUES ($1, $2, $3, $4, $5)\n            RETURNING id, name, password, role as \"role: UserRole\", game_id, session",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Int4"
+        "type_info": "Uuid"
       },
       {
         "ordinal": 1,
@@ -37,16 +37,17 @@
       {
         "ordinal": 4,
         "name": "game_id",
-        "type_info": "Int4"
+        "type_info": "Uuid"
       },
       {
         "ordinal": 5,
         "name": "session",
-        "type_info": "Varchar"
+        "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
+        "Uuid",
         "Varchar",
         "Varchar",
         {
@@ -61,7 +62,7 @@
             }
           }
         },
-        "Int4"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -73,5 +74,5 @@
       true
     ]
   },
-  "hash": "128fbde527de880673ee7dfee6ace8122da63c4302085fa16cdfb2e30a7ab795"
+  "hash": "a17b02a83e84de3eb8edce84282b58086eb614ed4acea4ed1e18c41bde0e1a3a"
 }

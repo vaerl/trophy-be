@@ -4,6 +4,7 @@ use futures::future::{Ready, err, ready};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use crate::ApiResult;
 
@@ -20,13 +21,13 @@ pub struct UserToken {
     // iat- and exp-names are required by jsonwebtoken!
     pub iat: i64,
     pub exp: i64,
-    pub user_id: i32,
-    pub login_session: String,
+    pub user_id: Uuid,
+    pub login_session: Uuid,
 }
 
 pub struct CreateToken {
-    pub user_id: i32,
-    pub session: String,
+    pub user_id: Uuid,
+    pub session: Uuid,
 }
 
 impl UserToken {
@@ -44,7 +45,7 @@ impl UserToken {
             iat: now,
             exp: expiration,
             user_id: login.user_id,
-            login_session: login.session.clone(),
+            login_session: login.session,
         };
 
         jsonwebtoken::encode::<UserToken>(

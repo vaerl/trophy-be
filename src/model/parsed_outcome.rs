@@ -2,6 +2,7 @@ use super::{GameKind, Outcome, Team};
 use humantime::parse_duration;
 use sqlx::PgPool;
 use std::time::Duration;
+use uuid::Uuid;
 
 use crate::ApiResult;
 
@@ -12,7 +13,7 @@ pub enum Value {
 }
 
 pub struct ParsedOutcome {
-    pub game_id: i32,
+    pub game_id: Uuid,
     pub team: Team,
     pub value: Value,
     pub point_value: Option<i32>,

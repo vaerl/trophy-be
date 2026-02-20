@@ -3,6 +3,7 @@ use crate::{ApiResult, TypeInfo};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 use std::fmt::{self, Display};
+use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "game_kind")]
@@ -25,7 +26,7 @@ impl fmt::Display for GameKind {
 
 #[derive(Serialize, FromRow)]
 pub struct Game {
-    pub id: i32,
+    pub id: Uuid,
     pub trophy_id: i32,
     pub name: String,
     pub kind: GameKind,
@@ -45,6 +46,7 @@ pub struct CreateGame {
 }
 
 impl Game {
+    /// Find all [Game]s.
     pub async fn find_all(pool: &PgPool, year: i32) -> ApiResult<GameVec> {
         let games = sqlx::query_as!(
             Game,
@@ -56,7 +58,8 @@ impl Game {
         Ok(GameVec(games))
     }
 
-    pub async fn find(id: i32, pool: &PgPool) -> ApiResult<Game> {
+    /// Try to get the [Game] of the specified ID.
+    pub async fn find(id: Uuid, pool: &PgPool) -> ApiResult<Game> {
         let game = sqlx::query_as!(
             Game,
             r#"SELECT id, trophy_id, name, kind as "kind: GameKind", year FROM games WHERE id = $1"#, id
@@ -69,27 +72,34 @@ impl Game {
         })
     }
 
-    /// Create a new game.
+    /// Create a new [Game].
     pub async fn create(create_game: CreateGame, pool: &PgPool) -> ApiResult<Game> {
         let mut tx = pool.begin().await?;
-        let game: Game = sqlx::query_as!(Game,
-            r#"INSERT INTO games (trophy_id, name, kind, year) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as "kind: GameKind", year"#,
-            create_game.trophy_id, create_game.name, create_game.kind as GameKind, create_game.year
+        let game: Game = sqlx::query_as!(
+            Game,
+            r#"INSERT INTO games (id, trophy_id, name, kind, year)
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING id, trophy_id, name, kind as "kind: GameKind", year"#,
+            Uuid::now_v7(),
+            create_game.trophy_id,
+            create_game.name,
+            create_game.kind as GameKind,
+            create_game.year
         )
         .fetch_one(&mut *tx)
         .await?;
-        tx.commit().await?;
 
         // create outcomes
         for team in Team::find_all(pool, create_game.year).await?.0 {
-            Outcome::create(game.id, team.id, pool).await?;
+            Outcome::create(game.id, team.id, &mut *tx).await?;
         }
 
+        tx.commit().await?;
         Ok(game)
     }
 
-    /// Update the specified game.
-    pub async fn update(id: i32, altered_game: CreateGame, pool: &PgPool) -> ApiResult<Game> {
+    /// Update the specified [Game].
+    pub async fn update(id: Uuid, altered_game: CreateGame, pool: &PgPool) -> ApiResult<Game> {
         // NOTE I've decided against being able to change the year of already created games (for now)
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!(
@@ -101,12 +111,11 @@ impl Game {
         .await?;
 
         tx.commit().await?;
-
         Ok(game)
     }
 
-    /// Delete the specified game.
-    pub async fn delete(id: i32, pool: &PgPool) -> ApiResult<Game> {
+    /// Delete the specified [Game].
+    pub async fn delete(id: Uuid, pool: &PgPool) -> ApiResult<Game> {
         let mut tx = pool.begin().await?;
         let game = sqlx::query_as!(
             Game,

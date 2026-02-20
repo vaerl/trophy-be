@@ -4,6 +4,7 @@ use log::Level;
 use serde::Serialize;
 use sqlx::{PgPool, Type};
 use std::fmt::Display;
+use uuid::Uuid;
 
 #[derive(Serialize, Type, Clone)]
 #[sqlx(type_name = "subject_type")]
@@ -66,8 +67,8 @@ impl Display for LogLevel {
 
 #[derive(Serialize)]
 pub struct History {
-    pub id: i32,
-    pub user_id: Option<i32>,
+    pub id: Uuid,
+    pub user_id: Option<Uuid>,
 
     /// Populated by joining `transaction_history` with `users`.
     pub user_name: Option<String>,
@@ -75,7 +76,7 @@ pub struct History {
     pub timestamp: DateTime<Utc>,
     pub level: LogLevel,
     pub operation: String,
-    pub subject_id: Option<i32>,
+    pub subject_id: Option<Uuid>,
     pub subject_type: SubjectType,
 }
 
@@ -99,10 +100,10 @@ impl History {
 
     /// Create a new history-entry.
     pub async fn create(
-        user_id: i32,
+        user_id: Uuid,
         log_level: LogLevel,
         operation: String,
-        subject_id: Option<i32>,
+        subject_id: Option<Uuid>,
         subject_type: SubjectType,
         pool: &PgPool,
     ) -> ApiResult<History> {

@@ -6,12 +6,12 @@
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Int4"
+        "type_info": "Uuid"
       },
       {
         "ordinal": 1,
         "name": "user_id",
-        "type_info": "Int4"
+        "type_info": "Uuid"
       },
       {
         "ordinal": 2,
@@ -47,7 +47,7 @@
       {
         "ordinal": 6,
         "name": "subject_id",
-        "type_info": "Int4"
+        "type_info": "Uuid"
       },
       {
         "ordinal": 7,
@@ -72,7 +72,7 @@
     ],
     "parameters": {
       "Left": [
-        "Int4",
+        "Uuid",
         "Timestamptz",
         {
           "Custom": {
@@ -87,7 +87,7 @@
           }
         },
         "Varchar",
-        "Int4",
+        "Uuid",
         {
           "Custom": {
             "name": "subject_type",

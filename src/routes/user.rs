@@ -10,6 +10,7 @@ use actix_web::{
     web::{self, Data},
 };
 use sqlx::PgPool;
+use uuid::Uuid;
 
 #[get("/user/status")]
 async fn status(auth: Option<Authenticated>) -> ApiResult<impl Responder> {
@@ -27,7 +28,7 @@ async fn find_all_users(pool: Data<PgPool>, auth: Authenticated) -> ApiResult<im
 
 #[get("/users/{id}")]
 async fn find_user(
-    id: web::Path<i32>,
+    id: web::Path<Uuid>,
     pool: Data<PgPool>,
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
@@ -37,7 +38,7 @@ async fn find_user(
 
 #[get("/users/{id}/game")]
 async fn find_game_for_ref(
-    id: web::Path<i32>,
+    id: web::Path<Uuid>,
     pool: Data<PgPool>,
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
@@ -59,7 +60,7 @@ async fn create_user(
 
 #[put("/users/{id}")]
 async fn update_user(
-    id: web::Path<i32>,
+    id: web::Path<Uuid>,
     altered_user: web::Json<UpdateUser>,
     pool: Data<PgPool>,
     auth: Authenticated,
@@ -72,7 +73,7 @@ async fn update_user(
 
 #[delete("/users/{id}")]
 async fn delete_user(
-    id: web::Path<i32>,
+    id: web::Path<Uuid>,
     pool: Data<PgPool>,
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {

@@ -33,12 +33,12 @@ impl fmt::Display for UserRole {
 
 #[derive(Serialize, FromRow, Debug)]
 pub struct User {
-    pub id: i32,
+    pub id: Uuid,
     pub name: String,
     pub password: String,
     pub role: UserRole,
-    pub session: Option<String>,
-    pub game_id: Option<i32>,
+    pub session: Option<Uuid>,
+    pub game_id: Option<Uuid>,
     pub game_name: Option<String>,
 }
 
@@ -51,7 +51,7 @@ pub struct CreateUser {
     pub name: String,
     pub password: String,
     pub role: UserRole,
-    pub game_id: Option<i32>,
+    pub game_id: Option<Uuid>,
 }
 
 #[derive(Deserialize)]
@@ -59,7 +59,7 @@ pub struct UpdateUser {
     pub name: String,
     pub role: UserRole,
     pub password: Option<String>,
-    pub game_id: Option<i32>,
+    pub game_id: Option<Uuid>,
 }
 
 impl fmt::Display for CreateUser {
@@ -82,6 +82,7 @@ pub struct CreateLogin {
 /// By using `field as "field?"` we make sqlx clear that it's potentially nullable - this solved an issue where sqlx would complain even though
 /// the receiving field was accepting an `Option` - more [here](https://github.com/launchbadge/sqlx/issues/1852).
 impl User {
+    /// Find all [User]s.
     pub async fn find_all(pool: &PgPool) -> ApiResult<UserVec> {
         let users = sqlx::query_as!(
             User,
@@ -95,7 +96,8 @@ impl User {
         Ok(UserVec(users))
     }
 
-    pub async fn find(id: i32, pool: &PgPool) -> ApiResult<User> {
+    /// Try to get the [User] with the specified ID.
+    pub async fn find(id: Uuid, pool: &PgPool) -> ApiResult<User> {
         let user = sqlx::query_as!(
             User,
             r#"SELECT users.id, users.name, password, role as "role: UserRole", game_id, games.name as "game_name?", session FROM users
@@ -110,6 +112,7 @@ impl User {
         })
     }
 
+    /// Try to get the [User] with the specified name.
     pub async fn find_by_name(name: &String, pool: &PgPool) -> ApiResult<User> {
         let user = sqlx::query_as!(
             User,
@@ -124,7 +127,8 @@ impl User {
         })
     }
 
-    pub async fn find_game_for_ref(user_id: i32, pool: &PgPool) -> ApiResult<Game> {
+    /// Try to get the game of the specified [User].
+    pub async fn find_game_for_ref(user_id: Uuid, pool: &PgPool) -> ApiResult<Game> {
         let user = User::find(user_id, pool).await?;
 
         match user.game_id {
@@ -142,6 +146,7 @@ impl User {
             });
         }
 
+        // if a game is specified, check if it exists
         if create_user.game_id.is_some()
             && Game::find(create_user.game_id.unwrap(), pool)
                 .await
@@ -174,9 +179,10 @@ impl User {
 
         // insert the user - sqlx doesn't handle LEFT JOIN correctly as it infers fields of the non-joined part to also be optional
         let inserted_user = sqlx::query!(
-            r#"INSERT INTO users (name, password, role, game_id)
-            VALUES ($1, $2, $3, $4)
+            r#"INSERT INTO users (id, name, password, role, game_id)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
+            Uuid::now_v7(),
             create_user.name,
             password_hash,
             create_user.role as UserRole,
@@ -211,8 +217,9 @@ impl User {
         Ok(user)
     }
 
+    /// Update an existing [User].
     /// Passing a new password updates the password.
-    pub async fn update(id: i32, altered_user: UpdateUser, pool: &PgPool) -> ApiResult<User> {
+    pub async fn update(id: Uuid, altered_user: UpdateUser, pool: &PgPool) -> ApiResult<User> {
         match altered_user.password {
             Some(password) => {
                 // taken from https://github.com/launchbadge/sqlx/pull/3931#discussion_r2214203657
@@ -273,13 +280,14 @@ impl User {
         }
     }
 
-    async fn update_session(id: i32, session: &String, pool: &PgPool) -> ApiResult<()> {
+    async fn update_session(user_id: Uuid, session: Option<Uuid>, pool: &PgPool) -> ApiResult<()> {
         let mut tx = pool.begin().await?;
+
         sqlx::query_as!(
             User,
             r#"UPDATE users SET session = $1 WHERE id = $2"#,
             session,
-            id
+            user_id
         )
         .execute(&mut *tx)
         .await?;
@@ -288,7 +296,8 @@ impl User {
         Ok(())
     }
 
-    pub async fn delete(id: i32, pool: &PgPool) -> ApiResult<User> {
+    /// Delete the specified [User].
+    pub async fn delete(id: Uuid, pool: &PgPool) -> ApiResult<User> {
         let mut tx = pool.begin().await?;
 
         // NOTE since I'm using LEFT JOIN, I have to assert that the fields are actually present
@@ -334,7 +343,7 @@ impl User {
             })
         } else {
             let session = User::generate_session();
-            User::update_session(user.id, &session, pool).await?;
+            User::update_session(user.id, Some(session), pool).await?;
             Ok(UserToken::generate_token(
                 &CreateToken {
                     user_id: user.id,
@@ -345,12 +354,15 @@ impl User {
         }
     }
 
-    pub async fn logout(id: i32, pool: &PgPool) -> ApiResult<()> {
-        User::update_session(id, &"".to_string(), pool).await
+    /// Logout the specified [User].
+    pub async fn logout(id: Uuid, pool: &PgPool) -> ApiResult<()> {
+        User::update_session(id, None, pool).await
     }
 
-    pub fn generate_session() -> String {
-        Uuid::new_v4().as_simple().to_string()
+    /// Generate a new v4-[Uuid] to use as our session-identifier.
+    /// Also see: https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_(random)
+    pub fn generate_session() -> Uuid {
+        Uuid::new_v4()
     }
 }
 

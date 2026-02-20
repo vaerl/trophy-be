@@ -14,6 +14,7 @@ use actix_web::{
 use futures::{FutureExt, future::LocalBoxFuture};
 use sqlx::PgPool;
 use std::{fmt::Display, rc::Rc};
+use uuid::Uuid;
 
 pub struct LogMiddleware<S> {
     pool: Rc<Data<PgPool>>,
@@ -80,7 +81,7 @@ where
                     res.request()
                         .match_info()
                         .get("id")
-                        .and_then(|s| s.parse::<i32>().ok()),
+                        .and_then(|s| s.parse::<Uuid>().ok()),
                 ),
                 None => (res.request().path().to_owned(), None),
             };

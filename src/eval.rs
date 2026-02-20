@@ -193,6 +193,8 @@ impl TypeInfo for ResultFile {
 
 #[cfg(test)]
 mod tests {
+    use uuid::Uuid;
+
     use super::*;
     use crate::model::TeamGender;
     use std::time::Duration;
@@ -200,7 +202,7 @@ mod tests {
     fn get_teams() -> Vec<Team> {
         vec![
             Team {
-                id: 1,
+                id: Uuid::now_v7(),
                 trophy_id: 1,
                 name: "A".to_string(),
                 gender: TeamGender::Female,
@@ -208,7 +210,7 @@ mod tests {
                 year: 2024,
             },
             Team {
-                id: 2,
+                id: Uuid::now_v7(),
                 trophy_id: 2,
                 name: "B".to_string(),
                 gender: TeamGender::Female,
@@ -216,7 +218,7 @@ mod tests {
                 year: 2024,
             },
             Team {
-                id: 3,
+                id: Uuid::now_v7(),
                 trophy_id: 3,
                 name: "C".to_string(),
                 gender: TeamGender::Female,
@@ -224,7 +226,7 @@ mod tests {
                 year: 2024,
             },
             Team {
-                id: 4,
+                id: Uuid::now_v7(),
                 trophy_id: 4,
                 name: "D".to_string(),
                 gender: TeamGender::Female,
@@ -232,7 +234,7 @@ mod tests {
                 year: 2024,
             },
             Team {
-                id: 5,
+                id: Uuid::now_v7(),
                 trophy_id: 5,
                 name: "E".to_string(),
                 gender: TeamGender::Female,
@@ -248,7 +250,7 @@ mod tests {
 
         for (team, value) in teams.iter().zip(values) {
             parsed_outcomes.push(ParsedOutcome {
-                game_id: 1,
+                game_id: Uuid::now_v7(),
                 team: team.clone(),
                 value: value.clone(),
                 point_value: None,

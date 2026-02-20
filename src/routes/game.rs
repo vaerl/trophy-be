@@ -8,6 +8,7 @@ use actix_web::{
     web::{self, Data, Json, Path, Query},
 };
 use sqlx::PgPool;
+use uuid::Uuid;
 
 #[get("/games")]
 async fn find_all_games(
@@ -45,7 +46,7 @@ async fn create_game(
 
 #[get("/games/{id}")]
 async fn find_game(
-    id: Path<i32>,
+    id: Path<Uuid>,
     pool: Data<PgPool>,
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
@@ -55,7 +56,7 @@ async fn find_game(
 
 #[put("/games/{id}")]
 async fn update_game(
-    id: Path<i32>,
+    id: Path<Uuid>,
     game: Json<CreateGame>,
     pool: Data<PgPool>,
     auth: Authenticated,
@@ -66,7 +67,7 @@ async fn update_game(
 
 #[delete("/games/{id}")]
 async fn delete_game(
-    id: Path<i32>,
+    id: Path<Uuid>,
     pool: Data<PgPool>,
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
@@ -76,7 +77,7 @@ async fn delete_game(
 
 #[get("/games/{id}/pending/amount")]
 async fn pending_teams_amount(
-    id: web::Path<i32>,
+    id: web::Path<Uuid>,
     pool: Data<PgPool>,
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {

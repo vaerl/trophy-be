@@ -3,6 +3,7 @@ use actix_web::{
     web::{self, Data},
 };
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use crate::{
     ApiResult, ToJson,
@@ -42,7 +43,7 @@ async fn update_outcome(
 async fn find_all_outcomes_for_team(
     pool: Data<PgPool>,
     auth: Authenticated,
-    team_id: web::Path<i32>,
+    team_id: web::Path<Uuid>,
 ) -> ApiResult<impl Responder> {
     // only admins should be able to access this information
     auth.has_roles(vec![UserRole::Admin])?;
@@ -53,7 +54,7 @@ async fn find_all_outcomes_for_team(
 async fn find_all_outcomes_for_game(
     pool: Data<PgPool>,
     auth: Authenticated,
-    game_id: web::Path<i32>,
+    game_id: web::Path<Uuid>,
 ) -> ApiResult<impl Responder> {
     match auth.role {
         UserRole::Admin => Outcome::find_all_for_game(*game_id, &pool).await?.to_json(),

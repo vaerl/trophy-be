@@ -9,6 +9,7 @@ use actix_web::{
 };
 use futures::{FutureExt, future::LocalBoxFuture};
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use crate::{
     ApiResult,
@@ -17,7 +18,7 @@ use crate::{
 
 #[derive(Debug)]
 pub struct Auth {
-    pub id: i32,
+    pub id: Uuid,
     pub role: UserRole,
 }
 

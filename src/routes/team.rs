@@ -3,6 +3,7 @@ use actix_web::{
     web::{self, Data, Query},
 };
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use crate::{
     ApiResult, ToJson,
@@ -46,7 +47,7 @@ async fn create_team(
 
 #[get("/teams/{id}")]
 async fn find_team(
-    id: web::Path<i32>,
+    id: web::Path<Uuid>,
     pool: Data<PgPool>,
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
@@ -56,7 +57,7 @@ async fn find_team(
 
 #[put("/teams/{id}")]
 async fn update_team(
-    id: web::Path<i32>,
+    id: web::Path<Uuid>,
     team: web::Json<CreateTeam>,
     pool: Data<PgPool>,
     auth: Authenticated,
@@ -67,7 +68,7 @@ async fn update_team(
 
 #[delete("/teams/{id}")]
 async fn delete_team(
-    id: web::Path<i32>,
+    id: web::Path<Uuid>,
     pool: Data<PgPool>,
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {

@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 use std::fmt::{self, Display};
+use uuid::Uuid;
 
 use super::{CustomError, Game, Outcome, TypeInfo};
 use crate::ApiResult;
@@ -30,7 +31,7 @@ impl fmt::Display for TeamGender {
 
 #[derive(Serialize, FromRow, Clone)]
 pub struct Team {
-    pub id: i32,
+    pub id: Uuid,
     pub trophy_id: i32,
     pub name: String,
     pub gender: TeamGender,
@@ -84,6 +85,7 @@ impl ImportTeam {
 }
 
 impl Team {
+    /// Find all [Team]s.
     pub async fn find_all(pool: &PgPool, year: i32) -> ApiResult<TeamVec> {
         let teams = sqlx::query_as!(
             Team,
@@ -95,6 +97,7 @@ impl Team {
         Ok(TeamVec(teams))
     }
 
+    /// Find all [Team]s split into a tuple by their gender.
     pub async fn find_all_by_gender(pool: &PgPool, year: i32) -> ApiResult<(TeamVec, TeamVec)> {
         let teams = Team::find_all(pool, year).await?.0;
         let mut female = Vec::<Team>::new();
@@ -110,7 +113,8 @@ impl Team {
         Ok((TeamVec(female), TeamVec(male)))
     }
 
-    pub async fn find(id: i32, pool: &PgPool) -> ApiResult<Team> {
+    /// Try to get the [Team] of the specified ID.
+    pub async fn find(id: Uuid, pool: &PgPool) -> ApiResult<Team> {
         let team = sqlx::query_as!(
             Team,
             r#"SELECT id, trophy_id, name, gender as "gender: TeamGender", points, year FROM teams WHERE id = $1"#,
@@ -124,28 +128,33 @@ impl Team {
         })
     }
 
-    /// Create a new team.
+    /// Create a new [Team].
     pub async fn create(create_team: CreateTeam, pool: &PgPool) -> ApiResult<Team> {
         let mut tx = pool.begin().await?;
         let team: Team = sqlx::query_as!(
             Team,
-            r#"INSERT INTO teams (trophy_id, name, gender, year) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, gender as "gender: TeamGender", points, year"#,
-            create_team.trophy_id, create_team.name, create_team.gender as TeamGender, create_team.year
+            r#"INSERT INTO teams (id, trophy_id, name, gender, year)
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING id, trophy_id, name, gender as "gender: TeamGender", points, year"#,
+            Uuid::now_v7(),
+            create_team.trophy_id,
+            create_team.name,
+            create_team.gender as TeamGender,
+            create_team.year
         )
         .fetch_one(&mut *tx)
         .await?;
-        tx.commit().await?;
 
         for game in Game::find_all(pool, create_team.year).await?.0 {
-            Outcome::create(game.id, team.id, pool).await?;
+            Outcome::create(game.id, team.id, &mut *tx).await?;
         }
 
+        tx.commit().await?;
         Ok(team)
     }
 
-    // TODO why?
-    /// Update the specified team. Does not set points.
-    pub async fn update(id: i32, altered_team: CreateTeam, pool: &PgPool) -> ApiResult<Team> {
+    /// Update the specified [Team]. Does not set points.
+    pub async fn update(id: Uuid, altered_team: CreateTeam, pool: &PgPool) -> ApiResult<Team> {
         // NOTE I've decided against being able to change the year of already created teams (for now)
         let mut tx = pool.begin().await?;
         let team = sqlx::query_as!(
@@ -160,7 +169,7 @@ impl Team {
         Ok(team)
     }
 
-    /// Write the points of this team to the database.
+    /// Write the points of this [Team] to the database.
     pub async fn update_points(&self, pool: &PgPool) -> ApiResult<Team> {
         let mut tx = pool.begin().await?;
         let team = sqlx::query_as!(
@@ -175,8 +184,8 @@ impl Team {
         Ok(team)
     }
 
-    /// Delete the specified team.
-    pub async fn delete(id: i32, pool: &PgPool) -> ApiResult<Team> {
+    /// Delete the specified [Team].
+    pub async fn delete(id: Uuid, pool: &PgPool) -> ApiResult<Team> {
         let mut tx = pool.begin().await?;
         let team = sqlx::query_as!(
             Team,

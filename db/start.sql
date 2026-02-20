@@ -21,22 +21,22 @@ CREATE TYPE log_level AS ENUM ('debug', 'info', 'warn');
 CREATE TYPE subject_type AS ENUM ('game', 'team', 'outcome', 'history', 'user', 'eval', 'general');
 -- create model-tables
 CREATE TABLE games (
-    id serial PRIMARY KEY NOT NULL,
+    id uuid PRIMARY KEY NOT NULL,
     trophy_id integer NOT NULL,
     name varchar (50) NOT NULL,
     kind game_kind NOT NULL,
     year integer NOT NULL
 );
 CREATE TABLE users (
-    id serial PRIMARY KEY NOT NULL,
+    id uuid PRIMARY KEY NOT NULL,
     name varchar (50) NOT NULL,
     password varchar NOT NULL,
     role user_role NOT NULL,
-    session varchar DEFAULT NULL,
-    game_id int REFERENCES games (id)
+    session uuid DEFAULT NULL,
+    game_id uuid REFERENCES games (id)
 );
 CREATE TABLE teams (
-    id serial PRIMARY KEY NOT NULL,
+    id uuid PRIMARY KEY NOT NULL,
     trophy_id integer NOT NULL,
     name varchar (50) NOT NULL,
     gender team_gender NOT NULL,
@@ -44,19 +44,19 @@ CREATE TABLE teams (
     year integer NOT NULL
 );
 CREATE TABLE game_team (
-    game_id int REFERENCES games (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    team_id int REFERENCES teams (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    game_id uuid REFERENCES games (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    team_id uuid REFERENCES teams (id) ON UPDATE CASCADE ON DELETE CASCADE,
     data text DEFAULT NULL,
     point_value int DEFAULT NULL,
     CONSTRAINT game_team_pkey PRIMARY KEY (game_id, team_id) -- explicit pk
 );
 --- create meta-tables
 CREATE TABLE transaction_history (
-    id serial PRIMARY KEY NOT NULL,
-    user_id int REFERENCES users (id),
+    id uuid PRIMARY KEY NOT NULL,
+    user_id uuid REFERENCES users (id),
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
     level log_level NOT NULL,
     operation varchar NOT NULL,
-    subject_id int,
+    subject_id uuid,
     subject_type subject_type NOT NULL
 );

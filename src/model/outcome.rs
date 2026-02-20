@@ -1,8 +1,9 @@
 use super::{Amount, Game, GameKind, ParsedOutcome, TeamGender, TypeInfo};
 use crate::ApiResult;
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, PgPool};
+use sqlx::{FromRow, PgConnection, PgPool};
 use std::fmt::{self, Display};
+use uuid::Uuid;
 
 /// This module provides all routes concerning outcomes.
 /// As the name "Result" was already taken for the programming-structure, I'm using "outcome".
@@ -11,11 +12,11 @@ use std::fmt::{self, Display};
 #[sqlx(type_name = "game_team")]
 #[sqlx(rename_all = "lowercase")]
 pub struct Outcome {
-    pub game_id: i32,
+    pub game_id: Uuid,
     pub game_trophy_id: i32,
     pub game_name: String,
     pub game_kind: GameKind,
-    pub team_id: i32,
+    pub team_id: Uuid,
     pub team_trophy_id: i32,
     pub team_name: String,
     pub team_gender: TeamGender,
@@ -80,7 +81,10 @@ impl Outcome {
     }
 
     /// Find all pending teams for the specified game.
-    pub async fn find_all_pending_teams_for_game(game_id: i32, pool: &PgPool) -> ApiResult<Amount> {
+    pub async fn find_all_pending_teams_for_game(
+        game_id: Uuid,
+        pool: &PgPool,
+    ) -> ApiResult<Amount> {
         let amount = sqlx::query_scalar!(
             r#"SELECT COUNT(*) FROM (
                 SELECT DISTINCT team_id FROM game_team
@@ -96,7 +100,8 @@ impl Outcome {
         Ok(Amount(amount))
     }
 
-    pub async fn find_all_for_game(game_id: i32, pool: &PgPool) -> ApiResult<OutcomeVec> {
+    /// Find all [Outcome]s for the specified [Game].
+    pub async fn find_all_for_game(game_id: Uuid, pool: &PgPool) -> ApiResult<OutcomeVec> {
         let outcomes = sqlx::query_as!(
             Outcome,
             r#"SELECT game_id, games.trophy_id as game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, teams.trophy_id as team_trophy_id, teams.name as team_name, teams.gender as "team_gender: TeamGender", data, point_value FROM game_team
@@ -111,7 +116,8 @@ impl Outcome {
         Ok(OutcomeVec(outcomes))
     }
 
-    pub async fn find_all_for_team(team_id: i32, pool: &PgPool) -> ApiResult<OutcomeVec> {
+    /// Find all [Outcome]s for the specified [Team].
+    pub async fn find_all_for_team(team_id: Uuid, pool: &PgPool) -> ApiResult<OutcomeVec> {
         let outcomes = sqlx::query_as!(
             Outcome,
             r#"SELECT game_id, games.trophy_id as game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, teams.trophy_id as team_trophy_id, teams.name as team_name, teams.gender as "team_gender: TeamGender", data, point_value FROM game_team
@@ -126,23 +132,28 @@ impl Outcome {
         Ok(OutcomeVec(outcomes))
     }
 
-    pub async fn create(game_id: i32, team_id: i32, pool: &PgPool) -> ApiResult<Outcome> {
-        // there is no need to check if the ids are valid here - because this is called while iterating over existing entities
-        // NOTE all needed entities are created, because if a Team or Game is created,
-        // the missing outcomes are created, but not any more!
-        let mut tx = pool.begin().await?;
+    /// Create a new outcome for the specified [Game] and [Team].
+    /// Must be called when either a [Game] and [Team] is created to keep [Outcome]s up-to-date.
+    /// Note that this doesn't run in a transcation and also doesn't validate the specified IDs
+    /// since it should only ever be called as a part of [Game::create] or [Team::create], which have transactions of their own.
+    pub async fn create(
+        game_id: Uuid,
+        team_id: Uuid,
+        // we stick to PgConnection to avoid lifetime- or generic-overhead
+        connection: &mut PgConnection,
+    ) -> ApiResult<Outcome> {
         let outcome = sqlx::query_as!(
             Outcome,
             r#"WITH inserted AS (INSERT INTO game_team (game_id, team_id) VALUES ($1, $2) RETURNING *)
-            SELECT game_id, games.trophy_id as game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, teams.trophy_id as team_trophy_id, teams.name as team_name, teams.gender as "team_gender: TeamGender", data, point_value FROM inserted
+            SELECT game_id, games.trophy_id as game_trophy_id, games.name as game_name, games.kind as "game_kind: GameKind", team_id, teams.trophy_id as team_trophy_id, teams.name as team_name, teams.gender as "team_gender: TeamGender", data, point_value
+                FROM inserted
                 INNER JOIN games ON inserted.game_id=games.id
                 INNER JOIN teams ON inserted.team_id=teams.id"#,
             game_id, team_id
         )
-        .fetch_one(&mut *tx)
+        .fetch_one(connection)
         .await?;
 
-        tx.commit().await?;
         Ok(outcome)
     }
 

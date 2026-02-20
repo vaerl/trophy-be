@@ -1,12 +1,12 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO games (trophy_id, name, kind, year) VALUES ($1, $2, $3, $4) RETURNING id, trophy_id, name, kind as \"kind: GameKind\", year",
+  "query": "INSERT INTO teams (id, trophy_id, name, gender, year)\n                VALUES ($1, $2, $3, $4, $5)\n                RETURNING id, trophy_id, name, gender as \"gender: TeamGender\", points, year",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Int4"
+        "type_info": "Uuid"
       },
       {
         "ordinal": 1,
@@ -20,14 +20,15 @@
       },
       {
         "ordinal": 3,
-        "name": "kind: GameKind",
+        "name": "gender: TeamGender",
         "type_info": {
           "Custom": {
-            "name": "game_kind",
+            "name": "team_gender",
             "kind": {
               "Enum": [
-                "points",
-                "time"
+                "female",
+                "male",
+                "mixed"
               ]
             }
           }
@@ -35,21 +36,28 @@
       },
       {
         "ordinal": 4,
+        "name": "points",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
         "name": "year",
         "type_info": "Int4"
       }
     ],
     "parameters": {
       "Left": [
+        "Uuid",
         "Int4",
         "Varchar",
         {
           "Custom": {
-            "name": "game_kind",
+            "name": "team_gender",
             "kind": {
               "Enum": [
-                "points",
-                "time"
+                "female",
+                "male",
+                "mixed"
               ]
             }
           }
@@ -62,8 +70,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "6f13f583d14c6f7b9c4e1f591b77501b96ae3175c6e1547c1a8f1c2bf6c73a10"
+  "hash": "b79e45079d52313ea933b41b9b2484a2bb2277b58d333c095ed4df48c3a49d87"
 }

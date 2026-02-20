@@ -1,12 +1,12 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                    WITH updated AS (UPDATE users SET name = $1, role = $2, game_id = $3 WHERE id = $4 RETURNING *)\n                    SELECT \n                        updated.id as \"id!\", \n                        updated.name as \"name!\", \n                        password as \"password!\", \n                        role as \"role!: UserRole\", \n                        game_id, \n                        games.name as \"game_name?\", \n                        session FROM updated\n                    LEFT JOIN games ON games.id=updated.game_id",
+  "query": "\n                    WITH updated AS (UPDATE users SET name = $1, role = $2, game_id = $3 WHERE id = $4 RETURNING *)\n                    SELECT\n                        updated.id as \"id!\",\n                        updated.name as \"name!\",\n                        password as \"password!\",\n                        role as \"role!: UserRole\",\n                        game_id,\n                        games.name as \"game_name?\",\n                        session FROM updated\n                    LEFT JOIN games ON games.id=updated.game_id",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
         "name": "id!",
-        "type_info": "Int4"
+        "type_info": "Uuid"
       },
       {
         "ordinal": 1,
@@ -37,7 +37,7 @@
       {
         "ordinal": 4,
         "name": "game_id",
-        "type_info": "Int4"
+        "type_info": "Uuid"
       },
       {
         "ordinal": 5,
@@ -47,7 +47,7 @@
       {
         "ordinal": 6,
         "name": "session",
-        "type_info": "Varchar"
+        "type_info": "Uuid"
       }
     ],
     "parameters": {
@@ -65,19 +65,19 @@
             }
           }
         },
-        "Int4",
-        "Int4"
+        "Uuid",
+        "Uuid"
       ]
     },
     "nullable": [
-      true,
-      true,
-      true,
-      true,
-      true,
       false,
+      false,
+      false,
+      false,
+      true,
+      true,
       true
     ]
   },
-  "hash": "839d6c3326694f0916aa4a10692e877749e7dbee786251014aefd0d3f6a55158"
+  "hash": "6de9918c270b9c1ec61bdfa18a80c79c06cc8e2d18e44399eafae14e2d0dd577"
 }
