@@ -161,7 +161,6 @@ impl User {
         info!("Creating new user.");
 
     info!("Creating new user.");
-    let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
     let password_hash = argon2.hash_password(create_user.password.as_bytes(), &salt).unwrap().to_string();
     let mut tx = pool.begin().await?;
@@ -170,6 +169,10 @@ impl User {
     let inserted_user = sqlx::query!(
         r#"INSERT INTO users (name, password, role, game_id) 
             VALUES ($1, $2, $3, $4) 
+        // taken from https://github.com/launchbadge/sqlx/pull/3931#discussion_r2214203657
+        let salt: [u8; Salt::RECOMMENDED_LENGTH] = rand::random();
+        let salt = SaltString::encode_b64(&salt)
+            .expect("Should not fail since we generated a salt of recommended length.");
             RETURNING id, name, password, role as "role: UserRole", game_id, session"#,
             create_user.name,
             password_hash,
@@ -209,7 +212,11 @@ impl User {
     pub async fn update(id: i32, altered_user: UpdateUser, pool: &PgPool) -> ApiResult<User> {
         match altered_user.password {
             Some(password) => {
-                let salt = SaltString::generate(&mut OsRng);
+                // taken from https://github.com/launchbadge/sqlx/pull/3931#discussion_r2214203657
+                let salt: [u8; Salt::RECOMMENDED_LENGTH] = rand::random();
+                let salt = SaltString::encode_b64(&salt)
+                    .expect("Should not fail since we generated a salt of recommended length.");
+
                 let argon2 = Argon2::default();
                 let password_hash = argon2
                     .hash_password(password.as_bytes(), &salt)

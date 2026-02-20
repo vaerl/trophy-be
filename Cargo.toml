@@ -35,9 +35,7 @@ serde_json = "1.0.149"
 # auth
 jsonwebtoken = { version = "10.3.0", features = ["aws_lc_rs"] }
 argon2 = "0.5.3"
-# TODO v0.6.4 is required by sqlx, actix-multipart, argon2 -> more here: https://github.com/launchbadge/sqlx/pull/3946
-# -> the link above also includes an example for generating salt-strings without depending on a specific version of rand_core
-rand_core = { version = "0.6.4", features = ["std"] }
+rand = { version = "0.10.0" }
 chrono = { version = "0.4.43", features = ["serde"] }
 uuid = { version = "1.21.0", features = ["v4", "serde"] }
 actix-multipart = "0.7.2"
