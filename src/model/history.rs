@@ -110,11 +110,12 @@ impl History {
         let mut tx = pool.begin().await?;
         let entry = sqlx::query_as!(History,
             r#" WITH inserted as
-            (INSERT INTO transaction_history (user_id, timestamp, level, operation, subject_id, subject_type)
-            VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, user_id, timestamp, level as "level: LogLevel", operation, subject_id, subject_type as "subject_type: SubjectType")
+            (INSERT INTO transaction_history (id, user_id, timestamp, level, operation, subject_id, subject_type)
+            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, user_id, timestamp, level as "level: LogLevel", operation, subject_id, subject_type as "subject_type: SubjectType")
             SELECT inserted.id, user_id, users.name as user_name, timestamp, "level: LogLevel", operation, subject_id, "subject_type: SubjectType" FROM inserted
             INNER JOIN users ON inserted.user_id=users.id
             "#,
+            Uuid::now_v7(),
             user_id,
             Utc::now(),
             log_level as LogLevel,

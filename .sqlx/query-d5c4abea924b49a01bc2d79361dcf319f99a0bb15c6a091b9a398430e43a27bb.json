@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": " WITH inserted as\n            (INSERT INTO transaction_history (user_id, timestamp, level, operation, subject_id, subject_type)\n            VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, user_id, timestamp, level as \"level: LogLevel\", operation, subject_id, subject_type as \"subject_type: SubjectType\")\n            SELECT inserted.id, user_id, users.name as user_name, timestamp, \"level: LogLevel\", operation, subject_id, \"subject_type: SubjectType\" FROM inserted\n            INNER JOIN users ON inserted.user_id=users.id\n            ",
+  "query": " WITH inserted as\n            (INSERT INTO transaction_history (id, user_id, timestamp, level, operation, subject_id, subject_type)\n            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, user_id, timestamp, level as \"level: LogLevel\", operation, subject_id, subject_type as \"subject_type: SubjectType\")\n            SELECT inserted.id, user_id, users.name as user_name, timestamp, \"level: LogLevel\", operation, subject_id, \"subject_type: SubjectType\" FROM inserted\n            INNER JOIN users ON inserted.user_id=users.id\n            ",
   "describe": {
     "columns": [
       {
@@ -73,6 +73,7 @@
     "parameters": {
       "Left": [
         "Uuid",
+        "Uuid",
         "Timestamptz",
         {
           "Custom": {
@@ -117,5 +118,5 @@
       false
     ]
   },
-  "hash": "e9f5b1edb64a632526b204c1822d8917fbb4266e42bb1cb81b191f176ea1eef5"
+  "hash": "d5c4abea924b49a01bc2d79361dcf319f99a0bb15c6a091b9a398430e43a27bb"
 }
