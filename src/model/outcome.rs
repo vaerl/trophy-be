@@ -1,5 +1,8 @@
 use super::{Amount, Game, GameKind, ParsedOutcome, TeamGender, TypeInfo};
-use crate::ApiResult;
+use crate::{
+    ApiResult,
+    model::{CustomError, Team},
+};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgConnection, PgPool};
 use std::fmt::{self, Display};
@@ -196,12 +199,22 @@ impl Outcome {
     }
 
     /// Parse all outcomes for game and return as ParsedOutcome.
+    /// Note that this expects the game to be fully complete.
     pub async fn parse_by_gender_for_game(game: &Game, pool: &PgPool) -> ApiResult<GenderOutcomes> {
         let mut female_outcomes = Vec::<ParsedOutcome>::new();
         let mut male_outcomes = Vec::<ParsedOutcome>::new();
         // sort outcomes by gender
         for outcome in Outcome::find_all_for_game(game.id, pool).await?.0 {
-            let parsed_outcome = ParsedOutcome::from(&game.kind, outcome, pool).await?;
+            let data = outcome.data.clone();
+            // return early if we miss data
+            if data.is_none() {
+                return Err(CustomError::EarlyEvaluationError {
+                    message: format!("Tried parsing the outcome {}, but it had no data.", outcome),
+                });
+            }
+
+            let team = Team::find(outcome.team_id, pool).await?;
+            let parsed_outcome = ParsedOutcome::from(data.unwrap(), &game.kind, game.id, team)?;
             match parsed_outcome.team.gender {
                 TeamGender::Female => female_outcomes.push(parsed_outcome),
                 TeamGender::Male => male_outcomes.push(parsed_outcome),

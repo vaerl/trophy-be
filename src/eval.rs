@@ -89,6 +89,7 @@ async fn evaluate_game(game: Game, pool: &PgPool) -> ApiResult<()> {
 /// Evaluate a [Game] by its [ParsedOutcome]s.
 /// For examples of how this algorithm performs evaluation, see the tests or README.
 fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
+    // sanity-check to ensure there is data
     if outcomes.is_empty() {
         return outcomes;
     }
@@ -100,8 +101,8 @@ fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
     let mut current_gap = 1;
 
     match outcomes[0].value {
-        Value::Time(_) => outcomes.sort_by(|a, b| a.value.cmp(&b.value)),
-        // we have to reverse this vec so the shortest time has the first position
+        Value::Seconds(_) => outcomes.sort_by(|a, b| a.value.cmp(&b.value)),
+        // we have to reverse this vec so the shortest duration has the first position
         Value::Points(_) => outcomes.sort_by(|a, b| a.value.cmp(&b.value).reverse()),
     }
 
@@ -364,11 +365,11 @@ mod tests {
         let parsed_outcomes = get_outcomes(
             teams,
             vec![
-                Value::Time(Duration::new(120, 0)),
-                Value::Time(Duration::new(60, 0)),
-                Value::Time(Duration::new(40, 0)),
-                Value::Time(Duration::new(80, 0)),
-                Value::Time(Duration::new(10, 0)),
+                Value::Seconds(Duration::from_secs(120)),
+                Value::Seconds(Duration::from_secs(60)),
+                Value::Seconds(Duration::from_secs(40)),
+                Value::Seconds(Duration::from_secs(80)),
+                Value::Seconds(Duration::from_secs(10)),
             ],
         );
 
@@ -412,11 +413,11 @@ mod tests {
         let parsed_outcomes = get_outcomes(
             teams,
             vec![
-                Value::Time(Duration::new(80, 0)),
-                Value::Time(Duration::new(80, 0)),
-                Value::Time(Duration::new(800, 0)),
-                Value::Time(Duration::new(80, 0)),
-                Value::Time(Duration::new(10, 0)),
+                Value::Seconds(Duration::from_secs(800)),
+                Value::Seconds(Duration::from_secs(800)),
+                Value::Seconds(Duration::from_secs(8000)),
+                Value::Seconds(Duration::from_secs(800)),
+                Value::Seconds(Duration::from_secs(100)),
             ],
         );
 
