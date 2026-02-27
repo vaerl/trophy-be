@@ -107,7 +107,7 @@ impl Game {
 
         // create outcomes
         for team in Team::find_all(pool, create_game.year).await?.0 {
-            Outcome::create(game.id, team.id, &mut *tx).await?;
+            Outcome::create(game.id, team.id, &mut tx).await?;
         }
 
         tx.commit().await?;
@@ -162,7 +162,7 @@ impl Game {
         .await?
         .unwrap_or(0);
 
-        return Ok(amount > 0);
+        Ok(amount > 0)
     }
 }
 

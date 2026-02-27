@@ -26,7 +26,7 @@ impl ParsedOutcome {
         };
 
         Ok(ParsedOutcome {
-            game_id: game_id,
+            game_id,
             team,
             value,
             point_value: None,

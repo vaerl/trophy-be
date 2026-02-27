@@ -180,7 +180,7 @@ impl Team {
         .await?;
 
         for game in Game::find_all(pool, create_team.year).await?.0 {
-            Outcome::create(game.id, team.id, &mut *tx).await?;
+            Outcome::create(game.id, team.id, &mut tx).await?;
         }
 
         tx.commit().await?;
