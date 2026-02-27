@@ -40,3 +40,10 @@ A gets 50, B and C get 49 points.
 
 1. create the dotenv-file, see [the example](example.env) for values that need to be set
 2. create a secret: `head -c16 /dev/urandom > secret.key`
+
+## Development
+
+### Git Hooks
+
+I've implemented a minimal pre-commmit hook that runs `cargo fmt` and `cargo clippy` to ensure that code is formatted and linted before being committed.
+You can activate the hook by running `git config core.hooksPath .githooks`.
