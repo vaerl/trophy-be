@@ -1,4 +1,4 @@
-use super::{Amount, Game, GameKind, ParsedOutcome, TeamGender, TypeInfo};
+use super::{Game, GameKind, ParsedOutcome, TeamGender, TypeInfo};
 use crate::{
     ApiResult,
     model::{CustomError, Team},
@@ -47,60 +47,6 @@ impl Outcome {
         .await?;
 
         Ok(OutcomeVec(outcomes))
-    }
-
-    /// Find all pending games.
-    pub async fn find_all_pending_games(year: i32, pool: &PgPool) -> ApiResult<Amount> {
-        let amount = sqlx::query_scalar!(
-            r#"SELECT COUNT(*) FROM (
-                SELECT DISTINCT game_id FROM game_team
-                    INNER JOIN games ON game_team.game_id=games.id
-                    INNER JOIN teams ON game_team.team_id=teams.id
-                WHERE data IS NULL AND games.year = $1) AS temp"#,
-            year
-        )
-        .fetch_one(pool)
-        .await?
-        .unwrap_or(0);
-
-        Ok(Amount(amount))
-    }
-
-    /// Find all pending teams.
-    pub async fn find_all_pending_teams(year: i32, pool: &PgPool) -> ApiResult<Amount> {
-        let amount = sqlx::query_scalar!(
-            r#"SELECT COUNT(*) FROM (
-                SELECT DISTINCT team_id FROM game_team
-                    INNER JOIN games ON game_team.game_id=games.id
-                    INNER JOIN teams ON game_team.team_id=teams.id
-                WHERE data IS NULL AND teams.year = $1) AS temp"#,
-            year
-        )
-        .fetch_one(pool)
-        .await?
-        .unwrap_or(0);
-
-        Ok(Amount(amount))
-    }
-
-    /// Find all pending teams for the specified game.
-    pub async fn find_all_pending_teams_for_game(
-        game_id: Uuid,
-        pool: &PgPool,
-    ) -> ApiResult<Amount> {
-        let amount = sqlx::query_scalar!(
-            r#"SELECT COUNT(*) FROM (
-                SELECT DISTINCT team_id FROM game_team
-                    INNER JOIN games ON game_team.game_id=games.id
-                    INNER JOIN teams ON game_team.team_id=teams.id
-                WHERE data IS NULL AND game_id = $1) AS temp"#,
-            game_id
-        )
-        .fetch_one(pool)
-        .await?
-        .unwrap_or(0);
-
-        Ok(Amount(amount))
     }
 
     /// Find all [Outcome]s for the specified [Game].

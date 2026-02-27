@@ -22,7 +22,7 @@ async fn is_done(
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin])?;
     StatusResponse {
-        status: crate::eval::is_done(&pool, **year).await?,
+        status: crate::eval::is_trophy_done(&pool, **year).await?,
     }
     .to_json()
 }

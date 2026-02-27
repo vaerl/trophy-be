@@ -4,7 +4,7 @@ use std::fmt::{self, Display};
 use uuid::Uuid;
 
 use super::{CustomError, Game, Outcome, TypeInfo};
-use crate::ApiResult;
+use crate::{ApiResult, model::Amount};
 
 #[derive(Serialize, Deserialize, sqlx::Type, Clone)]
 #[sqlx(type_name = "team_gender")]
@@ -95,6 +95,40 @@ impl Team {
         .await?;
 
         Ok(TeamVec(teams))
+    }
+
+    /// Find all pending [Team]s.
+    pub async fn find_all_pending(year: i32, pool: &PgPool) -> ApiResult<Amount> {
+        let amount = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) FROM (
+                SELECT DISTINCT team_id FROM game_team
+                    INNER JOIN games ON game_team.game_id=games.id
+                    INNER JOIN teams ON game_team.team_id=teams.id
+                WHERE data IS NULL AND teams.year = $1) AS temp"#,
+            year
+        )
+        .fetch_one(pool)
+        .await?
+        .unwrap_or(0);
+
+        Ok(Amount(amount))
+    }
+
+    /// Find all pending [Team]s for the specified [Game].
+    pub async fn find_all_pending_for_game(game_id: Uuid, pool: &PgPool) -> ApiResult<Amount> {
+        let amount = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) FROM (
+                SELECT DISTINCT team_id FROM game_team
+                    INNER JOIN games ON game_team.game_id=games.id
+                    INNER JOIN teams ON game_team.team_id=teams.id
+                WHERE data IS NULL AND game_id = $1) AS temp"#,
+            game_id
+        )
+        .fetch_one(pool)
+        .await?
+        .unwrap_or(0);
+
+        Ok(Amount(amount))
     }
 
     /// Find all [Team]s split into a tuple by their gender.

@@ -1,7 +1,7 @@
 use crate::{
     ApiResult, ToJson,
     middleware::Authenticated,
-    model::{CreateGame, Game, Outcome, UserRole, Year},
+    model::{CreateGame, Game, Team, UserRole, Year},
 };
 use actix_web::{
     Responder, delete, get, post, put,
@@ -27,9 +27,7 @@ async fn games_pending(
     year: Query<Year>,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Outcome::find_all_pending_games(**year, &pool)
-        .await?
-        .to_json()
+    Game::find_all_pending(**year, &pool).await?.to_json()
 }
 
 #[post("/games")]
@@ -82,9 +80,7 @@ async fn pending_teams_amount(
     auth: Authenticated,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Outcome::find_all_pending_teams_for_game(*id, &pool)
-        .await?
-        .to_json()
+    Team::find_all_pending_for_game(*id, &pool).await?.to_json()
 }
 
 // NOTE order matters!

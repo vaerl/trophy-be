@@ -8,7 +8,7 @@ use uuid::Uuid;
 use crate::{
     ApiResult, ToJson,
     middleware::Authenticated,
-    model::{CreateTeam, Outcome, Team, UserRole, Year},
+    model::{CreateTeam, Team, UserRole, Year},
 };
 
 #[get("/teams")]
@@ -28,9 +28,7 @@ async fn teams_pending(
     year: Query<Year>,
 ) -> ApiResult<impl Responder> {
     auth.has_roles(vec![UserRole::Admin, UserRole::Visualizer])?;
-    Outcome::find_all_pending_teams(**year, &pool)
-        .await?
-        .to_json()
+    Team::find_all_pending(**year, &pool).await?.to_json()
 }
 
 #[post("/teams")]

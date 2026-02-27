@@ -11,17 +11,13 @@ use std::{
 };
 use xlsxwriter::*;
 
-// TODO add all teams to the result-list
-// TODO check algorithm again - males was pretty good, females did not match
-// -> discrepancies are to be expected, because I deleted two teams completely
-
 pub struct ResultFile(pub NamedFile);
 
 const MAX_POINTS: i32 = 50;
 
 /// Checks whether all games have finished.
-pub async fn is_done(pool: &PgPool, year: i32) -> ApiResult<bool> {
-    let pending_games = Outcome::find_all_pending_games(year, pool).await?.0;
+pub async fn is_trophy_done(pool: &PgPool, year: i32) -> ApiResult<bool> {
+    let pending_games = Game::find_all_pending(year, pool).await?.0;
     Ok(pending_games == 0)
 }
 
@@ -38,7 +34,7 @@ pub async fn is_evaluated(pool: &PgPool, year: i32) -> ApiResult<bool> {
 }
 
 pub async fn evaluate_trophy(pool: &PgPool, year: i32) -> ApiResult<()> {
-    if !is_done(pool, year).await? {
+    if !is_trophy_done(pool, year).await? {
         return Err(CustomError::EarlyEvaluationError {
             message: "Tried to evaluate while teams are still playing!".to_string(),
         });
@@ -57,11 +53,15 @@ pub async fn evaluate_trophy(pool: &PgPool, year: i32) -> ApiResult<()> {
     Ok(())
 }
 
+/// Evalutate the given [Game].
+/// Errors if the [Game] is not yet done.
 async fn evaluate_game(game: Game, pool: &PgPool) -> ApiResult<()> {
-    // TODO shouldn't this only check if game is done?
-    if !is_done(pool, game.year).await? {
+    if game.is_pending(pool).await? {
         return Err(CustomError::EarlyEvaluationError {
-            message: "Tried to evaluate while teams are still playing!".to_string(),
+            message: format!(
+                "Tried to evaluate game {} while the game is not done.",
+                game
+            ),
         });
     }
 

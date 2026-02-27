@@ -1,5 +1,5 @@
 use super::{CustomError, Outcome, Team};
-use crate::{ApiResult, TypeInfo};
+use crate::{ApiResult, TypeInfo, model::Amount};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, PgPool};
 use std::fmt::{self, Display};
@@ -58,6 +58,22 @@ impl Game {
         Ok(GameVec(games))
     }
 
+    /// Find all pending [Game]s.
+    pub async fn find_all_pending(year: i32, pool: &PgPool) -> ApiResult<Amount> {
+        let amount = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) FROM (
+                SELECT DISTINCT game_id FROM game_team
+                    INNER JOIN games ON game_team.game_id=games.id
+                    INNER JOIN teams ON game_team.team_id=teams.id
+                WHERE data IS NULL AND games.year = $1) AS temp"#,
+            year
+        )
+        .fetch_one(pool)
+        .await?
+        .unwrap_or(0);
+
+        Ok(Amount(amount))
+    }
     /// Try to get the [Game] of the specified ID.
     pub async fn find(id: Uuid, pool: &PgPool) -> ApiResult<Game> {
         let game = sqlx::query_as!(
@@ -127,6 +143,26 @@ impl Game {
 
         tx.commit().await?;
         Ok(game)
+    }
+
+    pub async fn is_pending(&self, pool: &PgPool) -> ApiResult<bool> {
+        let amount = sqlx::query_scalar!(
+            r#"SELECT COUNT(*) FROM (
+                SELECT DISTINCT game_id FROM game_team
+                    INNER JOIN games ON game_team.game_id=games.id
+                    INNER JOIN teams ON game_team.team_id=teams.id
+                WHERE data IS NULL
+                AND games.year = $1
+                AND games.id = $2)
+            AS temp"#,
+            self.year,
+            self.id
+        )
+        .fetch_one(pool)
+        .await?
+        .unwrap_or(0);
+
+        return Ok(amount > 0);
     }
 }
 
