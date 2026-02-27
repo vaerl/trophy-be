@@ -12,8 +12,6 @@ pub struct ErrorResponse {
     pub error: String,
 }
 
-// TODO check if there are unused variants
-
 /// This enables me to simply call err.error_response() on errors, so all errors
 /// have the correct status-codes.
 
