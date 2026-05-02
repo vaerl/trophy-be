@@ -167,13 +167,11 @@ async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> ApiResult<()>
     sheet.write_string(0, 2, "Punkte", Some(&heading))?;
 
     // sort teams by points for right order in xlsx-file
-    teams.sort_by(|a, b| b.points.cmp(&a.points));
-    let mut row = 1;
-    for (id, team) in teams.iter().enumerate() {
+    teams.sort_by_key(|a| a.points);
+    for (row, (id, team)) in (1..).zip(teams.iter().enumerate()) {
         sheet.write_string(row, 0, &format!("{}", id + 1), Some(&values))?;
         sheet.write_string(row, 1, &team.name, Some(&values))?;
         sheet.write_string(row, 2, &team.points.to_string(), Some(&values))?;
-        row += 1;
     }
 
     Ok(())

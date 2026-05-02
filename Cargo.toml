@@ -14,10 +14,10 @@ humantime = "2.3.0"
 xlsxwriter = "0.6.1"
 thiserror = "2.0.18"
 # logging
-env_logger = "0.11.9"
+env_logger = "0.11.10"
 log = "0.4.29"
 # runtime
-tokio = { version = "1.49.0", features = ["full"] }
+tokio = { version = "1.52.2", features = ["full"] }
 # database
 sqlx = { version = "0.8.6", features = [
   "runtime-tokio-rustls",
@@ -36,8 +36,8 @@ serde_json = "1.0.149"
 # auth
 jsonwebtoken = { version = "10.3.0", features = ["aws_lc_rs"] }
 argon2 = "0.5.3"
-rand = { version = "0.10.0" }
+rand = { version = "0.10.1" }
 chrono = { version = "0.4.44", features = ["serde"] }
-uuid = { version = "1.21.0", features = ["v4", "v7", "serde"] }
+uuid = { version = "1.23.1", features = ["v4", "v7", "serde"] }
 actix-multipart = "0.7.2"
-calamine = "0.33.0"
+calamine = "0.34.0"
