@@ -25,13 +25,7 @@ pub async fn is_trophy_done(pool: &PgPool, year: i32) -> ApiResult<bool> {
 /// Checks whether all teams have points assigned.
 pub async fn is_evaluated(pool: &PgPool, year: i32) -> ApiResult<bool> {
     let teams = Team::find_all(pool, year).await?.0;
-    for team in teams {
-        if team.points == 0 {
-            return Ok(false);
-        }
-    }
-
-    Ok(true)
+    Ok(teams.iter().all(|team| team.points != 0))
 }
 
 pub async fn evaluate_trophy(pool: &PgPool, year: i32) -> ApiResult<()> {
@@ -103,7 +97,7 @@ fn evaluate(mut outcomes: Vec<ParsedOutcome>) -> Vec<ParsedOutcome> {
 
     match outcomes[0].value {
         Value::Seconds(_) => outcomes.sort_by(|a, b| a.value.cmp(&b.value)),
-        // we have to reverse this vec so the shortest duration has the first position
+        // sort_by sorts in ascending order by default, but since points require descending order, we have to reverse
         Value::Points(_) => outcomes.sort_by(|a, b| a.value.cmp(&b.value).reverse()),
     }
 
@@ -296,27 +290,27 @@ mod tests {
 
         assert!(
             teams[0].points == MAX_POINTS,
-            "Team 5 is has the correct number of points: {}",
+            "Team 5 has the correct number of points: {}",
             teams[0].points
         );
         assert!(
             teams[1].points == MAX_POINTS - 1,
-            "Team 4 is has the correct number of points: {}",
+            "Team 4 has the correct number of points: {}",
             teams[1].points
         );
         assert!(
             teams[2].points == MAX_POINTS - 2,
-            "Team 3 is has the correct number of points: {}",
+            "Team 3 has the correct number of points: {}",
             teams[2].points
         );
         assert!(
             teams[3].points == MAX_POINTS - 3,
-            "Team 2 is has the correct number of points: {}",
+            "Team 2 has the correct number of points: {}",
             teams[3].points
         );
         assert!(
             teams[4].points == MAX_POINTS - 4,
-            "Team 1 is has the correct number of points: {}",
+            "Team 1 has the correct number of points: {}",
             teams[4].points
         );
     }
@@ -344,28 +338,28 @@ mod tests {
 
         assert!(
             teams[0].points == MAX_POINTS,
-            "Team 5 is has the correct number of points: {}",
+            "Team 5 has the correct number of points: {}",
             teams[0].points
         );
         assert!(
             teams[1].points == MAX_POINTS - 1,
-            "Team 4 is has the correct number of points: {}",
+            "Team 4 has the correct number of points: {}",
             teams[1].points
         );
         assert!(
             teams[2].points == MAX_POINTS - 1,
-            "Team 3 is has the correct number of points: {}",
+            "Team 3 has the correct number of points: {}",
             teams[2].points
         );
         assert!(
             teams[3].points == MAX_POINTS - 1,
-            "Team 4 is has the correct number of points: {}",
+            "Team 4 has the correct number of points: {}",
             teams[3].points
         );
 
         assert!(
             teams[4].points == MAX_POINTS - 4,
-            "Team 1 is has the correct number of points: {}",
+            "Team 1 has the correct number of points: {}",
             teams[4].points
         );
     }
@@ -393,28 +387,28 @@ mod tests {
 
         assert!(
             teams[0].points == MAX_POINTS,
-            "Team 5 is has the correct number of points: {}",
+            "Team 5 has the correct number of points: {}",
             teams[0].points
         );
         assert!(
             teams[1].points == MAX_POINTS - 1,
-            "Team 4 is has the correct number of points: {}",
+            "Team 4 has the correct number of points: {}",
             teams[1].points
         );
         assert!(
             teams[2].points == MAX_POINTS - 2,
-            "Team 3 is has the correct number of points: {}",
+            "Team 3 has the correct number of points: {}",
             teams[2].points
         );
         assert!(
             teams[3].points == MAX_POINTS - 3,
-            "Team 4 is has the correct number of points: {}",
+            "Team 4 has the correct number of points: {}",
             teams[3].points
         );
 
         assert!(
             teams[4].points == MAX_POINTS - 4,
-            "Team 1 is has the correct number of points: {}",
+            "Team 1 has the correct number of points: {}",
             teams[4].points
         );
     }
@@ -441,28 +435,28 @@ mod tests {
 
         assert!(
             teams[0].points == MAX_POINTS,
-            "Team 5 is has the correct number of points: {}",
+            "Team 5 has the correct number of points: {}",
             teams[0].points
         );
         assert!(
             teams[1].points == MAX_POINTS - 1,
-            "Team 4 is has the correct number of points: {}",
+            "Team 4 has the correct number of points: {}",
             teams[1].points
         );
         assert!(
             teams[2].points == MAX_POINTS - 1,
-            "Team 3 is has the correct number of points: {}",
+            "Team 3 has the correct number of points: {}",
             teams[2].points
         );
         assert!(
             teams[3].points == MAX_POINTS - 1,
-            "Team 4 is has the correct number of points: {}",
+            "Team 4 has the correct number of points: {}",
             teams[3].points
         );
 
         assert!(
             teams[4].points == MAX_POINTS - 4,
-            "Team 1 is has the correct number of points: {}",
+            "Team 1 has the correct number of points: {}",
             teams[4].points
         );
     }
