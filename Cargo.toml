@@ -15,7 +15,7 @@ xlsxwriter = "0.6.1"
 thiserror = "2.0.18"
 # logging
 env_logger = "0.11.10"
-log = "0.4.31"
+log = "0.4.33"
 # runtime
 tokio = { version = "1.52.3", features = ["full"] }
 # database
@@ -27,7 +27,7 @@ sqlx = { version = "0.9.0", features = [
 ] }
 # http/rest
 actix = "0.13.5"
-actix-web = "4.13.0"
+actix-web = "4.14.0"
 actix-files = "0.6.10"
 actix-service = "2.0.3"
 actix-cors = "0.7.1"
@@ -37,7 +37,7 @@ serde_json = "1.0.150"
 jsonwebtoken = { version = "10.4.0", features = ["aws_lc_rs"] }
 argon2 = "0.5.3"
 rand = { version = "0.10.1" }
-chrono = { version = "0.4.44", features = ["serde"] }
-uuid = { version = "1.23.2", features = ["v4", "v7", "serde"] }
-actix-multipart = "0.7.2"
+chrono = { version = "0.4.45", features = ["serde"] }
+uuid = { version = "1.23.3", features = ["v4", "v7", "serde"] }
+actix-multipart = "0.8.0"
 calamine = "0.35.0"
