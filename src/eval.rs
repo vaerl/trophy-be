@@ -5,6 +5,7 @@ use crate::{
 use actix_files::NamedFile;
 use sqlx::PgPool;
 use std::{
+    cmp::Reverse,
     fmt::{self, Display},
     fs::File,
     time::SystemTime,
@@ -141,10 +142,10 @@ pub async fn create_xlsx_file(pool: &PgPool, year: i32) -> ApiResult<ResultFile>
 
     // only write teams if any exist
     if !female.0.is_empty() {
-        write_teams(female.0, &workbook).await?;
+        write_teams(female.0, &workbook)?;
     }
     if !male.0.is_empty() {
-        write_teams(male.0, &workbook).await?;
+        write_teams(male.0, &workbook)?;
     }
     workbook.close()?;
 
@@ -152,7 +153,7 @@ pub async fn create_xlsx_file(pool: &PgPool, year: i32) -> ApiResult<ResultFile>
     Ok(ResultFile(NamedFile::open(path)?))
 }
 
-async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> ApiResult<()> {
+fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> ApiResult<()> {
     // create fonts
     let mut heading = Format::new();
     heading.set_bold().set_font_size(20.0);
@@ -167,11 +168,24 @@ async fn write_teams(mut teams: Vec<Team>, workbook: &Workbook) -> ApiResult<()>
     sheet.write_string(0, 2, "Punkte", Some(&heading))?;
 
     // sort teams by points for right order in xlsx-file
-    teams.sort_by_key(|a| a.points);
-    for (row, (id, team)) in (1..).zip(teams.iter().enumerate()) {
-        sheet.write_string(row, 0, &format!("{}", id + 1), Some(&values))?;
+    teams.sort_by_key(|a| Reverse(a.points));
+
+    // always start at place 1
+    let mut place = 1;
+
+    for i in 0..teams.len() {
+        let team = &teams[i];
+        let row = (i + 1) as u32;
+
+        // write the current team to sheet
+        sheet.write_string(row, 0, &format!("{}", place), Some(&values))?;
         sheet.write_string(row, 1, &team.name, Some(&values))?;
         sheet.write_string(row, 2, &team.points.to_string(), Some(&values))?;
+
+        // reduce place if the next team has less points
+        if i + 1 < teams.len() && team.points > teams[i + 1].points {
+            place += 1;
+        }
     }
 
     Ok(())
