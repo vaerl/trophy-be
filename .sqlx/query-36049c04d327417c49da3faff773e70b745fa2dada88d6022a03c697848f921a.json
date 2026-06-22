@@ -6,17 +6,35 @@
       {
         "ordinal": 0,
         "name": "game_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "game_team",
+            "name": "game_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "game_trophy_id",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "games",
+            "name": "trophy_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "game_name",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "games",
+            "name": "name"
+          }
+        }
       },
       {
         "ordinal": 3,
@@ -31,22 +49,46 @@
               ]
             }
           }
+        },
+        "origin": {
+          "Table": {
+            "table": "games",
+            "name": "kind"
+          }
         }
       },
       {
         "ordinal": 4,
         "name": "team_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "game_team",
+            "name": "team_id"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "team_trophy_id",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "teams",
+            "name": "trophy_id"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "team_name",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "teams",
+            "name": "name"
+          }
+        }
       },
       {
         "ordinal": 7,
@@ -62,17 +104,35 @@
               ]
             }
           }
+        },
+        "origin": {
+          "Table": {
+            "table": "teams",
+            "name": "gender"
+          }
         }
       },
       {
         "ordinal": 8,
         "name": "data",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "game_team",
+            "name": "data"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "point_value",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "game_team",
+            "name": "point_value"
+          }
+        }
       }
     ],
     "parameters": {

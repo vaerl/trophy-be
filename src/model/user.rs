@@ -246,7 +246,7 @@ impl User {
                         game_id,
                         games.name as "game_name?",
                         session FROM updated
-                    RIGHT JOIN games ON games.id=updated.game_id"#,
+                    LEFT JOIN games ON games.id=updated.game_id"#,
                     altered_user.name, password_hash, altered_user.role as UserRole, altered_user.game_id, id
                 )
                 .fetch_one(&mut *tx)
